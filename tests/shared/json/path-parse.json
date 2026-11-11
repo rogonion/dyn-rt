@@ -284,5 +284,68 @@
       [{ "access": "named", "selector": { "kind": "key", "value": "id" } }]
     ],
     "roundtrip": "$['title_\"main\"..part']..id"
+  },
+  {
+    "name": "two recursive descent groups with hyphenated keys (go/js variant)",
+    "path": "$['report-data']..['total.sum']",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "report-data" } }
+      ],
+      [{ "access": "named", "selector": { "kind": "key", "value": "total.sum" } }]
+    ],
+    "roundtrip": "$['report-data']..['total.sum']"
+  },
+  {
+    "name": "slice followed by wildcard (js variant)",
+    "path": "$.transactions[1:5:2].*",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "transactions" } },
+        { "access": "positional", "selector": { "kind": "slice", "start": 1, "end": 5, "step": 2 } },
+        { "access": "mixed", "selector": { "kind": "wildcard" } }
+      ]
+    ],
+    "roundtrip": "$.transactions[1:5:2].*"
+  },
+  {
+    "name": "union of two named keys (go/js variant)",
+    "path": "$.data.user.preferences['theme-settings','font-size']",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "data" } },
+        { "access": "named", "selector": { "kind": "key", "value": "user" } },
+        { "access": "named", "selector": { "kind": "key", "value": "preferences" } },
+        {
+          "access": "named",
+          "selector": {
+            "kind": "union",
+            "members": [
+              { "access": "named", "selector": { "kind": "key", "value": "theme-settings" } },
+              { "access": "named", "selector": { "kind": "key", "value": "font-size" } }
+            ]
+          }
+        }
+      ]
+    ],
+    "roundtrip": "$.data.user.preferences['theme-settings','font-size']"
+  },
+  {
+    "name": "hyphenated key without inner dots (go/js variant)",
+    "path": "$.products['item-details'].dimensions[0].width",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "products" } },
+        { "access": "named", "selector": { "kind": "key", "value": "item-details" } },
+        { "access": "named", "selector": { "kind": "key", "value": "dimensions" } },
+        { "access": "positional", "selector": { "kind": "index", "value": 0 } },
+        { "access": "named", "selector": { "kind": "key", "value": "width" } }
+      ]
+    ],
+    "roundtrip": "$.products['item-details'].dimensions[0].width"
   }
 ]
