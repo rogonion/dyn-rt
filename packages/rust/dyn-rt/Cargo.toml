@@ -7,8 +7,14 @@ license-file.workspace = true
 
 [features]
 default = ["json"]
-json = ["dep:dyn-rt-json-domain"]
+json = ["dep:dyn-rt-json-application", "dep:dyn-rt-json-domain", "dep:dyn-rt-json-infra"]
 # metadatamodel = ["json", "dep:dyn-rt-metadatamodel-domain"]  # added in the metadatamodel phase
 
 [dependencies]
+dyn-rt-json-application = { path = "../../../libs/rust/json-application", optional = true }
 dyn-rt-json-domain = { path = "../../../libs/rust/json-domain", optional = true }
+dyn-rt-json-infra = { path = "../../../libs/rust/json-infra", optional = true }
+
+[dev-dependencies]
+dyn-rt-test-support = { path = "../../../libs/rust/test-support" }
+serde_json = "1"

@@ -33,7 +33,10 @@ impl fmt::Display for JsonError {
                 path,
                 expected,
                 found,
-            } => write!(f, "type mismatch at {path}: expected {expected}, found {found}"),
+            } => write!(
+                f,
+                "type mismatch at {path}: expected {expected}, found {found}"
+            ),
             JsonError::InvalidValue(msg) => write!(f, "invalid value: {msg}"),
         }
     }

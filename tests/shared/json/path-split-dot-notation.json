@@ -1,0 +1,166 @@
+[
+  {
+    "name": "root and simple key",
+    "input": "$.store",
+    "expected": [
+      "$",
+      "store"
+    ]
+  },
+  {
+    "name": "bracket index attached to key + property title",
+    "input": "book[0].title",
+    "expected": [
+      "book[0]",
+      "title"
+    ]
+  },
+  {
+    "name": "standalone root selector",
+    "input": "$",
+    "expected": [
+      "$"
+    ]
+  },
+  {
+    "name": "standalone property name",
+    "input": "store",
+    "expected": [
+      "store"
+    ]
+  },
+  {
+    "name": "standalone wildcard selector",
+    "input": "*",
+    "expected": [
+      "*"
+    ]
+  },
+  {
+    "name": "root with quoted bracket key containing inner dots",
+    "input": "$['a..b']",
+    "expected": [
+      "$['a..b']"
+    ]
+  },
+  {
+    "name": "standalone quoted bracket key with inner dots",
+    "input": "['c..d']",
+    "expected": [
+      "['c..d']"
+    ]
+  },
+  {
+    "name": "root with hyphenated quoted key",
+    "input": "$['report-data']",
+    "expected": [
+      "$['report-data']"
+    ]
+  },
+  {
+    "name": "complex symbols and dots inside single quotes",
+    "input": "['total.sum..()&^']",
+    "expected": [
+      "['total.sum..()&^']"
+    ]
+  },
+  {
+    "name": "chained dot property with bracketed property key",
+    "input": "store.bicycle['item-code']",
+    "expected": [
+      "store",
+      "bicycle['item-code']"
+    ]
+  },
+  {
+    "name": "slice selector attached to property name",
+    "input": "$.transactions[1:5:2].amount",
+    "expected": [
+      "$",
+      "transactions[1:5:2]",
+      "amount"
+    ]
+  },
+  {
+    "name": "deeply nested property path with mixed union selector",
+    "input": "$.data.user.preferences['theme-settings',\"font-size\",3]",
+    "expected": [
+      "$",
+      "data",
+      "user",
+      "preferences['theme-settings',\"font-size\",3]"
+    ]
+  },
+  {
+    "name": "bracketed category identifier followed by dot property",
+    "input": "['1st_category'].name",
+    "expected": [
+      "['1st_category']",
+      "name"
+    ]
+  },
+  {
+    "name": "complex path with dots in quotes, array indices, chained brackets",
+    "input": "$.products['item-details..'].dimensions[0].width.dimensions[2][3].width",
+    "expected": [
+      "$",
+      "products['item-details..']",
+      "dimensions[0]",
+      "width",
+      "dimensions[2][3]",
+      "width"
+    ]
+  },
+  {
+    "name": "spaces and dots inside quoted brackets with array indexing",
+    "input": "$['user info']['address.wind'][1].street",
+    "expected": [
+      "$['user info']['address.wind'][1]",
+      "street"
+    ]
+  },
+  {
+    "name": "wildcard array index attached to property",
+    "input": "$.data[*].price",
+    "expected": [
+      "$",
+      "data[*]",
+      "price"
+    ]
+  },
+  {
+    "name": "single simple identifier",
+    "input": "author",
+    "expected": [
+      "author"
+    ]
+  },
+  {
+    "name": "escaped single quote and dots inside bracket key",
+    "input": "$['store\\'s..item']",
+    "expected": [
+      "$['store\\'s..item']"
+    ]
+  },
+  {
+    "name": "escaped double quote and dots inside bracket key",
+    "input": "$[\"user\\\"name..data\"]",
+    "expected": [
+      "$[\"user\\\"name..data\"]"
+    ]
+  },
+  {
+    "name": "empty single-quoted string bracket key",
+    "input": "$['']",
+    "expected": [
+      "$['']"
+    ]
+  },
+  {
+    "name": "mixed double quotes and dots inside single-quoted bracket key",
+    "input": "$['title_\"main\"..part']",
+    "expected": [
+      "$['title_\"main\"..part']"
+    ]
+  }
+]

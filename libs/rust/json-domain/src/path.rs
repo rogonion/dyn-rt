@@ -151,7 +151,10 @@ impl fmt::Display for PathSelector {
                     .map(|member| {
                         let rendered = member.selector.to_string();
                         // Strip one layer of brackets so members do not double-wrap.
-                        if rendered.starts_with('[') && rendered.ends_with(']') && rendered.len() >= 2 {
+                        if rendered.starts_with('[')
+                            && rendered.ends_with(']')
+                            && rendered.len() >= 2
+                        {
                             rendered[1..rendered.len() - 1].to_string()
                         } else {
                             rendered

@@ -1,0 +1,15 @@
+[package]
+name = "dyn-rt-json-infra"
+description = "dyn-rt json context adapters: the regex PathTokenizer (named single-purpose regexes applied in explicit step order) and, later, serde_json <-> domain Value conversion."
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+
+[dependencies]
+dyn-rt-json-domain = { path = "../json-domain" }
+regex = "1"
+
+[dev-dependencies]
+dyn-rt-json-application = { path = "../json-application" }
+dyn-rt-test-support = { path = "../test-support" }
+serde_json = "1"

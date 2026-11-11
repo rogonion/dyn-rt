@@ -36,7 +36,10 @@ pub fn build_value(build: &serde_json::Value) -> Value {
         let pairs = entries.iter().map(|e| {
             let pair = e.as_array().expect("object entry must be [key, value]");
             (
-                pair[0].as_str().expect("object key must be a string").to_string(),
+                pair[0]
+                    .as_str()
+                    .expect("object key must be a string")
+                    .to_string(),
                 to_value(&pair[1]),
             )
         });
@@ -77,12 +80,12 @@ pub fn to_json(v: &Value) -> serde_json::Value {
             .map(serde_json::Value::Number)
             .expect("finite f64"),
         Value::String(s) => s.clone().into(),
-        Value::Array(items) => {
-            serde_json::Value::Array(items.iter().map(to_json).collect())
-        }
+        Value::Array(items) => serde_json::Value::Array(items.iter().map(to_json).collect()),
         Value::Object(entries) => {
-            let map: serde_json::Map<String, serde_json::Value> =
-                entries.iter().map(|(k, v)| (k.clone(), to_json(v))).collect();
+            let map: serde_json::Map<String, serde_json::Value> = entries
+                .iter()
+                .map(|(k, v)| (k.clone(), to_json(v)))
+                .collect();
             serde_json::Value::Object(map)
         }
     }
@@ -126,7 +129,10 @@ pub fn access_to_json(access: AccessStrategy) -> serde_json::Value {
 pub fn segment_from_json(v: &serde_json::Value) -> PathSegment {
     let access = access_from_json(&v["access"]);
     let selector_json = &v["selector"];
-    let selector = match selector_json["kind"].as_str().expect("selector.kind must be a string") {
+    let selector = match selector_json["kind"]
+        .as_str()
+        .expect("selector.kind must be a string")
+    {
         "root" => PathSelector::Root,
         "wildcard" => PathSelector::Wildcard,
         "key" => PathSelector::Key(
@@ -208,9 +214,7 @@ pub fn segments_to_json(segments: &RecursiveDescentSegments) -> serde_json::Valu
         segments
             .0
             .iter()
-            .map(|group| {
-                serde_json::Value::Array(group.0.iter().map(segment_to_json).collect())
-            })
+            .map(|group| serde_json::Value::Array(group.0.iter().map(segment_to_json).collect()))
             .collect(),
     )
 }

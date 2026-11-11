@@ -1,0 +1,143 @@
+[
+  {
+    "name": "basic path with some recursive descent",
+    "input": "$.store..book[0].title",
+    "expected": [
+      "$.store",
+      "book[0].title"
+    ]
+  },
+  {
+    "name": "multiple recursive descents starting with $..",
+    "input": "$..store..book..*",
+    "expected": [
+      "$",
+      "store",
+      "book",
+      "*"
+    ]
+  },
+  {
+    "name": "string literals containing .. inside brackets",
+    "input": "$['a..b']..['c..d']",
+    "expected": [
+      "$['a..b']",
+      "['c..d']"
+    ]
+  },
+  {
+    "name": "complex symbols with .. inside bracket quotes",
+    "input": "$['report-data']..['total.sum..()&^']..store.bicycle['item-code']",
+    "expected": [
+      "$['report-data']",
+      "['total.sum..()&^']",
+      "store.bicycle['item-code']"
+    ]
+  },
+  {
+    "name": "multiple recursive descents with hyphenated keys",
+    "input": "$['report-data']..['total.sum']..store.bicycle['item-code']",
+    "expected": [
+      "$['report-data']",
+      "['total.sum']",
+      "store.bicycle['item-code']"
+    ]
+  },
+  {
+    "name": "slice selector",
+    "input": "$.transactions[1:5:2].amount",
+    "expected": [
+      "$.transactions[1:5:2].amount"
+    ]
+  },
+  {
+    "name": "union selector with mixed types",
+    "input": "$.data.user.preferences['theme-settings',\"font-size\",3]",
+    "expected": [
+      "$.data.user.preferences['theme-settings',\"font-size\",3]"
+    ]
+  },
+  {
+    "name": "recursive descent into bracketed numeric key",
+    "input": "$..['1st_category'].name",
+    "expected": [
+      "$",
+      "['1st_category'].name"
+    ]
+  },
+  {
+    "name": "dots inside property key + chained array indices",
+    "input": "$.products['item-details..'].dimensions[0].width.dimensions[2][3].width",
+    "expected": [
+      "$.products['item-details..'].dimensions[0].width.dimensions[2][3].width"
+    ]
+  },
+  {
+    "name": "spaces and dots in quoted key",
+    "input": "$['user info']['address.wind'][1].street",
+    "expected": [
+      "$['user info']['address.wind'][1].street"
+    ]
+  },
+  {
+    "name": "wildcard array match",
+    "input": "$.data[*].price",
+    "expected": [
+      "$.data[*].price"
+    ]
+  },
+  {
+    "name": "bracketed property key",
+    "input": "$.store.bicycle['item-code']",
+    "expected": [
+      "$.store.bicycle['item-code']"
+    ]
+  },
+  {
+    "name": "single recursive descent",
+    "input": "$..author",
+    "expected": [
+      "$",
+      "author"
+    ]
+  },
+  {
+    "name": "standard dot and index path",
+    "input": "$.store.book[0].title",
+    "expected": [
+      "$.store.book[0].title"
+    ]
+  },
+  {
+    "name": "escaped single quote inside key containing ..",
+    "input": "$['store\\'s..item']..id",
+    "expected": [
+      "$['store\\'s..item']",
+      "id"
+    ]
+  },
+  {
+    "name": "escaped double quote inside key containing ..",
+    "input": "$[\"user\\\"name..data\"]..title",
+    "expected": [
+      "$[\"user\\\"name..data\"]",
+      "title"
+    ]
+  },
+  {
+    "name": "empty bracketed string key",
+    "input": "$['']..author",
+    "expected": [
+      "$['']",
+      "author"
+    ]
+  },
+  {
+    "name": "mixed quotes inside single-quoted key with ..",
+    "input": "$['title_\"main\"..part']..id",
+    "expected": [
+      "$['title_\"main\"..part']",
+      "id"
+    ]
+  }
+]

@@ -6,6 +6,7 @@
 
 pub mod error;
 pub mod path;
+pub mod ports;
 pub mod value;
 
 pub use error::JsonError;
@@ -13,4 +14,5 @@ pub use path::{
     AccessStrategy, JsonPath, PathSegment, PathSelector, RecursiveDescentSegment,
     RecursiveDescentSegments, SliceSelector,
 };
+pub use ports::PathTokenizer;
 pub use value::{Number, Value};

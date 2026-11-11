@@ -1,0 +1,166 @@
+[
+  {
+    "name": "standalone root selector",
+    "input": "$",
+    "expected": [
+      "$"
+    ]
+  },
+  {
+    "name": "standalone property name",
+    "input": "store",
+    "expected": [
+      "store"
+    ]
+  },
+  {
+    "name": "standalone wildcard selector",
+    "input": "*",
+    "expected": [
+      "*"
+    ]
+  },
+  {
+    "name": "root split from quoted bracket key",
+    "input": "$['a..b']",
+    "expected": [
+      "$",
+      "'a..b'"
+    ]
+  },
+  {
+    "name": "standalone quoted bracket key with inner dots",
+    "input": "['c..d']",
+    "expected": [
+      "'c..d'"
+    ]
+  },
+  {
+    "name": "root split from hyphenated quoted key",
+    "input": "$['report-data']",
+    "expected": [
+      "$",
+      "'report-data'"
+    ]
+  },
+  {
+    "name": "complex symbols and dots inside single quotes",
+    "input": "['total.sum..()&^']",
+    "expected": [
+      "'total.sum..()&^'"
+    ]
+  },
+  {
+    "name": "chained dot property with bracketed property key",
+    "input": "bicycle['item-code']",
+    "expected": [
+      "bicycle",
+      "'item-code'"
+    ]
+  },
+  {
+    "name": "slice selector split from property name",
+    "input": "transactions[1:5:2]",
+    "expected": [
+      "transactions",
+      "1:5:2"
+    ]
+  },
+  {
+    "name": "mixed union selector split from property name",
+    "input": "preferences['theme-settings',\"font-size\",3]",
+    "expected": [
+      "preferences",
+      "'theme-settings',\"font-size\",3"
+    ]
+  },
+  {
+    "name": "bracketed category identifier",
+    "input": "['1st_category']",
+    "expected": [
+      "'1st_category'"
+    ]
+  },
+  {
+    "name": "property key containing dots",
+    "input": "products['item-details..']",
+    "expected": [
+      "products",
+      "'item-details..'"
+    ]
+  },
+  {
+    "name": "single array index",
+    "input": "dimensions[0]",
+    "expected": [
+      "dimensions",
+      "0"
+    ]
+  },
+  {
+    "name": "chained array indices",
+    "input": "dimensions[2][3]",
+    "expected": [
+      "dimensions",
+      "2",
+      "3"
+    ]
+  },
+  {
+    "name": "chained bracket keys into individual atomic brackets",
+    "input": "$['user info']['address.wind'][1]",
+    "expected": [
+      "$",
+      "'user info'",
+      "'address.wind'",
+      "1"
+    ]
+  },
+  {
+    "name": "wildcard array index split from property",
+    "input": "data[*]",
+    "expected": [
+      "data",
+      "*"
+    ]
+  },
+  {
+    "name": "single simple identifier",
+    "input": "author",
+    "expected": [
+      "author"
+    ]
+  },
+  {
+    "name": "root split from escaped quote bracket key",
+    "input": "$['store\\'s..item']",
+    "expected": [
+      "$",
+      "'store\\'s..item'"
+    ]
+  },
+  {
+    "name": "root split from escaped double quote bracket key",
+    "input": "$[\"user\\\"name..data\"]",
+    "expected": [
+      "$",
+      "\"user\\\"name..data\""
+    ]
+  },
+  {
+    "name": "root split from empty string bracket key",
+    "input": "$['']",
+    "expected": [
+      "$",
+      "''"
+    ]
+  },
+  {
+    "name": "root split from mixed quote bracket key",
+    "input": "$['title_\"main\"..part']",
+    "expected": [
+      "$",
+      "'title_\"main\"..part'"
+    ]
+  }
+]

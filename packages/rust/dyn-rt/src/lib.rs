@@ -9,5 +9,15 @@
 #[cfg(feature = "json")]
 pub mod json {
     //! JSON toolkit: value model, path parsing/resolution, object ops, schema.
+    pub use dyn_rt_json_application::{extract_segment, parse_path};
     pub use dyn_rt_json_domain::*;
+    pub use dyn_rt_json_infra::RegexPathTokenizer;
+
+    /// Parse a JSONPath string into its deconstructed AST, using the default
+    /// regex tokenizer.
+    ///
+    /// Example: `$.store.book[0].title`
+    pub fn parse(path: &str) -> RecursiveDescentSegments {
+        parse_path(&RegexPathTokenizer, path)
+    }
 }
