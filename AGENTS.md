@@ -52,6 +52,18 @@ misc/                     scratch notes, drawio MCP notes
 - "Zero IO" means no network, subprocess, or external services; reading local
   fixture files is fine.
 
+## Code style (ADR 0005)
+
+- Prefer explicit, linear logic over brevity or cleverness: named steps, early
+  returns, plain loops, one explicit `match` arm per case. Tolerate duplication
+  (like the go/js splitter trio) over clever shared abstractions.
+- No regex golf, dense iterator chains, or macros/generics used for brevity.
+  Recursion only when it mirrors the parsed structure, and each step stays
+  obvious.
+- Optimize only when a profiler or failing test says so, keeping the explicit
+  shape. Exception: public API ergonomics (constructors like
+  `Value::object(...)`) may be concise; internal logic stays explicit.
+
 ## Architecture rules (ADR 0002)
 
 - Dependencies point inward: `*-domain` crates depend on nothing but std;
