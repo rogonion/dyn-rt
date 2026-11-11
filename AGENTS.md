@@ -19,7 +19,9 @@ feature/subpath gating so consumers only bundle what they use (ADR 0003).
 ```
 apps/<lang>/<name>/       executables / composition roots — wire adapters into the core here
 libs/<lang>/<name>/       internal code, layered per ADR 0002 (Rust: one crate per layer)
-packages/<lang>/          publishable export entrypoints (façades over libs)
+packages/<lang>/          publishable export entrypoints (façades over libs); for Go: ONE module at
+                          packages/go/ with contexts as subpackages (.../packages/go/json), released
+                          via subdir-prefixed tags packages/go/vX.Y.Z, local dev via root go.work (ADR 0006)
 tests/shared/             cross-language fixtures consumed by cargo tests AND vitest (parity)
 docs/architecture/        ADRs (decisions) + descriptions/ (long-form)
 misc/                     scratch notes, drawio MCP notes
