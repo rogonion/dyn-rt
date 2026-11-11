@@ -1,0 +1,52 @@
+[
+  {
+    "name": "null: type name and is_null",
+    "build": { "value": null },
+    "assert": { "type": "null", "is_null": true }
+  },
+  {
+    "name": "bool: type name and as_bool",
+    "build": { "value": true },
+    "assert": { "type": "boolean", "as_bool": true }
+  },
+  {
+    "name": "int: type name, integer, as_f64",
+    "build": { "value": 1 },
+    "assert": { "type": "number", "is_integer": true, "as_f64": 1 }
+  },
+  {
+    "name": "float: type name, not integer",
+    "build": { "value": 1.5 },
+    "assert": { "type": "number", "is_integer": false, "as_f64": 1.5 }
+  },
+  {
+    "name": "u64 max stays lossless (never routed through f64 in the model)",
+    "build": { "value": 18446744073709551615 },
+    "assert": { "type": "number", "is_integer": true, "as_f64": 18446744073709551616 }
+  },
+  {
+    "name": "negative int",
+    "build": { "value": -5 },
+    "assert": { "type": "number", "is_integer": true, "as_f64": -5 }
+  },
+  {
+    "name": "string: as_str works, array accessor is gated off",
+    "build": { "value": "x" },
+    "assert": { "type": "string", "as_str": "x", "as_array_len": null }
+  },
+  {
+    "name": "array: type name and length",
+    "build": { "value": [1, 2] },
+    "assert": { "type": "array", "as_array_len": 2 }
+  },
+  {
+    "name": "object from entries: key order kept, duplicate keys replaced",
+    "build": { "object": [["a", 1], ["b", "two"], ["a", 3]] },
+    "assert": {
+      "type": "object",
+      "get": { "a": 3, "b": "two" },
+      "get_missing": ["zz"],
+      "expected_object": { "a": 3, "b": "two" }
+    }
+  }
+]

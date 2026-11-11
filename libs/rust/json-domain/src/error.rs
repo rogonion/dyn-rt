@@ -41,6 +41,9 @@ impl fmt::Display for JsonError {
 
 impl std::error::Error for JsonError {}
 
+// Reason this suite stays inline (ADR 0004): Display strings are a local
+// contract, not part of the cross-language vector format, so there is no
+// shared fixture to drive them from.
 #[cfg(test)]
 mod tests {
     use super::*;

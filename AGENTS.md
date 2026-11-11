@@ -37,6 +37,21 @@ misc/                     scratch notes, drawio MCP notes
   Never system Python or pip.
 - Host needs only: cargo, node + pnpm, uv.
 
+## Testing (ADR 0004)
+
+- Tests are data-driven by default: a suite is a table of cases loaded from
+  `tests/shared/**/*.json` (cross-language vectors) or a crate-local
+  `testdata/` dir, iterated in a single loop. Every case has a `name` and is
+  reported by name on failure, with expected vs got printed — the go/js
+  `it.each` / range-over-func shape, sourced from shared JSON so Rust and
+  TypeScript run identical cases.
+- Inline case-by-case tests need an explicit reason in a comment above them.
+- `serde_json` may appear in `dev-dependencies` and in
+  `libs/rust/test-support` ONLY to parse/emit fixtures — never in shipped
+  domain/application code.
+- "Zero IO" means no network, subprocess, or external services; reading local
+  fixture files is fine.
+
 ## Architecture rules (ADR 0002)
 
 - Dependencies point inward: `*-domain` crates depend on nothing but std;
@@ -49,7 +64,7 @@ misc/                     scratch notes, drawio MCP notes
   implementations live in infra/app crates.
 - Errors: each core defines one closed error enum (`JsonError`, ...).
   Adapters translate native failures into it. No `anyhow` across boundaries.
-- Core tests run with zero IO: no fs, no network, no subprocess — in-memory
-  values only. Shared vectors live in `tests/shared/`.
+- Core code does no IO at all; what tests may read is defined by the Testing
+  rules above (local fixtures only). Shared vectors live in `tests/shared/`.
 - A shape moves into a shared core only when 2+ contexts need it; otherwise
   keep it in its own context.
