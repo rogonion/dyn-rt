@@ -6,16 +6,17 @@ edition.workspace = true
 license-file.workspace = true
 
 [features]
-default = ["json"]
+default = ["json", "reflect"]
 json = ["json-path"]
 json-path = ["dep:dyn-rt-json-path", "dep:dyn-rt-shared"]
-# json-manipulation = ["dep:dyn-rt-json-manipulation", "json-path"]   # next module
+reflect = ["dep:dyn-rt-reflect", "dep:dyn-rt-shared"]
+# json-manipulation = ["dep:dyn-rt-json-manipulation", "json-path", "reflect"]  # next module
 # json-schema       = ["dep:dyn-rt-json-schema", "json-manipulation"]
-# reflect           = ["dep:dyn-rt-reflect"]
 # metadatamodel     = ["dep:dyn-rt-metadatamodel", "json"]
 
 [dependencies]
 dyn-rt-json-path = { path = "../../../libs/rust/json-path", optional = true }
+dyn-rt-reflect = { path = "../../../libs/rust/reflect", optional = true }
 dyn-rt-shared = { path = "../../../libs/rust/shared", optional = true }
 
 [dev-dependencies]

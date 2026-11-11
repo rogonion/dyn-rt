@@ -1,0 +1,10 @@
+[
+  { "name": "sequence get", "value": [10, 20, 30], "op": "get", "index": 1, "expected": 20 },
+  { "name": "sequence get out of bounds", "value": [10], "op": "get", "index": 5, "expected": null },
+  { "name": "sequence len", "value": [10, 20], "op": "len", "expected": 2 },
+  { "name": "sequence set replaces", "value": [10, 20], "op": "set", "index": 0, "set": 99, "expected": [99, 20] },
+  { "name": "sequence set out of bounds fails", "value": [10], "op": "set", "index": 3, "set": 1, "expect_error": "IndexOutOfBounds" },
+  { "name": "sequence push appends", "value": [10], "op": "push", "set": 20, "expected": [10, 20] },
+  { "name": "sequence push on a map fails", "value": { "a": 1 }, "op": "push", "set": 20, "expect_error": "UnsupportedOperation" },
+  { "name": "sequence get on a scalar", "value": 5, "op": "get", "index": 0, "expected": null }
+]

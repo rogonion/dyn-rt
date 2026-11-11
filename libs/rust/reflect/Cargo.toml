@@ -1,0 +1,14 @@
+[package]
+name = "dyn-rt-reflect"
+description = "dyn-rt reflect module: general-purpose runtime reflection for Rust (go-reflect analogue). domain/application are std-only; adapters hold the Value/std impls."
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+
+[dependencies]
+# imported ONLY in src/adapters.rs (impl Reflect for shared::Value)
+dyn-rt-shared = { path = "../shared" }
+
+[dev-dependencies]
+dyn-rt-test-support = { path = "../test-support" }
+serde_json = "1"

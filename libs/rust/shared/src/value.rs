@@ -94,11 +94,33 @@ impl Value {
         }
     }
 
+    pub fn as_object_mut(&mut self) -> Option<&mut Vec<(String, Value)>> {
+        match self {
+            Value::Object(entries) => Some(entries),
+            _ => None,
+        }
+    }
+
+    pub fn as_array_mut(&mut self) -> Option<&mut Vec<Value>> {
+        match self {
+            Value::Array(items) => Some(items),
+            _ => None,
+        }
+    }
+
     /// Object member lookup by key (first match wins; keys are unique in
     /// practice because constructors dedupe).
     pub fn get(&self, key: &str) -> Option<&Value> {
         self.as_object()?
             .iter()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v)
+    }
+
+    /// Mutable object member lookup by key.
+    pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
+        self.as_object_mut()?
+            .iter_mut()
             .find(|(k, _)| k == key)
             .map(|(_, v)| v)
     }

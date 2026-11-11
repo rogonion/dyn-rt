@@ -7,5 +7,6 @@ license-file.workspace = true
 
 [dependencies]
 dyn-rt-json-path = { path = "../json-path" }
+dyn-rt-reflect = { path = "../reflect" }
 dyn-rt-shared = { path = "../shared" }
 serde_json = { version = "1", features = ["preserve_order"] }

@@ -16,6 +16,7 @@ name = "dyn-rt"
 version = "0.1.0"
 dependencies = [
  "dyn-rt-json-path",
+ "dyn-rt-reflect",
  "dyn-rt-shared",
  "dyn-rt-test-support",
  "serde_json",
@@ -38,6 +39,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dyn-rt-reflect"
+version = "0.1.0"
+dependencies = [
+ "dyn-rt-shared",
+ "dyn-rt-test-support",
+ "serde_json",
+]
+
+[[package]]
 name = "dyn-rt-shared"
 version = "0.1.0"
 dependencies = [
@@ -50,6 +60,7 @@ name = "dyn-rt-test-support"
 version = "0.1.0"
 dependencies = [
  "dyn-rt-json-path",
+ "dyn-rt-reflect",
  "dyn-rt-shared",
  "serde_json",
 ]

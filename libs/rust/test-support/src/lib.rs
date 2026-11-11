@@ -11,7 +11,15 @@ use dyn_rt_json_path::domain::{
     AccessStrategy, PathSegment, PathSelector, RecursiveDescentSegment, RecursiveDescentSegments,
     SliceSelector,
 };
+use dyn_rt_reflect::Reflect;
 use dyn_rt_shared::{Number, Value};
+
+/// Downcast a reflected value back to the domain `Value` (panics if not one).
+pub fn value_of(reflected: &dyn Reflect) -> &Value {
+    let any: &dyn std::any::Any = reflected; // trait upcasting: Reflect: Any
+    any.downcast_ref::<Value>()
+        .expect("reflected value is a Value")
+}
 
 fn shared_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../tests/shared")

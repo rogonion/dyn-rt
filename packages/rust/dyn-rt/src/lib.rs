@@ -4,8 +4,16 @@
 //! they use (ADR 0003). Module layout per ADR 0007:
 //!
 //! - `json::path` (feature `json-path`, in default `json`): JSONPath parsing.
-//! - `json::manipulation`, `json::schema`, `reflect`: added per module.
+//! - `json::manipulation`, `json::schema`: added per module.
+//! - `reflect` (feature `reflect`, in default): general-purpose runtime
+//!   reflection — usable independently of json.
 //! - `metadatamodel`: metadata model on top of `json` (added in its phase).
+
+#[cfg(feature = "reflect")]
+pub mod reflect {
+    //! General-purpose runtime reflection (the go-`reflect` analogue).
+    pub use dyn_rt_reflect::*;
+}
 
 #[cfg(feature = "json-path")]
 pub mod json {
