@@ -1,9 +1,0 @@
-[package]
-name = "dyn-rt-json-application"
-description = "dyn-rt json context use cases: JSONPath parsing orchestration over the PathTokenizer port. Depends on dyn-rt-json-domain only."
-version.workspace = true
-edition.workspace = true
-license-file.workspace = true
-
-[dependencies]
-dyn-rt-json-domain = { path = "../json-domain" }

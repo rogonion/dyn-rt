@@ -1,19 +1,22 @@
 [package]
 name = "dyn-rt"
-description = "dyn-rt dynamic runtime: JSON toolkit (json) + metadata model (metadatamodel). One crate; cargo features select contexts for tree-shaking."
+description = "dyn-rt dynamic runtime: one crate, per-module features (ADR 0003/0007). Groups: json (default), metadatamodel."
 version.workspace = true
 edition.workspace = true
 license-file.workspace = true
 
 [features]
 default = ["json"]
-json = ["dep:dyn-rt-json-application", "dep:dyn-rt-json-domain", "dep:dyn-rt-json-infra"]
-# metadatamodel = ["json", "dep:dyn-rt-metadatamodel-domain"]  # added in the metadatamodel phase
+json = ["json-path"]
+json-path = ["dep:dyn-rt-json-path", "dep:dyn-rt-shared"]
+# json-manipulation = ["dep:dyn-rt-json-manipulation", "json-path"]   # next module
+# json-schema       = ["dep:dyn-rt-json-schema", "json-manipulation"]
+# reflect           = ["dep:dyn-rt-reflect"]
+# metadatamodel     = ["dep:dyn-rt-metadatamodel", "json"]
 
 [dependencies]
-dyn-rt-json-application = { path = "../../../libs/rust/json-application", optional = true }
-dyn-rt-json-domain = { path = "../../../libs/rust/json-domain", optional = true }
-dyn-rt-json-infra = { path = "../../../libs/rust/json-infra", optional = true }
+dyn-rt-json-path = { path = "../../../libs/rust/json-path", optional = true }
+dyn-rt-shared = { path = "../../../libs/rust/shared", optional = true }
 
 [dev-dependencies]
 dyn-rt-test-support = { path = "../../../libs/rust/test-support" }

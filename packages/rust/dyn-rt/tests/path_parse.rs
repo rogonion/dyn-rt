@@ -10,7 +10,7 @@ fn path_parse() {
         let name = case["name"].as_str().unwrap_or("<unnamed>");
         let path = case["path"].as_str().unwrap();
 
-        let result = dyn_rt::json::parse(path);
+        let result = dyn_rt::json::path::parse(path);
 
         assert_eq!(
             support::segments_to_json(&result),

@@ -1,8 +1,8 @@
 //! Data-driven suites for the regex PathTokenizer steps and segment extraction.
 //! Vectors: tests/shared/json/path-split-*.json and path-extract-segment.json (ADR 0004).
 
-use dyn_rt_json_domain::ports::PathTokenizer;
-use dyn_rt_json_infra::RegexPathTokenizer;
+use dyn_rt_json_path::domain::PathTokenizer;
+use dyn_rt_json_path::{RegexPathTokenizer, extract_segment};
 use dyn_rt_test_support as support;
 
 fn expected_strings(case: &serde_json::Value) -> Vec<String> {
@@ -65,7 +65,7 @@ fn extract_segment_cases() {
     for case in support::load_cases("json/path-extract-segment.json") {
         let name = case["name"].as_str().unwrap_or("<unnamed>");
         let input = case["input"].as_str().unwrap();
-        let result = dyn_rt_json_application::extract_segment(&tokenizer, input);
+        let result = extract_segment(&tokenizer, input);
         assert_eq!(
             support::segment_to_json(&result),
             case["expected"],

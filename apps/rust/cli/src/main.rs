@@ -1,4 +1,4 @@
-use dyn_rt::json::{self, Value};
+use dyn_rt::json::{Value, path};
 
 fn main() {
     let doc = Value::object([
@@ -23,7 +23,7 @@ fn main() {
     };
 
     for path in paths {
-        let segments = json::parse(&path);
+        let segments = path::parse(&path);
         println!(
             "parse {path} -> {} descent group(s), roundtrip = {}",
             segments.0.len(),

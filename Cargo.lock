@@ -15,9 +15,8 @@ dependencies = [
 name = "dyn-rt"
 version = "0.1.0"
 dependencies = [
- "dyn-rt-json-application",
- "dyn-rt-json-domain",
- "dyn-rt-json-infra",
+ "dyn-rt-json-path",
+ "dyn-rt-shared",
  "dyn-rt-test-support",
  "serde_json",
 ]
@@ -30,28 +29,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "dyn-rt-json-application"
-version = "0.1.0"
-dependencies = [
- "dyn-rt-json-domain",
-]
-
-[[package]]
-name = "dyn-rt-json-domain"
+name = "dyn-rt-json-path"
 version = "0.1.0"
 dependencies = [
  "dyn-rt-test-support",
+ "regex",
  "serde_json",
 ]
 
 [[package]]
-name = "dyn-rt-json-infra"
+name = "dyn-rt-shared"
 version = "0.1.0"
 dependencies = [
- "dyn-rt-json-application",
- "dyn-rt-json-domain",
  "dyn-rt-test-support",
- "regex",
  "serde_json",
 ]
 
@@ -59,7 +49,8 @@ dependencies = [
 name = "dyn-rt-test-support"
 version = "0.1.0"
 dependencies = [
- "dyn-rt-json-domain",
+ "dyn-rt-json-path",
+ "dyn-rt-shared",
  "serde_json",
 ]
 

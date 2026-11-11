@@ -1,6 +1,6 @@
 [package]
-name = "dyn-rt-json-domain"
-description = "Pure domain model of the dyn-rt json context: Value, error vocabulary, ports. std only, zero IO."
+name = "dyn-rt-shared"
+description = "Shared substrate for dyn-rt modules: the pure Value/Number model and the json error vocabulary. std only."
 version.workspace = true
 edition.workspace = true
 license-file.workspace = true

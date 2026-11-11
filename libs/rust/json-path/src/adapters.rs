@@ -1,7 +1,7 @@
 //! dyn-rt json infra: adapters for the json core.
 //!
-//! This is the ONLY json crate (besides apps) allowed to use `regex` (ADR
-//! 0002). Each regex is a named, single-purpose static applied in one
+//! This module's adapters are the ONLY place in the crate allowed to use
+//! `regex` (ADR 0002/0007). Each regex is a named, single-purpose static applied in one
 //! explicit step of the parse pipeline (ADR 0005) — ported from
 //! dyn-rt-rs-old-3, which is the logic reference for the parser.
 
@@ -9,8 +9,7 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
-use dyn_rt_json_domain::path::SliceSelector;
-use dyn_rt_json_domain::ports::PathTokenizer;
+use crate::domain::{PathTokenizer, SliceSelector};
 
 /// Matches bracketed selector expressions `[...]` (ignoring internal dots)
 /// OR the standalone recursive descent operator `..`.

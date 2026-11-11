@@ -7,11 +7,11 @@
 
 use std::path::PathBuf;
 
-use dyn_rt_json_domain::path::{
+use dyn_rt_json_path::domain::{
     AccessStrategy, PathSegment, PathSelector, RecursiveDescentSegment, RecursiveDescentSegments,
     SliceSelector,
 };
-use dyn_rt_json_domain::{Number, Value};
+use dyn_rt_shared::{Number, Value};
 
 fn shared_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../tests/shared")

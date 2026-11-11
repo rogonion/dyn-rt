@@ -9,10 +9,10 @@
 //! 3. split each part into bracket contents and plain text
 //! 4. extract one [`PathSegment`] per token
 
-use dyn_rt_json_domain::path::{
-    AccessStrategy, PathSegment, PathSelector, RecursiveDescentSegment, RecursiveDescentSegments,
+use crate::domain::{
+    AccessStrategy, PathSegment, PathSelector, PathTokenizer, RecursiveDescentSegment,
+    RecursiveDescentSegments,
 };
-use dyn_rt_json_domain::ports::PathTokenizer;
 
 /// Parse a JSONPath string into its deconstructed AST.
 ///

@@ -41,7 +41,7 @@ fn value_ops() {
         if let Some(len) = assert.get("as_array_len") {
             match len.as_u64() {
                 Some(l) => assert_eq!(
-                    value.as_array().map(<[dyn_rt_json_domain::Value]>::len),
+                    value.as_array().map(<[dyn_rt_shared::Value]>::len),
                     Some(l as usize),
                     "{}",
                     ctx()

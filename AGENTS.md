@@ -18,7 +18,12 @@ feature/subpath gating so consumers only bundle what they use (ADR 0003).
 
 ```
 apps/<lang>/<name>/       executables / composition roots — wire adapters into the core here
-libs/<lang>/<name>/       internal code, layered per ADR 0002 (Rust: one crate per layer)
+libs/<lang>/<module>/     ONE crate per module (ADR 0007): shared, test-support (dev-only),
+                          json-path, json-manipulation, json-schema, reflect, metadatamodel.
+                          Inside each module crate: src/domain, src/application, src/adapters
+                          (hexagon; adapters is the only place regex/serde may be imported).
+                          metadatamodel has one submodule per subdomain under src/, each with
+                          its own domain/application/adapters dirs.
 packages/<lang>/          publishable export entrypoints (façades over libs); for Go: ONE module at
                           packages/go/ with contexts as subpackages (.../packages/go/json), released
                           via subdir-prefixed tags packages/go/vX.Y.Z, local dev via root go.work (ADR 0006)
@@ -77,19 +82,20 @@ misc/                     scratch notes, drawio MCP notes
   shape. Exception: public API ergonomics (constructors like
   `Value::object(...)`) may be concise; internal logic stays explicit.
 
-## Architecture rules (ADR 0002)
+## Architecture rules (ADR 0002 + ADR 0007)
 
-- Dependencies point inward: `*-domain` crates depend on nothing but std;
-  `*-application` crates import only `*-domain` crates; adapters and apps
-  import both. This is enforced at compile time by the workspace dependency
-  graph — never invert it.
-- `serde` / `serde_json` and `regex` are allowed ONLY in `*-infra` crates and
-  in `apps/` composition roots. Domain and application crates never see them.
-- Ports are roles the core needs; definitions live in the domain crate,
-  implementations live in infra/app crates.
-- Errors: each core defines one closed error enum (`JsonError`, ...).
-  Adapters translate native failures into it. No `anyhow` across boundaries.
+- Dependencies point inward. Between modules this is compiler-enforced (crate
+  = module, ADR 0007): e.g. `json-manipulation` may depend on `json-path` and
+  `shared`, never the reverse. Inside a module crate, layers are dirs:
+  `domain` (std only) <- `application` <- `adapters`/apps. Never invert.
+- `serde` / `serde_json` and `regex` are allowed ONLY in a module's
+  `src/adapters/` dir and in `apps/` composition roots. `domain` and
+  `application` never import them.
+- Ports are roles the core needs; definitions live in the module's domain,
+  implementations live in its adapters or in apps.
+- Errors: each module core defines one closed error enum. Adapters translate
+  native failures into it. No `anyhow` across boundaries.
 - Core code does no IO at all; what tests may read is defined by the Testing
   rules above (local fixtures only). Shared vectors live in `tests/shared/`.
-- A shape moves into a shared core only when 2+ contexts need it; otherwise
-  keep it in its own context.
+- A shape moves into `shared` only when 2+ modules need it; otherwise keep it
+  in its own module.
