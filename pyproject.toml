@@ -1,0 +1,14 @@
+[project]
+name = "dyn-rt"
+version = "0.1.0"
+description = "dyn-rt dynamic runtime (Rust first, then TypeScript). Python here is the uv+poe task runner only."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.uv]
+# Virtual root: no package of its own; dev tools install into one workspace venv.
+package = false
+
+[dependency-groups]
+dev = ["poethepoet>=0.49.0"]

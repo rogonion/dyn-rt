@@ -1,0 +1,7 @@
+packages:
+  - 'packages/typescript/*'
+  - 'libs/typescript/*'
+
+engineStrict: true
+allowBuilds:
+  esbuild: true

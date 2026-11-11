@@ -1,0 +1,19 @@
+# Root task registry. Run from the repo root with `uv run poe <task>`
+# (poe auto-detects this file). Rust tasks call cargo directly; TypeScript
+# tasks use `pnpm -r` so every workspace package runs its own script.
+
+[tool.poe.tasks]
+rs-fmt = "cargo fmt --all"
+rs-clippy = "cargo clippy --workspace --all-targets -- -D warnings"
+rs-test = "cargo test --workspace"
+rs-build = "cargo build --workspace"
+
+ts-install = "pnpm install"
+ts-build = "pnpm -r --if-present build"
+ts-test = "pnpm -r --if-present test"
+ts-lint = "pnpm -r --if-present lint"
+
+fmt = ["rs-fmt"]
+lint = ["rs-clippy", "ts-lint"]
+test = ["rs-test", "ts-test"]
+build = ["rs-build", "ts-build"]

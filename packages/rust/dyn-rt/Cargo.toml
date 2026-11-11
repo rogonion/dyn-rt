@@ -1,0 +1,14 @@
+[package]
+name = "dyn-rt"
+description = "dyn-rt dynamic runtime: JSON toolkit (json) + metadata model (metadatamodel). One crate; cargo features select contexts for tree-shaking."
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+
+[features]
+default = ["json"]
+json = ["dep:dyn-rt-json-domain"]
+# metadatamodel = ["json", "dep:dyn-rt-metadatamodel-domain"]  # added in the metadatamodel phase
+
+[dependencies]
+dyn-rt-json-domain = { path = "../../../libs/rust/json-domain", optional = true }

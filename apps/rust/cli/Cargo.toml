@@ -1,0 +1,9 @@
+[package]
+name = "dyn-rt-cli"
+description = "Demo/verification CLI for dyn-rt. Composition root: wires adapters into the core."
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+
+[dependencies]
+dyn-rt = { path = "../../../packages/rust/dyn-rt" }
