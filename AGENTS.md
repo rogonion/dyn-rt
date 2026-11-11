@@ -57,7 +57,10 @@ misc/                     scratch notes, drawio MCP notes
 - Prefer explicit, linear logic over brevity or cleverness: named steps, early
   returns, plain loops, one explicit `match` arm per case. Tolerate duplication
   (like the go/js splitter trio) over clever shared abstractions.
-- No regex golf, dense iterator chains, or macros/generics used for brevity.
+- Tokenizing/splitting uses named, single-purpose regexes applied in an
+  explicit ordered sequence of steps (dyn-rt-rs-old-3 style) — NOT a
+  handwritten char-by-char loop (dyn-rt-rs-old style). No regex golf, dense
+  iterator chains, or macros/generics used for brevity.
   Recursion only when it mirrors the parsed structure, and each step stays
   obvious.
 - Optimize only when a profiler or failing test says so, keeping the explicit

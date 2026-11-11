@@ -20,8 +20,14 @@ linear logic flow over brevity:
   Tolerate duplication (e.g. similar split passes for `..`, `.`, and
   brackets) over a shared clever abstraction — the go/js splitter trio is the
   model, not a problem to solve.
-- No regex golf, no dense iterator chains, no macros or generics used for
-  brevity. A `match` with one explicit arm per case beats a clever fold.
+- Tokenizing/splitting prefers NAMED, single-purpose regexes applied in an
+  explicit, ordered sequence of steps — the dyn-rt-rs-old-3 style, where each
+  regex constant has a name and each split pass is a separate visible call.
+  This is preferred over a handwritten character-by-character state machine
+  (the dyn-rt-rs-old style), whose implicit state is harder to follow.
+- No regex golf (one mega-pattern with many capture groups), no dense iterator
+  chains, no macros or generics used for brevity. A `match` with one explicit
+  arm per case beats a clever fold.
 - Recursion is fine when it mirrors the structure being parsed (a path is a
   list of segments), but keep each recursive step obvious; prefer a `for` loop
   over the recursion when both are clear.
