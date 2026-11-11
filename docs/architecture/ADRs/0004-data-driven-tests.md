@@ -14,12 +14,23 @@ behave identically, one shared source of cases.
 
 ## Decision
 
-- Every suite is data-driven by default: a table of cases loaded from
-  `tests/shared/**/*.json` (canonical cross-language vectors) or a crate-local
-  `testdata/` directory, iterated in a single loop. Each case carries a `name`;
-  on failure the test reports the case name and prints expected vs got.
-- Inline, case-by-case tests are allowed only with an explicit reason in a
-  comment directly above the test.
+- Every suite is data-driven by default, in one of three tiers:
+  1. `tests/shared/**/*.json` — canonical cross-language vectors. These MUST be
+     JSON-representable, because both the Rust and TypeScript suites load the
+     same files. Cases needing constructs JSON can't express directly (e.g.
+     duplicate object keys) use a `build` instruction the harness interprets
+     (e.g. `{"object": [["a", 1], ["a", 3]]}`).
+  2. Crate-local `testdata/` — language-specific cases that are not
+     JSON-representable, in whatever format suits the language, still loaded
+     as a case table and iterated in one loop.
+  3. Inline, case-by-case tests — only when the test is not data at all (e.g.
+     pinning a local Display string), and only with an explicit reason in a
+     comment directly above the test.
+- Each case carries a `name`; on failure the test reports the case name and
+  prints expected vs got.
+- When a runtime error is reported, first add a case reproducing the scenario
+  (tier 1 whenever possible, so both languages get the regression), then fix
+  the code.
 - `serde_json` may appear in `dev-dependencies` and in
   `libs/rust/test-support` solely to parse/emit fixtures — never in shipped
   domain or application code.

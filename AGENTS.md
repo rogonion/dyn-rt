@@ -39,13 +39,17 @@ misc/                     scratch notes, drawio MCP notes
 
 ## Testing (ADR 0004)
 
-- Tests are data-driven by default: a suite is a table of cases loaded from
-  `tests/shared/**/*.json` (cross-language vectors) or a crate-local
-  `testdata/` dir, iterated in a single loop. Every case has a `name` and is
-  reported by name on failure, with expected vs got printed — the go/js
-  `it.each` / range-over-func shape, sourced from shared JSON so Rust and
-  TypeScript run identical cases.
-- Inline case-by-case tests need an explicit reason in a comment above them.
+- Tests are data-driven by default, in one of three tiers (ADR 0004):
+  1. `tests/shared/**/*.json` — cross-language vectors; MUST be
+     JSON-representable (both languages load the same files). Non-JSON
+     constructs go through a `build` instruction (e.g. `{"object": [[k, v]]}`
+     for duplicate keys).
+  2. Crate-local `testdata/` — language-specific, non-JSON cases, still a
+     case table iterated in one loop.
+  3. Inline tests — only when the test is not data at all, and only with an
+     explicit reason in a comment above them.
+  Every case has a `name` and is reported by name on failure, with expected
+  vs got printed — the go/js `it.each` / range-over-func shape.
 - `serde_json` may appear in `dev-dependencies` and in
   `libs/rust/test-support` ONLY to parse/emit fixtures — never in shipped
   domain/application code.
