@@ -7,6 +7,10 @@
 
 use std::path::PathBuf;
 
+use dyn_rt_json_domain::path::{
+    AccessStrategy, PathSegment, PathSelector, RecursiveDescentSegment, RecursiveDescentSegments,
+    SliceSelector,
+};
 use dyn_rt_json_domain::{Number, Value};
 
 fn shared_dir() -> PathBuf {
@@ -93,4 +97,120 @@ pub fn compact(v: &serde_json::Value) -> String {
 /// on this also verifies object key order.
 pub fn compact_value(v: &Value) -> String {
     compact(&to_json(v))
+}
+
+// ---------------------------------------------------------------------------
+// Path AST <-> JSON conversions for the shared path vectors
+// (tests/shared/json/path-*.json). Canonical segment form:
+//   { "access": "mixed"|"named"|"positional",
+//     "selector": { "kind": "root"|"wildcard"|"key"|"index"|"slice"|"union", ... } }
+// ---------------------------------------------------------------------------
+
+pub fn access_from_json(v: &serde_json::Value) -> AccessStrategy {
+    match v.as_str().expect("access must be a string") {
+        "mixed" => AccessStrategy::Mixed,
+        "named" => AccessStrategy::Named,
+        "positional" => AccessStrategy::Positional,
+        other => panic!("unknown access strategy: {other}"),
+    }
+}
+
+pub fn access_to_json(access: AccessStrategy) -> serde_json::Value {
+    match access {
+        AccessStrategy::Mixed => "mixed".into(),
+        AccessStrategy::Named => "named".into(),
+        AccessStrategy::Positional => "positional".into(),
+    }
+}
+
+pub fn segment_from_json(v: &serde_json::Value) -> PathSegment {
+    let access = access_from_json(&v["access"]);
+    let selector_json = &v["selector"];
+    let selector = match selector_json["kind"].as_str().expect("selector.kind must be a string") {
+        "root" => PathSelector::Root,
+        "wildcard" => PathSelector::Wildcard,
+        "key" => PathSelector::Key(
+            selector_json["value"]
+                .as_str()
+                .expect("key value must be a string")
+                .to_string(),
+        ),
+        "index" => PathSelector::Index(
+            selector_json["value"]
+                .as_i64()
+                .expect("index value must be an integer") as isize,
+        ),
+        "slice" => PathSelector::Slice(SliceSelector {
+            start: selector_json["start"].as_i64().map(|n| n as isize),
+            end: selector_json["end"].as_i64().map(|n| n as isize),
+            step: selector_json["step"].as_i64().map(|n| n as isize),
+        }),
+        "union" => PathSelector::Union(
+            selector_json["members"]
+                .as_array()
+                .expect("union members must be an array")
+                .iter()
+                .map(segment_from_json)
+                .collect(),
+        ),
+        other => panic!("unknown selector kind: {other}"),
+    };
+    PathSegment {
+        access_strategy: access,
+        selector,
+    }
+}
+
+pub fn segment_to_json(segment: &PathSegment) -> serde_json::Value {
+    let selector = match &segment.selector {
+        PathSelector::Unrecognized => serde_json::json!({ "kind": "unrecognized" }),
+        PathSelector::Root => serde_json::json!({ "kind": "root" }),
+        PathSelector::Wildcard => serde_json::json!({ "kind": "wildcard" }),
+        PathSelector::Key(key) => serde_json::json!({ "kind": "key", "value": key }),
+        PathSelector::Index(index) => serde_json::json!({ "kind": "index", "value": index }),
+        PathSelector::Slice(slice) => serde_json::json!({
+            "kind": "slice",
+            "start": slice.start,
+            "end": slice.end,
+            "step": slice.step,
+        }),
+        PathSelector::Union(members) => serde_json::json!({
+            "kind": "union",
+            "members": members.iter().map(segment_to_json).collect::<Vec<_>>(),
+        }),
+    };
+    serde_json::json!({ "access": access_to_json(segment.access_strategy), "selector": selector })
+}
+
+/// Convert the top-level `segments` array of a path-parse case.
+pub fn segments_from_json(v: &serde_json::Value) -> RecursiveDescentSegments {
+    RecursiveDescentSegments(
+        v.as_array()
+            .expect("segments must be an array of descent groups")
+            .iter()
+            .map(|group| {
+                RecursiveDescentSegment(
+                    group
+                        .as_array()
+                        .expect("descent group must be an array of segments")
+                        .iter()
+                        .map(segment_from_json)
+                        .collect(),
+                )
+            })
+            .collect(),
+    )
+}
+
+/// Convert a parsed AST back to the top-level `segments` JSON form.
+pub fn segments_to_json(segments: &RecursiveDescentSegments) -> serde_json::Value {
+    serde_json::Value::Array(
+        segments
+            .0
+            .iter()
+            .map(|group| {
+                serde_json::Value::Array(group.0.iter().map(segment_to_json).collect())
+            })
+            .collect(),
+    )
 }

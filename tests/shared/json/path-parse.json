@@ -1,0 +1,288 @@
+[
+  {
+    "name": "standard dot and index path",
+    "path": "$.store.book[0].title",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "store" } },
+        { "access": "named", "selector": { "kind": "key", "value": "book" } },
+        { "access": "positional", "selector": { "kind": "index", "value": 0 } },
+        { "access": "named", "selector": { "kind": "key", "value": "title" } }
+      ]
+    ],
+    "roundtrip": "$.store.book[0].title"
+  },
+  {
+    "name": "basic path with recursive descent",
+    "path": "$.store..book[0].title",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "store" } }
+      ],
+      [
+        { "access": "named", "selector": { "kind": "key", "value": "book" } },
+        { "access": "positional", "selector": { "kind": "index", "value": 0 } },
+        { "access": "named", "selector": { "kind": "key", "value": "title" } }
+      ]
+    ],
+    "roundtrip": "$.store..book[0].title"
+  },
+  {
+    "name": "multiple recursive descents ending in wildcard",
+    "path": "$..store..book..*",
+    "segments": [
+      [{ "access": "mixed", "selector": { "kind": "root" } }],
+      [{ "access": "named", "selector": { "kind": "key", "value": "store" } }],
+      [{ "access": "named", "selector": { "kind": "key", "value": "book" } }],
+      [{ "access": "mixed", "selector": { "kind": "wildcard" } }]
+    ],
+    "roundtrip": "$..store..book..*"
+  },
+  {
+    "name": "string literals containing .. inside brackets",
+    "path": "$['a..b']..['c..d']",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "a..b" } }
+      ],
+      [{ "access": "named", "selector": { "kind": "key", "value": "c..d" } }]
+    ],
+    "roundtrip": "$['a..b']..['c..d']"
+  },
+  {
+    "name": "complex symbols with .. inside bracket quotes",
+    "path": "$['report-data']..['total.sum..()&^']..store.bicycle['item-code']",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "report-data" } }
+      ],
+      [{ "access": "named", "selector": { "kind": "key", "value": "total.sum..()&^" } }],
+      [
+        { "access": "named", "selector": { "kind": "key", "value": "store" } },
+        { "access": "named", "selector": { "kind": "key", "value": "bicycle" } },
+        { "access": "named", "selector": { "kind": "key", "value": "item-code" } }
+      ]
+    ],
+    "roundtrip": "$['report-data']..['total.sum..()&^']..store.bicycle['item-code']"
+  },
+  {
+    "name": "multiple recursive descents with hyphenated keys",
+    "path": "$['report-data']..['total.sum']..store.bicycle['item-code']",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "report-data" } }
+      ],
+      [{ "access": "named", "selector": { "kind": "key", "value": "total.sum" } }],
+      [
+        { "access": "named", "selector": { "kind": "key", "value": "store" } },
+        { "access": "named", "selector": { "kind": "key", "value": "bicycle" } },
+        { "access": "named", "selector": { "kind": "key", "value": "item-code" } }
+      ]
+    ],
+    "roundtrip": "$['report-data']..['total.sum']..store.bicycle['item-code']"
+  },
+  {
+    "name": "slice selector",
+    "path": "$.transactions[1:5:2].amount",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "transactions" } },
+        { "access": "positional", "selector": { "kind": "slice", "start": 1, "end": 5, "step": 2 } },
+        { "access": "named", "selector": { "kind": "key", "value": "amount" } }
+      ]
+    ],
+    "roundtrip": "$.transactions[1:5:2].amount"
+  },
+  {
+    "name": "slice selector with negative end",
+    "path": "$.transactions[1:-5].amount",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "transactions" } },
+        { "access": "positional", "selector": { "kind": "slice", "start": 1, "end": -5, "step": null } },
+        { "access": "named", "selector": { "kind": "key", "value": "amount" } }
+      ]
+    ],
+    "roundtrip": "$.transactions[1:-5].amount"
+  },
+  {
+    "name": "union selector with mixed member types",
+    "path": "$.data.user.preferences['theme-settings',\"font-size\",-3]",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "data" } },
+        { "access": "named", "selector": { "kind": "key", "value": "user" } },
+        { "access": "named", "selector": { "kind": "key", "value": "preferences" } },
+        {
+          "access": "mixed",
+          "selector": {
+            "kind": "union",
+            "members": [
+              { "access": "named", "selector": { "kind": "key", "value": "theme-settings" } },
+              { "access": "named", "selector": { "kind": "key", "value": "font-size" } },
+              { "access": "positional", "selector": { "kind": "index", "value": -3 } }
+            ]
+          }
+        }
+      ]
+    ],
+    "roundtrip": "$.data.user.preferences['theme-settings','font-size',-3]"
+  },
+  {
+    "name": "union of indices",
+    "path": "$[1,3,5]",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        {
+          "access": "positional",
+          "selector": {
+            "kind": "union",
+            "members": [
+              { "access": "positional", "selector": { "kind": "index", "value": 1 } },
+              { "access": "positional", "selector": { "kind": "index", "value": 3 } },
+              { "access": "positional", "selector": { "kind": "index", "value": 5 } }
+            ]
+          }
+        }
+      ]
+    ],
+    "roundtrip": "$[1,3,5]"
+  },
+  {
+    "name": "recursive descent into bracketed numeric-leading key",
+    "path": "$..['1st_category'].name",
+    "segments": [
+      [{ "access": "mixed", "selector": { "kind": "root" } }],
+      [
+        { "access": "named", "selector": { "kind": "key", "value": "1st_category" } },
+        { "access": "named", "selector": { "kind": "key", "value": "name" } }
+      ]
+    ],
+    "roundtrip": "$..['1st_category'].name"
+  },
+  {
+    "name": "dots inside property key plus chained array indices",
+    "path": "$.products['item-details..'].dimensions[0].width.dimensions[-2][3].width",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "products" } },
+        { "access": "named", "selector": { "kind": "key", "value": "item-details.." } },
+        { "access": "named", "selector": { "kind": "key", "value": "dimensions" } },
+        { "access": "positional", "selector": { "kind": "index", "value": 0 } },
+        { "access": "named", "selector": { "kind": "key", "value": "width" } },
+        { "access": "named", "selector": { "kind": "key", "value": "dimensions" } },
+        { "access": "positional", "selector": { "kind": "index", "value": -2 } },
+        { "access": "positional", "selector": { "kind": "index", "value": 3 } },
+        { "access": "named", "selector": { "kind": "key", "value": "width" } }
+      ]
+    ],
+    "roundtrip": "$.products['item-details..'].dimensions[0].width.dimensions[-2][3].width"
+  },
+  {
+    "name": "spaces and dots in quoted keys",
+    "path": "$['user info']['address.wind'][1].street",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "user info" } },
+        { "access": "named", "selector": { "kind": "key", "value": "address.wind" } },
+        { "access": "positional", "selector": { "kind": "index", "value": 1 } },
+        { "access": "named", "selector": { "kind": "key", "value": "street" } }
+      ]
+    ],
+    "roundtrip": "$['user info']['address.wind'][1].street"
+  },
+  {
+    "name": "wildcard member",
+    "path": "$.data[*].price",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "data" } },
+        { "access": "mixed", "selector": { "kind": "wildcard" } },
+        { "access": "named", "selector": { "kind": "key", "value": "price" } }
+      ]
+    ],
+    "roundtrip": "$.data.*.price"
+  },
+  {
+    "name": "bracketed property key",
+    "path": "$.store.bicycle['item-code']",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "store" } },
+        { "access": "named", "selector": { "kind": "key", "value": "bicycle" } },
+        { "access": "named", "selector": { "kind": "key", "value": "item-code" } }
+      ]
+    ],
+    "roundtrip": "$.store.bicycle['item-code']"
+  },
+  {
+    "name": "single recursive descent",
+    "path": "$..author",
+    "segments": [
+      [{ "access": "mixed", "selector": { "kind": "root" } }],
+      [{ "access": "named", "selector": { "kind": "key", "value": "author" } }]
+    ],
+    "roundtrip": "$..author"
+  },
+  {
+    "name": "escaped single quote inside key containing ..",
+    "path": "$['store\\'s..item']..id",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "store\\'s..item" } }
+      ],
+      [{ "access": "named", "selector": { "kind": "key", "value": "id" } }]
+    ],
+    "roundtrip": "$['store\\'s..item']..id"
+  },
+  {
+    "name": "escaped double quote inside key containing ..",
+    "path": "$[\"user\\\"name..data\"]..title",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "user\\\"name..data" } }
+      ],
+      [{ "access": "named", "selector": { "kind": "key", "value": "title" } }]
+    ],
+    "roundtrip": "$['user\\\"name..data']..title"
+  },
+  {
+    "name": "empty bracketed string key",
+    "path": "$['']..author",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "" } }
+      ],
+      [{ "access": "named", "selector": { "kind": "key", "value": "author" } }]
+    ],
+    "roundtrip": "$['']..author"
+  },
+  {
+    "name": "double quotes inside single-quoted key with ..",
+    "path": "$['title_\"main\"..part']..id",
+    "segments": [
+      [
+        { "access": "mixed", "selector": { "kind": "root" } },
+        { "access": "named", "selector": { "kind": "key", "value": "title_\"main\"..part" } }
+      ],
+      [{ "access": "named", "selector": { "kind": "key", "value": "id" } }]
+    ],
+    "roundtrip": "$['title_\"main\"..part']..id"
+  }
+]

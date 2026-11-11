@@ -51,6 +51,9 @@ misc/                     scratch notes, drawio MCP notes
   domain/application code.
 - "Zero IO" means no network, subprocess, or external services; reading local
   fixture files is fine.
+- When a runtime error is reported, FIRST add a case reproducing the scenario
+  to the relevant `tests/shared` vector file, then fix the code — the suite
+  then pins both the old and the new behavior.
 
 ## Code style (ADR 0005)
 
@@ -59,8 +62,9 @@ misc/                     scratch notes, drawio MCP notes
   (like the go/js splitter trio) over clever shared abstractions.
 - Tokenizing/splitting uses named, single-purpose regexes applied in an
   explicit ordered sequence of steps (dyn-rt-rs-old-3 style) — NOT a
-  handwritten char-by-char loop (dyn-rt-rs-old style). No regex golf, dense
-  iterator chains, or macros/generics used for brevity.
+  handwritten char-by-char loop (dyn-rt-rs-old style). No regex golf or dense
+  iterator chains. Declarative macros and de-facto standard proc-macro crates
+  (serde, thiserror, ...) are fine; bespoke clever macros/proc-macros are not.
   Recursion only when it mirrors the parsed structure, and each step stays
   obvious.
 - Optimize only when a profiler or failing test says so, keeping the explicit

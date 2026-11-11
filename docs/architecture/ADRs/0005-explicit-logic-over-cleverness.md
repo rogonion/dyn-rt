@@ -26,8 +26,14 @@ linear logic flow over brevity:
   This is preferred over a handwritten character-by-character state machine
   (the dyn-rt-rs-old style), whose implicit state is harder to follow.
 - No regex golf (one mega-pattern with many capture groups), no dense iterator
-  chains, no macros or generics used for brevity. A `match` with one explicit
-  arm per case beats a clever fold.
+  chains, no bespoke macros or generics written for cleverness. A `match` with
+  one explicit arm per case beats a clever fold.
+- Rust's deduplication mechanics are welcome where they are idiomatic and
+  explainable: declarative macros for repetitive construction (the
+  `json_path_*_segment!` constructor macros in dyn-rt-rs-old-3 are the model)
+  and de-facto standard proc-macro crates (serde, thiserror, ...) are fine.
+  Bespoke proc-macros written for this repo are not. Explicitness governs
+  logic flow — it does not mean rejecting Rust idioms.
 - Recursion is fine when it mirrors the structure being parsed (a path is a
   list of segments), but keep each recursive step obvious; prefer a `for` loop
   over the recursion when both are clear.
