@@ -216,11 +216,22 @@ impl TypeInfo {
     }
 }
 
-/// Returns a cached, `'static` [`TypeInfo`] for any [`Reflect`] type. The cache
-/// is per-monomorphization, so each concrete type is built exactly once.
+/// Returns a cached, `'static` [`TypeInfo`] for any [`Reflect`] type. Each
+/// concrete type is built exactly once and leaked into a global `TypeId`-keyed
+/// registry — a `static` inside a generic fn is shared across all
+/// monomorphizations, so the cache must be keyed explicitly.
 pub fn type_info<T: Reflect>() -> &'static TypeInfo {
-    static CACHE: OnceLock<TypeInfo> = OnceLock::new();
-    CACHE.get_or_init(TypeInfo::of::<T>)
+    static REGISTRY: OnceLock<
+        std::sync::Mutex<std::collections::HashMap<TypeId, &'static TypeInfo>>,
+    > = OnceLock::new();
+    let registry = REGISTRY.get_or_init(|| std::sync::Mutex::new(std::collections::HashMap::new()));
+    let mut map = registry.lock().expect("type_info registry poisoned");
+    if let Some(info) = map.get(&TypeId::of::<T>()) {
+        return info;
+    }
+    let info: &'static TypeInfo = Box::leak(Box::new(TypeInfo::of::<T>()));
+    map.insert(TypeId::of::<T>(), info);
+    info
 }
 
 /// Static description of one field of a static-keyed type.
