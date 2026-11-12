@@ -20,8 +20,8 @@ One repo, dual toolchains, four top-level code directories:
   workspace lib per context with `domain/ application/ adapters/` inside.
 - `packages/<lang>/` — publishable export entrypoints (façades re-exporting
   the libs).
-- `tests/shared/` — JSON vector fixtures read by both cargo tests and vitest,
-  giving a Rust↔TypeScript parity guarantee.
+- Test data lives in-language, inside each module's own `tests/` dir (ADR 0004);
+  there is no shared vector directory — languages mirror the same case tables.
 
 Root tooling: cargo workspace (`apps/rust/*`, `libs/rust/*`, `packages/rust/*`)
 + pnpm workspace (`libs/typescript/*`, `packages/typescript/*`), orchestrated

@@ -5,32 +5,49 @@
 
 ## Context
 
-The reference implementations drive their suites from case tables: go-json
-ranges over test-data iterators yielding `{input, expected}` structs, js-json
-uses `it.each(testData)` arrays, and go-metadatamodel keeps document fixtures in
-`testdata/*.json`. dyn-rt-rs-old-3 instead scattered inline `#[test]`s. We want
-one convention across the repo — and, since Rust and TypeScript ports must
-behave identically, one shared source of cases.
+The reference implementations drive their suites from case tables written in
+the implementation language: go-json ranges over test-data iterators yielding
+`{input, expected}` structs, js-json uses `it.each(testData)` arrays.
+dyn-rt-rs-old-3 showed the Rust shape we adopt: per-suite custom loops over
+`yield_test_data()` tables whose entries are built by constructor macros and
+carry a shared `TestMetadata` title. An earlier revision of this ADR routed
+cases through `tests/shared/**/*.json` for cross-language parity, but JSON
+fixtures make tests unreadable as usage examples and force every case through
+a JSON encoding; in-language tables show accepted inputs directly.
 
 ## Decision
 
-- Every suite is data-driven by default, in one of three tiers:
-  1. `tests/shared/**/*.json` — canonical cross-language vectors. These MUST be
-     JSON-representable, because both the Rust and TypeScript suites load the
-     same files. Cases needing constructs JSON can't express directly (e.g.
-     duplicate object keys) use a `build` instruction the harness interprets
-     (e.g. `{"object": [["a", 1], ["a", 3]]}`).
-  2. Crate-local `testdata/` — language-specific cases that are not
-     JSON-representable, in whatever format suits the language, still loaded
-     as a case table and iterated in one loop.
-  3. Inline, case-by-case tests — only when the test is not data at all (e.g.
-     pinning a local Display string), and only with an explicit reason in a
-     comment directly above the test.
-- Each case carries a `name`; on failure the test reports the case name and
-  prints expected vs got.
-- When a runtime error is reported, first add a case reproducing the scenario
-  (tier 1 whenever possible, so both languages get the regression), then fix
-  the code.
+- In EVERY language (Rust, TypeScript, Go, ...), tests are data-driven by
+  default and the test data is written in that language, in code, close to the
+  module under test (the module crate/package's own `tests/` dir — e.g. the
+  json-path parse suite lives in `libs/rust/json-path/tests/`).
+- Every suite is a custom loop over a case table — no framework-enforced
+  shape. Typically one `#[test]` per suite iterating a `yield_test_data()`-style
+  table; adding a new case means adding one entry to the table in code.
+- Every test datum carries the shared `TestMetadata` (at minimum a
+  `test_title`). On failure the loop reports the case title with expected vs
+  got, collects all failures, and panics once with a summary
+  (`Test case -> N : [[[ title ]]] || expected ... ; got ...`).
+- Constructor macros for building case data are the sanctioned way to keep
+  tables readable (ADR 0005 allows declarative macros): e.g. the
+  `json_path_root_segment!` / `json_path_key_selector_segment!` /
+  `new_recursive_descent_segment(s)!` macros in `dyn-rt-json-path` and the
+  `new_test_datum_*` shapes in each suite. The harness pieces
+  (`TestMetadata`, `new_test_metadata!`, `new_test_title!`, `report_failures`)
+  live once in `libs/rust/test-support` (dev-only); each other language gets
+  its own equivalent.
+- Tiers:
+  1. In-code case table in the module's own `tests/` dir — the DEFAULT.
+  2. Crate-local `testdata/` files — only for cases not representable in
+     source, still loaded as a case table and iterated in one loop.
+  3. Inline tests — only when the test is not data at all, and only with an
+     explicit reason in a comment directly above the test.
+- Cross-language parity is achieved by mirroring the same case tables in each
+  language (same cases, same titles), not by sharing JSON files.
+  `tests/shared/` is no longer used.
+- When a runtime error is reported, FIRST add a case reproducing the scenario
+  to the relevant table, then fix the code — the suite then pins both the old
+  and the new behavior.
 - `serde_json` may appear in `dev-dependencies` and in
   `libs/rust/test-support` solely to parse/emit fixtures — never in shipped
   domain or application code.
@@ -39,10 +56,9 @@ behave identically, one shared source of cases.
 
 ## Consequences
 
-- Rust and TypeScript run identical vectors; pinning or fixing a behavior means
-  adding one JSON row and making both suites pass it.
-- Fixture loading and serde_json <-> domain `Value` conversion for tests live
-  once in `dyn-rt-test-support`; suites stay thin loops over cases.
-- Language-specific cases that JSON cannot express (e.g. duplicate object keys
-  pre-parse) go in the crate's own `testdata/` and stay in that language — or
-  are expressed through a `build` instruction the harness understands.
+- Tests double as usage examples: a reader sees accepted inputs and expected
+  outputs directly in the language of the library.
+- Suites stay thin loops over tables; the harness lives once in
+  `dyn-rt-test-support` (plus per-language equivalents).
+- Rust and TypeScript mirror the same tables case-for-case; parity is a
+  review-time check of the tables, not a shared file format.

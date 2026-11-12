@@ -4,6 +4,8 @@
 //! - `application`: the parse use cases (imports domain only)
 //! - `adapters`: the regex tokenizer — the only place `regex` is imported
 
+mod macros;
+
 pub mod adapters;
 pub mod application;
 pub mod domain;

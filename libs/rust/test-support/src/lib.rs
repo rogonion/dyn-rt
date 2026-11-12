@@ -5,6 +5,10 @@
 //! over cases. This crate must only ever be referenced from
 //! `dev-dependencies` — never from shipped code.
 
+mod harness;
+
+pub use harness::*;
+
 use std::path::PathBuf;
 
 use dyn_rt_json_path::domain::{

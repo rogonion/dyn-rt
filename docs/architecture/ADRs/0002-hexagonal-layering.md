@@ -28,8 +28,8 @@ Rules (mirrored in the root AGENTS.md):
   composition roots.
 - Ports are traits defined in the domain crate; implementations live outside.
 - One closed error enum per core; adapters translate native errors into it.
-- Core tests are zero-IO: in-memory values only, shared vectors from
-  `tests/shared/`.
+- Core tests are zero-IO: in-memory values only, in-language case tables in
+  the module's own `tests/` dir (ADR 0004).
 
 ## Consequences
 

@@ -1,6 +1,6 @@
 //! Inline tests for the `Unknown` kind (ADR 0004 tier 3): a custom type that
-//! implements only the base `Reflect` trait is not JSON-expressible, so it
-//! cannot live in `tests/shared/` — this is the explicit reason for an
+//! implements only the base `Reflect` trait is not expressible as a plain
+//! in-code datum for the shared suites — this is the explicit reason for an
 //! inline test.
 
 use std::any::Any;

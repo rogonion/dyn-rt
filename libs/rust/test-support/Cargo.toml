@@ -1,6 +1,6 @@
 [package]
 name = "dyn-rt-test-support"
-description = "Dev-only test helpers: loads tests/shared JSON fixtures and converts serde_json <-> domain Value for tests. Never a runtime dependency (ADR 0004)."
+description = "Dev-only test helpers: the shared data-driven test harness (ADR 0004) plus fixture loading for suites not yet migrated. Never a runtime dependency."
 version.workspace = true
 edition.workspace = true
 license-file.workspace = true

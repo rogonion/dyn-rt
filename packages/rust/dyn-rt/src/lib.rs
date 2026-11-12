@@ -27,6 +27,13 @@ pub mod json {
         pub use dyn_rt_json_path::adapters::RegexPathTokenizer;
         pub use dyn_rt_json_path::application::{extract_segment, parse_path};
         pub use dyn_rt_json_path::domain::*;
+        // AST constructor macros (for writing path tables, e.g. in tests)
+        pub use dyn_rt_json_path::{
+            json_path_index_selector_segment, json_path_key_selector_segment,
+            json_path_root_segment, json_path_slice_selector_segment,
+            json_path_union_selector_segment, json_path_wildcard_segment,
+            new_recursive_descent_segment, new_recursive_descent_segments,
+        };
 
         /// Parse a JSONPath string into its deconstructed AST, using the
         /// default regex tokenizer.
