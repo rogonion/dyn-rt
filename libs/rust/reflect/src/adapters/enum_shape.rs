@@ -4,7 +4,8 @@ use std::any::{Any, TypeId, type_name};
 
 use super::{cloned_t, into_t};
 use crate::domain::{
-    Reflect, ReflectEnum, ReflectKind, ReflectRef, ReflectRefMut, VariantInfo, type_info,
+    Reflect, ReflectEnum, ReflectKind, ReflectNew, ReflectRef, ReflectRefMut, VariantInfo,
+    type_info,
 };
 use crate::error::ReflectError;
 
@@ -118,5 +119,12 @@ impl<T: Reflect> ReflectEnum for Option<T> {
                 type_name: type_name::<Self>().to_string(),
             }),
         }
+    }
+}
+
+/// `Option<T>` is constructible as `None`.
+impl<T: Reflect> ReflectNew for Option<T> {
+    fn reflect_new() -> Box<dyn Reflect> {
+        Box::new(None::<T>)
     }
 }

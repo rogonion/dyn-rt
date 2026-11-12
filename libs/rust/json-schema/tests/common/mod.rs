@@ -13,7 +13,8 @@ use dyn_rt_shared::Value;
 // test types (mirrors misc_test.go)
 // ---------------------------------------------------------------------------
 
-#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+#[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
+#[reflect(new)]
 pub struct User {
     #[reflect(rename = "ID")]
     pub id: i64,
@@ -23,7 +24,8 @@ pub struct User {
     pub email: String,
 }
 
-#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+#[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
+#[reflect(new)]
 pub struct Product {
     #[reflect(rename = "ID")]
     pub id: i64,
@@ -33,7 +35,8 @@ pub struct Product {
     pub price: f64,
 }
 
-#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+#[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
+#[reflect(new)]
 pub struct Address {
     #[reflect(rename = "Street")]
     pub street: String,
@@ -43,7 +46,8 @@ pub struct Address {
     pub zip_code: Option<String>,
 }
 
-#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+#[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
+#[reflect(new)]
 pub struct UserProfile {
     #[reflect(rename = "Name")]
     pub name: String,
@@ -53,7 +57,8 @@ pub struct UserProfile {
     pub address: Address,
 }
 
-#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+#[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
+#[reflect(new)]
 pub struct UserProfile2 {
     #[reflect(rename = "Name")]
     pub name: String,
@@ -65,7 +70,8 @@ pub struct UserProfile2 {
     pub occupation: String,
 }
 
-#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+#[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
+#[reflect(new)]
 pub struct Employee {
     #[reflect(rename = "ID")]
     pub id: i64,
@@ -77,7 +83,8 @@ pub struct Employee {
     pub project_hours: HashMap<String, i64>,
 }
 
-#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+#[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
+#[reflect(new)]
 pub struct Company {
     #[reflect(rename = "Name")]
     pub name: String,
@@ -87,7 +94,8 @@ pub struct Company {
     pub employees: Vec<Box<User>>,
 }
 
-#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+#[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
+#[reflect(new)]
 pub struct NestedItem {
     #[reflect(rename = "ID")]
     pub id: i64,
@@ -97,13 +105,15 @@ pub struct NestedItem {
     pub list_data: Vec<Value>,
 }
 
-#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+#[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
+#[reflect(new)]
 pub struct Circle {
     #[reflect(rename = "Radius")]
     pub radius: f64,
 }
 
-#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+#[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
+#[reflect(new)]
 pub struct Square {
     #[reflect(rename = "Side")]
     pub side: f64,
@@ -115,7 +125,8 @@ pub enum Shape {
     Square(Square),
 }
 
-#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+#[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
+#[reflect(new)]
 pub struct UserWithAddress {
     #[reflect(rename = "Name")]
     pub name: String,

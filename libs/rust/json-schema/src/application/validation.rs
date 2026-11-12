@@ -375,7 +375,14 @@ fn validate_set(
 /// Nil detection: an indirection without an inner value, or `Option::None`
 /// (an enum whose variant table is exactly `Some`/`None` and whose active
 /// variant carries no payload).
-fn is_nil(data: &dyn Reflect) -> bool {
+pub(crate) fn is_nil(data: &dyn Reflect) -> bool {
+    if data
+        .reflect_as_any()
+        .downcast_ref::<Value>()
+        .is_some_and(Value::is_null)
+    {
+        return true;
+    }
     match data.reflect_ref() {
         ReflectRef::Indirection(indirection) => {
             let mut nil = false;
@@ -404,7 +411,7 @@ fn short_type_name(name: &str) -> &str {
 }
 
 /// String form of a map key (`String` or `Value::String`), when it is one.
-fn key_to_string(key: &dyn Reflect) -> Option<String> {
+pub(crate) fn key_to_string(key: &dyn Reflect) -> Option<String> {
     if let Some(string) = key.reflect_as_any().downcast_ref::<String>() {
         return Some(string.clone());
     }

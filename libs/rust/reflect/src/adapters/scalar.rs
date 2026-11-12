@@ -3,7 +3,7 @@
 
 use std::any::{Any, type_name};
 
-use crate::domain::{Reflect, ReflectKind, ReflectRef, ReflectRefMut};
+use crate::domain::{Reflect, ReflectKind, ReflectNew, ReflectRef, ReflectRefMut};
 use crate::error::ReflectError;
 
 macro_rules! impl_reflect_scalar {
@@ -76,4 +76,21 @@ impl_reflect_scalar!(
     f32 => "f32",
     f64 => "f64",
     String => "string",
+);
+
+/// Scalars are constructible via their `Default` (zero value).
+macro_rules! impl_reflect_new_scalar {
+    ($($t:ty),* $(,)?) => {
+        $(
+            impl ReflectNew for $t {
+                fn reflect_new() -> Box<dyn Reflect> {
+                    Box::new(<$t>::default())
+                }
+            }
+        )*
+    };
+}
+
+impl_reflect_new_scalar!(
+    bool, char, i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, f32, f64, String,
 );

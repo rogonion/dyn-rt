@@ -4,5 +4,6 @@
 #[path = "../common/mod.rs"]
 mod common;
 
+mod conversion;
 mod path;
 mod validation;

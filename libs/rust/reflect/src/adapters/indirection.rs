@@ -7,7 +7,8 @@ use std::sync::{Arc, Mutex};
 
 use super::{cloned_t, into_t, unsupported};
 use crate::domain::{
-    Reflect, ReflectIndirection, ReflectKind, ReflectRef, ReflectRefMut, TypeInfo, type_info,
+    Reflect, ReflectIndirection, ReflectKind, ReflectNew, ReflectRef, ReflectRefMut, TypeInfo,
+    type_info,
 };
 use crate::error::ReflectError;
 
@@ -370,5 +371,32 @@ impl<T: Reflect> ReflectIndirection for Mutex<T> {
 
     fn reflect_inner_type_info(&self) -> &'static TypeInfo {
         type_info::<T>()
+    }
+}
+
+/// Pointer-like wrappers are constructible when the inner type is `Default`.
+macro_rules! impl_reflect_new_indirection {
+    ($t:ty, $ctor:expr) => {
+        impl<T: Reflect + Default> ReflectNew for $t {
+            fn reflect_new() -> Box<dyn Reflect> {
+                Box::new($ctor(T::default()))
+            }
+        }
+    };
+}
+
+impl_reflect_new_indirection!(Box<T>, Box::new);
+impl_reflect_new_indirection!(Rc<T>, Rc::new);
+impl_reflect_new_indirection!(Arc<T>, Arc::new);
+
+impl<T: Reflect + Default> ReflectNew for RefCell<T> {
+    fn reflect_new() -> Box<dyn Reflect> {
+        Box::new(RefCell::new(T::default()))
+    }
+}
+
+impl<T: Reflect + Default> ReflectNew for Mutex<T> {
+    fn reflect_new() -> Box<dyn Reflect> {
+        Box::new(Mutex::new(T::default()))
     }
 }

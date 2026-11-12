@@ -11,7 +11,7 @@
 use std::any::TypeId;
 use std::sync::Arc;
 
-use dyn_rt_reflect::{Reflect, ReflectKind, TypeInfo, type_info};
+use dyn_rt_reflect::{Reflect, ReflectKind, ReflectNew, TypeInfo, type_info};
 use dyn_rt_shared::Value;
 
 use crate::error::SchemaError;
@@ -195,9 +195,18 @@ impl SchemaNode {
         }
     }
 
+    /// Like `base`, but the type info also carries the `ReflectNew`
+    /// constructor, so conversion can build fresh instances of the type.
+    fn base_new<T: Reflect + ReflectNew>(shape: SchemaShape) -> Self {
+        SchemaNode {
+            type_info: TypeInfo::of_constructible::<T>(),
+            ..Self::base::<T>(shape)
+        }
+    }
+
     /// A scalar node for the concrete type `T`.
-    pub fn scalar<T: Reflect>() -> Self {
-        Self::base::<T>(SchemaShape::Scalar)
+    pub fn scalar<T: Reflect + ReflectNew>() -> Self {
+        Self::base_new::<T>(SchemaShape::Scalar)
     }
 
     /// A scalar node for a `shared::Value` scalar variant (e.g. `"string"`,
@@ -208,7 +217,7 @@ impl SchemaNode {
                 type_name: variant_name,
                 type_id: TypeId::of::<Value>(),
                 kind: ReflectKind::Scalar,
-                new_instance: None,
+                new_instance: Some(<Value as ReflectNew>::reflect_new),
             },
             shape: SchemaShape::Scalar,
             nilable: false,
@@ -225,8 +234,8 @@ impl SchemaNode {
         Self::base::<Value>(SchemaShape::Any)
     }
 
-    pub fn struct_node<T: Reflect>(fields: Vec<(&str, Schema)>) -> Self {
-        Self::base::<T>(SchemaShape::Struct {
+    pub fn struct_node<T: Reflect + ReflectNew>(fields: Vec<(&str, Schema)>) -> Self {
+        Self::base_new::<T>(SchemaShape::Struct {
             fields: fields
                 .into_iter()
                 .map(|(name, schema)| (name.to_string(), schema))
@@ -234,20 +243,20 @@ impl SchemaNode {
         })
     }
 
-    pub fn map_node<T: Reflect>(key: Schema, value: Schema) -> Self {
-        Self::base::<T>(SchemaShape::Map {
+    pub fn map_node<T: Reflect + ReflectNew>(key: Schema, value: Schema) -> Self {
+        Self::base_new::<T>(SchemaShape::Map {
             entries: Vec::new(),
             key: Some(Box::new(key)),
             value: Some(Box::new(value)),
         })
     }
 
-    pub fn map_node_with_entries<T: Reflect>(
+    pub fn map_node_with_entries<T: Reflect + ReflectNew>(
         entries: Vec<(&str, Schema)>,
         key: Option<Schema>,
         value: Option<Schema>,
     ) -> Self {
-        Self::base::<T>(SchemaShape::Map {
+        Self::base_new::<T>(SchemaShape::Map {
             entries: entries
                 .into_iter()
                 .map(|(name, schema)| (name.to_string(), schema))
@@ -257,25 +266,25 @@ impl SchemaNode {
         })
     }
 
-    pub fn sequence_node<T: Reflect>(elements: Schema) -> Self {
-        Self::base::<T>(SchemaShape::Sequence {
+    pub fn sequence_node<T: Reflect + ReflectNew>(elements: Schema) -> Self {
+        Self::base_new::<T>(SchemaShape::Sequence {
             elements: Some(Box::new(elements)),
             items: Vec::new(),
         })
     }
 
-    pub fn sequence_node_with_items<T: Reflect>(
+    pub fn sequence_node_with_items<T: Reflect + ReflectNew>(
         elements: Schema,
         items: Vec<(usize, Schema)>,
     ) -> Self {
-        Self::base::<T>(SchemaShape::Sequence {
+        Self::base_new::<T>(SchemaShape::Sequence {
             elements: Some(Box::new(elements)),
             items,
         })
     }
 
-    pub fn indirection_node<T: Reflect>(inner: Schema) -> Self {
-        Self::base::<T>(SchemaShape::Indirection {
+    pub fn indirection_node<T: Reflect + ReflectNew>(inner: Schema) -> Self {
+        Self::base_new::<T>(SchemaShape::Indirection {
             inner: Box::new(inner),
         })
     }

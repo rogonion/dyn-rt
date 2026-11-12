@@ -7,7 +7,7 @@ use dyn_rt_shared::Value;
 
 use super::{cloned_t, into_t, into_value, key_as_str, unsupported};
 use crate::domain::{
-    Reflect, ReflectKind, ReflectMap, ReflectRef, ReflectRefMut, TypeInfo, type_info,
+    Reflect, ReflectKind, ReflectMap, ReflectNew, ReflectRef, ReflectRefMut, TypeInfo, type_info,
 };
 use crate::error::ReflectError;
 
@@ -214,3 +214,21 @@ macro_rules! impl_reflect_std_map {
 
 impl_reflect_std_map!(std::collections::HashMap<K, V>, Eq + std::hash::Hash);
 impl_reflect_std_map!(std::collections::BTreeMap<K, V>, Ord);
+
+/// Std maps are constructible as empty maps.
+macro_rules! impl_reflect_new_std_map {
+    ($map:ty, $($kbound:tt)+) => {
+        impl<K, V> ReflectNew for $map
+        where
+            K: Reflect + $($kbound)+,
+            V: Reflect,
+        {
+            fn reflect_new() -> Box<dyn Reflect> {
+                Box::new(<$map>::default())
+            }
+        }
+    };
+}
+
+impl_reflect_new_std_map!(std::collections::HashMap<K, V>, Eq + std::hash::Hash);
+impl_reflect_new_std_map!(std::collections::BTreeMap<K, V>, Ord);

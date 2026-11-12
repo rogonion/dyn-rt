@@ -7,7 +7,8 @@ use dyn_rt_shared::Value;
 
 use super::{cloned_t, into_t, into_value, unsupported};
 use crate::domain::{
-    Reflect, ReflectKind, ReflectRef, ReflectRefMut, ReflectSequence, TypeInfo, type_info,
+    Reflect, ReflectKind, ReflectNew, ReflectRef, ReflectRefMut, ReflectSequence, TypeInfo,
+    type_info,
 };
 use crate::error::ReflectError;
 
@@ -185,5 +186,12 @@ impl<T: Reflect> ReflectSequence for Vec<T> {
 
     fn reflect_element_type_info(&self) -> &'static TypeInfo {
         type_info::<T>()
+    }
+}
+
+/// `Vec<T>` is constructible as an empty vec.
+impl<T: Reflect> ReflectNew for Vec<T> {
+    fn reflect_new() -> Box<dyn Reflect> {
+        Box::new(Vec::<T>::new())
     }
 }
