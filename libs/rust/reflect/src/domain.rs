@@ -72,7 +72,13 @@ impl std::fmt::Display for ReflectKind {
 /// structure. Types with no shape implement only this trait and route to
 /// [`ReflectRef::Unknown`].
 pub trait Reflect: Any {
-    /// Human-readable, stable type identifier.
+    /// Human-readable type label for display and error messages only.
+    ///
+    /// This is NOT an identity: `std::any::type_name` output is not guaranteed
+    /// stable across compiler versions, and `#[reflect(name = "...")]`
+    /// overrides can collide across types. Never compare names for equality —
+    /// type identity is [`std::any::TypeId`] (see `reflect_as_any().type_id()`
+    /// and the `TypeId`-keyed `type_info` registry).
     fn reflect_type_name(&self) -> &'static str;
 
     /// Routes this value into its structural sub-category (read-only). Kind
@@ -176,6 +182,7 @@ pub trait ReflectNew: Reflect {
 /// available a constructor.
 #[derive(Debug, Clone)]
 pub struct TypeInfo {
+    /// Display label only — never use for identity; `type_id` is the key.
     pub type_name: &'static str,
     pub type_id: TypeId,
     pub kind: ReflectKind,
