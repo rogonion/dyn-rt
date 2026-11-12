@@ -8,6 +8,8 @@ license-file.workspace = true
 [dependencies]
 # imported ONLY in src/adapters/ (impl Reflect for shared::Value)
 dyn-rt-shared = { path = "../shared" }
+# derive macros, re-exported at the crate root (serde-style)
+dyn-rt-reflect-derive = { path = "../reflect-derive" }
 
 [dev-dependencies]
 dyn-rt-test-support = { path = "../test-support" }

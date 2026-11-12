@@ -48,10 +48,29 @@ handle directly, so kind and access are one fact.
   a value that does not implement a more concrete `Reflect*` shape simply
   reports `Scalar`/etc. and operations return `ReflectError::UnsupportedOperation`.
   Mis-implemented `Reflect*` contracts are the implementor's problem.
-- Derive macros: a `libs/rust/reflect-derive` proc-macro crate using the
-  de-facto helpers `syn` + `quote` will provide `#[derive(Reflect)]` for
-  structs/enums (built when the schema module needs it; proc-macros must live
-  in their own crate).
+- Derive macros: `libs/rust/reflect-derive` (proc-macro crate, `syn` + `quote`
+  + `proc-macro2` — the de-facto stack per ADR 0005), re-exported from
+  `dyn-rt-reflect` serde-style. Per-shape, one derive per type, each emitting
+  the base `Reflect` impl too:
+  - `#[derive(Reflect)]` — base only, routes to `Unknown`; `Clone`-based
+    clone/apply (requires `Clone`).
+  - `#[derive(ReflectStruct)]` — structs (non-generic for now: the field table
+    is a `static` and statics in generic fns are shared across
+    monomorphizations); structural clone/apply field-by-field, so every field
+    must implement `Reflect` (compile error otherwise). Skipped fields fall
+    back to `Clone`.
+  - `#[derive(ReflectEnum)]` — enums with unit or single-payload tuple
+    variants; structural clone/apply per payload.
+  - Attributes under `#[reflect(...)]`: type level `crate = "path"`,
+    `name = "..."`, `new` (emit `ReflectNew` via `Default`); struct fields
+    `rename = "..."` / `skip`; enum variants `rename = "..."`.
+  - `reflect_clone` stays infallible: "implementing Reflect implies a defined
+    clone strategy" is a type-level contract — a type that can neither
+    structurally clone (fields not Reflect) nor `Clone` simply does not
+    implement `Reflect`; shareable non-clonable parts go behind `Rc`/`Arc`.
+  - Derive tests live in `libs/rust/reflect/tests/derive.rs` (a proc-macro
+    crate cannot use its own macros), as a titled op table over a fixed set
+    of derived test types (ADR 0004/0009).
 - `shared::Value` keeps objects as `Vec<(String, Value)>` (insertion order,
   std-only) — not `HashMap` (loses order) or `BTreeMap` (reorders). serde is a
   serialization library, not a domain model: the core stays std-only and
