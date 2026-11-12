@@ -1,15 +1,12 @@
 //! Data-driven suite for the json-schema APPLICATION layer (ADR 0004/0009):
-//! validation. Suite covers src/application.rs (validate / validate_with /
+//! validation. Suite covers src/application/validation.rs (validate /
 //! validate_node). Fixtures mirror go-json's schema/misc_test.go shapes.
-
-#[path = "common/mod.rs"]
-mod common;
 
 use std::any::TypeId;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use common::*;
+use crate::common::*;
 use dyn_rt_json_schema::{
     Schema, SchemaError, SchemaNode, SchemaValidator, ValidationOptions, validate_with,
 };
