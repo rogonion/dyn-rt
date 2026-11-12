@@ -68,6 +68,16 @@ enum Expr {
     Wrap(Box<Expr>),
 }
 
+/// in-line struct within an enum, where the payload struct itself nests
+/// another struct (enum -> struct -> struct); Rust has no anonymous
+/// composite types, so the payload is a named struct used directly as the
+/// variant payload
+#[derive(ReflectEnum, Clone, Debug, PartialEq)]
+enum Record {
+    Person(Person),
+    Empty,
+}
+
 #[derive(Clone)]
 #[allow(dead_code)]
 struct Cloneable(String);
@@ -85,6 +95,7 @@ enum Subject {
     Person(Person),
     Contact(Contact),
     Expr(Expr),
+    Record(Record),
 }
 
 impl Subject {
@@ -97,6 +108,7 @@ impl Subject {
             Subject::Person(v) => v,
             Subject::Contact(v) => v,
             Subject::Expr(v) => v,
+            Subject::Record(v) => v,
         }
     }
 }
@@ -112,6 +124,8 @@ enum Op {
     Variant(&'static str),
     VariantNames(&'static str),
     PayloadKind(&'static str),
+    PayloadFieldNames(&'static str),
+    PayloadFieldKindAt(usize, &'static str),
     CloneRoundtrip,
     ApplyMismatch,
     SetVariant(&'static str, bool), // name, has_payload -> expect UnknownVariant or Ok
@@ -198,6 +212,25 @@ fn observe(subject: &Subject, op: &Op) -> Result<String, &'static str> {
                 None => Ok("<none>".to_string()),
             }
         }
+        Op::PayloadFieldNames(_) => {
+            let e = as_enum(r).expect("enum");
+            let payload = e.reflect_active_variant_payload().expect("payload");
+            let s = as_struct(payload).expect("struct payload");
+            Ok(s.reflect_field_infos()
+                .iter()
+                .map(|f| f.name)
+                .collect::<Vec<_>>()
+                .join(","))
+        }
+        Op::PayloadFieldKindAt(index, _) => {
+            let e = as_enum(r).expect("enum");
+            let payload = e.reflect_active_variant_payload().expect("payload");
+            let s = as_struct(payload).expect("struct payload");
+            match s.reflect_field_at(*index) {
+                Some(field) => Ok(kind_of(field).to_string()),
+                None => Ok("<none>".to_string()),
+            }
+        }
         Op::CloneRoundtrip => {
             let cloned = r.reflect_clone();
             let same = match subject {
@@ -208,6 +241,7 @@ fn observe(subject: &Subject, op: &Op) -> Result<String, &'static str> {
                 Subject::Person(v) => cloned.reflect_as_any().downcast_ref::<Person>() == Some(v),
                 Subject::Contact(v) => cloned.reflect_as_any().downcast_ref::<Contact>() == Some(v),
                 Subject::Expr(v) => cloned.reflect_as_any().downcast_ref::<Expr>() == Some(v),
+                Subject::Record(v) => cloned.reflect_as_any().downcast_ref::<Record>() == Some(v),
             };
             Ok(if same { "equal" } else { "different" }.to_string())
         }
@@ -225,6 +259,7 @@ fn observe(subject: &Subject, op: &Op) -> Result<String, &'static str> {
                 Subject::Person(v) => v,
                 Subject::Contact(v) => v,
                 Subject::Expr(v) => v,
+                Subject::Record(v) => v,
             };
             let result = match subject {
                 Subject::Opaque(_) => mut_ref.reflect_apply(&string_source),
@@ -546,6 +581,95 @@ fn derive_ops() {
             Op::CloneRoundtrip,
             Ok("equal".to_string()),
             test_title = "clone of recursive enum through Box equals original"
+        ),
+        // --- in-line struct within an enum: Contact::Home(Address)
+        derive_case!(
+            Subject::Contact(Contact::Home(Address {
+                street: "2 Oak Ave".to_string(),
+                city: "Shelbyville".to_string()
+            })),
+            Op::PayloadFieldNames(""),
+            Ok("street,city".to_string()),
+            test_title = "struct payload of enum variant exposes its field table"
+        ),
+        // --- enum -> struct -> struct: Record::Person(Person{.., address: Address})
+        derive_case!(
+            Subject::Record(Record::Person(Person {
+                name: "amy".to_string(),
+                address: Address {
+                    street: "1 Main St".to_string(),
+                    city: "Springfield".to_string()
+                }
+            })),
+            Op::Kind("enum"),
+            Ok("enum".to_string()),
+            test_title = "enum with nested-struct payload routes to Enum kind"
+        ),
+        derive_case!(
+            Subject::Record(Record::Person(Person {
+                name: "amy".to_string(),
+                address: Address {
+                    street: "1 Main St".to_string(),
+                    city: "Springfield".to_string()
+                }
+            })),
+            Op::Variant("Person"),
+            Ok("Person".to_string()),
+            test_title = "active variant of enum carrying a struct payload"
+        ),
+        derive_case!(
+            Subject::Record(Record::Person(Person {
+                name: "amy".to_string(),
+                address: Address {
+                    street: "1 Main St".to_string(),
+                    city: "Springfield".to_string()
+                }
+            })),
+            Op::PayloadKind("struct"),
+            Ok("struct".to_string()),
+            test_title = "payload of Record::Person has Struct kind"
+        ),
+        derive_case!(
+            Subject::Record(Record::Person(Person {
+                name: "amy".to_string(),
+                address: Address {
+                    street: "1 Main St".to_string(),
+                    city: "Springfield".to_string()
+                }
+            })),
+            Op::PayloadFieldNames(""),
+            Ok("name,address".to_string()),
+            test_title = "payload field table of Record::Person lists name,address"
+        ),
+        derive_case!(
+            Subject::Record(Record::Person(Person {
+                name: "amy".to_string(),
+                address: Address {
+                    street: "1 Main St".to_string(),
+                    city: "Springfield".to_string()
+                }
+            })),
+            Op::PayloadFieldKindAt(1, "struct"),
+            Ok("struct".to_string()),
+            test_title = "field inside enum payload is itself a nested struct"
+        ),
+        derive_case!(
+            Subject::Record(Record::Person(Person {
+                name: "amy".to_string(),
+                address: Address {
+                    street: "1 Main St".to_string(),
+                    city: "Springfield".to_string()
+                }
+            })),
+            Op::CloneRoundtrip,
+            Ok("equal".to_string()),
+            test_title = "clone of enum with nested-struct payload equals original"
+        ),
+        derive_case!(
+            Subject::Record(Record::Empty),
+            Op::PayloadKind("<none>"),
+            Ok("<none>".to_string()),
+            test_title = "unit variant of enum has no payload"
         ),
     ];
 
