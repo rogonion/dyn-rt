@@ -8,6 +8,8 @@ pub mod indirection;
 pub mod map;
 pub mod scalar;
 pub mod sequence;
+#[cfg(feature = "serde-json")]
+pub mod serde_json;
 pub mod unknown;
 pub mod value;
 

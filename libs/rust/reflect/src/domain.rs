@@ -111,6 +111,28 @@ pub trait Reflect: Any {
     fn reflect_kind() -> ReflectKind
     where
         Self: Sized;
+
+    /// Scalar extraction for schema-layer conversion: the value as i64, when
+    /// the scalar is an integer. Default `None`; scalar adapters override.
+    fn reflect_scalar_i64(&self) -> Option<i64> {
+        None
+    }
+
+    /// Scalar extraction: the value as f64, when the scalar is numeric.
+    fn reflect_scalar_f64(&self) -> Option<f64> {
+        None
+    }
+
+    /// Scalar extraction: the value as bool, when the scalar is a boolean.
+    fn reflect_scalar_bool(&self) -> Option<bool> {
+        None
+    }
+
+    /// Scalar extraction: the value rendered as a string, when the scalar is
+    /// string-like (strings, and other scalars' display form).
+    fn reflect_scalar_string(&self) -> Option<String> {
+        None
+    }
 }
 
 /// Immutable structural routing of a [`Reflect`] value. Matching on the enum

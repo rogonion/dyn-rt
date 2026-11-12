@@ -577,53 +577,24 @@ fn convert_scalar(
     )))
 }
 
-/// Source as i64 (port of convertToInt): ints, uints, floats, bools, strings.
+/// Source as i64 (port of convertToInt): integers, floats, bools, strings.
+/// Extraction goes through the `Reflect::reflect_scalar_*` provided methods,
+/// so any reflect-able scalar source works (primitives, shared::Value,
+/// serde_json::Value, ...).
 fn to_i64(source: &dyn Reflect) -> Result<i64, String> {
-    let any = source.reflect_as_any();
-    macro_rules! try_int {
-        ($($t:ty),*) => {
-            $(if let Some(v) = any.downcast_ref::<$t>() {
-                return Ok(*v as i64);
-            })*
-        };
+    if let Some(v) = source.reflect_scalar_i64() {
+        return Ok(v);
     }
-    try_int!(i8, i16, i32, i64, isize, u8, u16, u32);
-    if let Some(v) = any.downcast_ref::<u64>() {
-        return i64::try_from(*v).map_err(|_| format!("{v} overflows i64"));
+    if let Some(v) = source.reflect_scalar_f64() {
+        return Ok(v as i64);
     }
-    if let Some(v) = any.downcast_ref::<u128>() {
-        return i64::try_from(*v).map_err(|_| format!("{v} overflows i64"));
+    if let Some(b) = source.reflect_scalar_bool() {
+        return Ok(if b { 1 } else { 0 });
     }
-    if let Some(v) = any.downcast_ref::<i128>() {
-        return i64::try_from(*v).map_err(|_| format!("{v} overflows i64"));
-    }
-    if let Some(v) = any.downcast_ref::<f32>() {
-        return Ok(*v as i64);
-    }
-    if let Some(v) = any.downcast_ref::<f64>() {
-        return Ok(*v as i64);
-    }
-    if let Some(v) = any.downcast_ref::<bool>() {
-        return Ok(if *v { 1 } else { 0 });
-    }
-    if let Some(v) = any.downcast_ref::<char>() {
-        return Ok(*v as i64);
-    }
-    if let Some(v) = any.downcast_ref::<String>() {
-        return v
-            .parse::<i64>()
-            .map_err(|_| format!("cannot parse '{v}' as i64"));
-    }
-    if let Some(Value::Number(n)) = any.downcast_ref::<Value>() {
-        return Ok(n.as_f64() as i64);
-    }
-    if let Some(Value::String(s)) = any.downcast_ref::<Value>() {
+    if let Some(s) = source.reflect_scalar_string() {
         return s
             .parse::<i64>()
             .map_err(|_| format!("cannot parse '{s}' as i64"));
-    }
-    if let Some(Value::Bool(b)) = any.downcast_ref::<Value>() {
-        return Ok(if *b { 1 } else { 0 });
     }
     Err(format!(
         "unsupported source type '{}' for i64 conversion",
@@ -639,133 +610,80 @@ fn to_u64(source: &dyn Reflect) -> Result<u64, String> {
 
 /// Source as f64 (port of convertToFloat).
 fn to_f64(source: &dyn Reflect) -> Result<f64, String> {
-    let any = source.reflect_as_any();
-    if let Some(v) = any.downcast_ref::<f64>() {
-        return Ok(*v);
+    if let Some(v) = source.reflect_scalar_f64() {
+        return Ok(v);
     }
-    if let Some(v) = any.downcast_ref::<f32>() {
-        return Ok(*v as f64);
+    if let Some(b) = source.reflect_scalar_bool() {
+        return Ok(if b { 1.0 } else { 0.0 });
     }
-    if let Some(v) = any.downcast_ref::<String>() {
-        return v
-            .parse::<f64>()
-            .map_err(|_| format!("cannot parse '{v}' as f64"));
-    }
-    if let Some(Value::String(s)) = any.downcast_ref::<Value>() {
+    if let Some(s) = source.reflect_scalar_string() {
         return s
             .parse::<f64>()
             .map_err(|_| format!("cannot parse '{s}' as f64"));
     }
-    if let Some(Value::Number(n)) = any.downcast_ref::<Value>() {
-        return Ok(n.as_f64());
-    }
-    Ok(to_i64(source)? as f64)
+    Err(format!(
+        "unsupported source type '{}' for f64 conversion",
+        source.reflect_type_name()
+    ))
 }
 
 /// Source as bool (port of convertToBool): bool, numbers (!= 0), strings.
 fn to_bool(source: &dyn Reflect) -> Result<bool, String> {
-    let any = source.reflect_as_any();
-    if let Some(v) = any.downcast_ref::<bool>() {
-        return Ok(*v);
+    if let Some(b) = source.reflect_scalar_bool() {
+        return Ok(b);
     }
-    if let Some(v) = any.downcast_ref::<String>() {
-        return v
-            .parse::<bool>()
-            .map_err(|_| format!("cannot parse '{v}' as bool"));
+    if let Some(v) = source.reflect_scalar_f64() {
+        return Ok(v != 0.0);
     }
-    if let Some(Value::String(s)) = any.downcast_ref::<Value>() {
+    if let Some(s) = source.reflect_scalar_string() {
         return s
             .parse::<bool>()
             .map_err(|_| format!("cannot parse '{s}' as bool"));
     }
-    if let Some(Value::Bool(b)) = any.downcast_ref::<Value>() {
-        return Ok(*b);
-    }
-    Ok(to_i64(source)? != 0)
+    Err(format!(
+        "unsupported source type '{}' for bool conversion",
+        source.reflect_type_name()
+    ))
 }
 
 /// Source as String (port of convertToString): any scalar renders directly.
 fn to_string(source: &dyn Reflect) -> Result<String, String> {
-    let any = source.reflect_as_any();
-    if let Some(v) = any.downcast_ref::<String>() {
-        return Ok(v.clone());
+    if let Some(s) = source.reflect_scalar_string() {
+        return Ok(s);
     }
-    if let Some(v) = any.downcast_ref::<bool>() {
+    if let Some(v) = source.reflect_scalar_f64() {
         return Ok(v.to_string());
     }
-    if let Some(v) = any.downcast_ref::<char>() {
-        return Ok(v.to_string());
+    if let Some(b) = source.reflect_scalar_bool() {
+        return Ok(b.to_string());
     }
-    if let Some(v) = any.downcast_ref::<f64>() {
-        return Ok(v.to_string());
-    }
-    if let Some(v) = any.downcast_ref::<f32>() {
-        return Ok(v.to_string());
-    }
-    macro_rules! try_int_str {
-        ($($t:ty),*) => {
-            $(if let Some(v) = any.downcast_ref::<$t>() {
-                return Ok(v.to_string());
-            })*
-        };
-    }
-    try_int_str!(
-        i8, i16, i32, i64, isize, u8, u16, u32, u64, usize, i128, u128
-    );
-    match any.downcast_ref::<Value>() {
-        Some(Value::String(s)) => Ok(s.clone()),
-        Some(Value::Number(n)) => Ok(n.as_f64().to_string()),
-        Some(Value::Bool(b)) => Ok(b.to_string()),
-        Some(Value::Null) => Ok("null".to_string()),
-        _ => Err(format!(
-            "unsupported source type '{}' for string conversion",
-            source.reflect_type_name()
-        )),
-    }
+    Err(format!(
+        "unsupported source type '{}' for string conversion",
+        source.reflect_type_name()
+    ))
 }
 
 /// Source as a lossless json Number, when it is numeric or numeric-string.
 fn to_number(source: &dyn Reflect) -> Option<Number> {
-    let any = source.reflect_as_any();
-    if let Some(v) = any.downcast_ref::<i64>() {
-        return Some(if *v < 0 {
-            Number::NegInt(*v)
+    if let Some(i) = source.reflect_scalar_i64() {
+        return Some(if i < 0 {
+            Number::NegInt(i)
         } else {
-            Number::PosInt(*v as u64)
+            Number::PosInt(i as u64)
         });
     }
-    if let Some(v) = any.downcast_ref::<u64>() {
-        return Some(Number::PosInt(*v));
+    if let Some(f) = source.reflect_scalar_f64() {
+        return Some(Number::Float(f));
     }
-    if let Some(v) = any.downcast_ref::<f64>() {
-        return Some(Number::Float(*v));
-    }
-    if let Some(v) = any.downcast_ref::<f32>() {
-        return Some(Number::Float(*v as f64));
-    }
-    if let Some(v) = any.downcast_ref::<String>() {
-        if let Ok(i) = v.parse::<i64>() {
+    if let Some(s) = source.reflect_scalar_string() {
+        if let Ok(i) = s.parse::<i64>() {
             return Some(if i < 0 {
                 Number::NegInt(i)
             } else {
                 Number::PosInt(i as u64)
             });
         }
-        return v.parse::<f64>().ok().map(Number::Float);
+        return s.parse::<f64>().ok().map(Number::Float);
     }
-    match any.downcast_ref::<Value>() {
-        Some(Value::Number(n)) => Some(*n),
-        Some(Value::String(s)) => {
-            if let Ok(i) = s.parse::<i64>() {
-                Some(if i < 0 {
-                    Number::NegInt(i)
-                } else {
-                    Number::PosInt(i as u64)
-                })
-            } else {
-                s.parse::<f64>().ok().map(Number::Float)
-            }
-        }
-        _ => None,
-    }
+    None
 }

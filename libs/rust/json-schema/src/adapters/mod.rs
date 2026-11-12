@@ -4,6 +4,11 @@
 
 use dyn_rt_json_path::{RegexPathTokenizer, parse_path};
 
+#[cfg(feature = "deser")]
+pub mod deser;
+#[cfg(feature = "deser")]
+pub use deser::*;
+
 use crate::application::{SchemaAtPath, schema_at_path};
 use crate::domain::Schema;
 use crate::error::SchemaError;

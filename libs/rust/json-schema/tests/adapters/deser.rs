@@ -1,0 +1,162 @@
+//! Data-driven suite for src/adapters/deser.rs (ADR 0004/0009): text ->
+//! reflect-able serde value (json/yaml/toml), plus the 2-step integration
+//! into a typed target via conversion. Gated on the `deser` feature.
+
+use crate::common::*;
+use dyn_rt_json_schema::Schema;
+use dyn_rt_json_schema::adapters::deser::{from_json_str, from_toml_str, from_yaml_str};
+use dyn_rt_json_schema::application::convert;
+use dyn_rt_reflect::Reflect;
+use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+
+enum Format {
+    Json,
+    Yaml,
+    Toml,
+}
+
+struct DeserCase {
+    meta: TestMetadata,
+    format: Format,
+    text: &'static str,
+    /// Ok(expected debug render of the parsed serde value) or Err(fragment)
+    expected: Result<String, &'static str>,
+}
+
+macro_rules! deser_case {
+    ($format:expr, $text:expr, $expected:expr $(, test_title = $title:expr)?) => {
+        DeserCase {
+            meta: new_test_metadata!(
+                $(
+                    test_title = Some($title.to_string())
+                )?
+            ),
+            format: $format,
+            text: $text,
+            expected: $expected,
+        }
+    };
+}
+
+fn parse(case: &DeserCase) -> Result<Box<dyn Reflect>, dyn_rt_json_schema::SchemaError> {
+    match case.format {
+        Format::Json => from_json_str(case.text),
+        Format::Yaml => from_yaml_str(case.text),
+        Format::Toml => from_toml_str(case.text),
+    }
+}
+
+#[test]
+fn deser_cases() {
+    let user_json = serde_json::json!({"ID": 1, "Name": "amy", "Email": "amy@example.com"});
+    let test_data: Vec<_> = vec![
+        deser_case!(
+            Format::Json,
+            r#"{"ID": 1, "Name": "amy", "Email": "amy@example.com"}"#,
+            Ok(format!("{user_json:?}")),
+            test_title = "json text parses into a reflect-able serde value"
+        ),
+        deser_case!(
+            Format::Yaml,
+            "ID: 1\nName: amy\nEmail: amy@example.com\n",
+            Ok(format!("{user_json:?}")),
+            test_title = "yaml text parses into the same serde value shape"
+        ),
+        deser_case!(
+            Format::Toml,
+            "ID = 1\nName = \"amy\"\nEmail = \"amy@example.com\"\n",
+            Ok(format!("{user_json:?}")),
+            test_title = "toml text parses into the same serde value shape"
+        ),
+        deser_case!(
+            Format::Json,
+            "[1, \"two\", true, null]",
+            Ok(format!("{:?}", serde_json::json!([1, "two", true, null]))),
+            test_title = "json array with mixed scalars"
+        ),
+        deser_case!(
+            Format::Yaml,
+            "- 1\n- two\n",
+            Ok(format!("{:?}", serde_json::json!([1, "two"]))),
+            test_title = "yaml sequence"
+        ),
+        deser_case!(
+            Format::Json,
+            "{not json",
+            Err("json:"),
+            test_title = "invalid json errors DeserializationFailed"
+        ),
+        deser_case!(
+            Format::Toml,
+            "not = = toml",
+            Err("toml:"),
+            test_title = "invalid toml errors DeserializationFailed"
+        ),
+    ];
+
+    let mut failures: Vec<String> = Vec::new();
+    for (test_index, case) in test_data.iter().enumerate() {
+        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let got = parse(case);
+        match (&case.expected, &got) {
+            (Ok(expected), Ok(value)) => {
+                let rendered = format!(
+                    "{:?}",
+                    value
+                        .reflect_as_any()
+                        .downcast_ref::<serde_json::Value>()
+                        .expect("deser returns serde_json::Value")
+                );
+                if &rendered != expected {
+                    failures.push(format!(
+                        "{title} || expected {:?}, got {:?}",
+                        expected, rendered
+                    ));
+                }
+            }
+            (Err(fragment), Err(err)) => {
+                if !err.to_string().contains(fragment) {
+                    failures.push(format!(
+                        "{title} || error: expected fragment {:?}, got {:?}",
+                        fragment, err
+                    ));
+                }
+            }
+            _ => failures.push(format!(
+                "{title} || expected {:?}, got {}",
+                case.expected,
+                got.as_ref().map(|_| "Ok(..)").unwrap_or("Err(..)")
+            )),
+        }
+    }
+
+    // 2-step integration: yaml text -> serde value (reflect-able) ->
+    // conversion into the schema-dictated struct
+    let yaml = "ID: 1\nName: amy\nEmail: amy@example.com\n";
+    let parsed = from_yaml_str(yaml).expect("yaml parses");
+    let mut target: Box<dyn Reflect> = Box::new(User::default());
+    let outcome = convert(&*parsed, &Schema::Node(user_schema()), &mut *target);
+    match outcome {
+        Ok(_) => {
+            let rendered = format!(
+                "{:?}",
+                target
+                    .reflect_as_any()
+                    .downcast_ref::<User>()
+                    .expect("target is User")
+            );
+            if rendered != format!("{:?}", sample_user()) {
+                failures.push(format!(
+                    "Test case integration: yaml -> convert into User || expected {:?}, got {:?}",
+                    format!("{:?}", sample_user()),
+                    rendered
+                ));
+            }
+        }
+        Err(err) => failures.push(format!(
+            "Test case integration: yaml -> convert into User || unexpected error {err:?}"
+        )),
+    }
+
+    report_failures(failures, test_data.len() + 1);
+}

@@ -4,6 +4,9 @@
 #[path = "../common/mod.rs"]
 mod common;
 
+#[cfg(feature = "deser")]
+mod deser;
+
 use common::*;
 use dyn_rt_json_schema::Schema;
 use dyn_rt_json_schema::adapters::schema_at_path_str;

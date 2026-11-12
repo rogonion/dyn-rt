@@ -66,6 +66,42 @@ impl Reflect for Value {
         // Value is a nominal enum at the type level; instances route by variant.
         ReflectKind::Enum
     }
+
+    fn reflect_scalar_i64(&self) -> Option<i64> {
+        match self {
+            Value::Number(dyn_rt_shared::Number::PosInt(v)) => i64::try_from(*v).ok(),
+            Value::Number(dyn_rt_shared::Number::NegInt(v)) => Some(*v),
+            _ => None,
+        }
+    }
+
+    fn reflect_scalar_f64(&self) -> Option<f64> {
+        match self {
+            Value::Number(n) => Some(n.as_f64()),
+            _ => None,
+        }
+    }
+
+    fn reflect_scalar_bool(&self) -> Option<bool> {
+        match self {
+            Value::Bool(b) => Some(*b),
+            _ => None,
+        }
+    }
+
+    fn reflect_scalar_string(&self) -> Option<String> {
+        match self {
+            Value::Null => Some("null".to_string()),
+            Value::Bool(b) => Some(b.to_string()),
+            Value::Number(n) => Some(match n {
+                dyn_rt_shared::Number::PosInt(v) => v.to_string(),
+                dyn_rt_shared::Number::NegInt(v) => v.to_string(),
+                dyn_rt_shared::Number::Float(v) => v.to_string(),
+            }),
+            Value::String(s) => Some(s.clone()),
+            _ => None,
+        }
+    }
 }
 
 impl ReflectNew for Value {
