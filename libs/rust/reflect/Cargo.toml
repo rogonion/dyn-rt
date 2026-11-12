@@ -11,4 +11,3 @@ dyn-rt-shared = { path = "../shared" }
 
 [dev-dependencies]
 dyn-rt-test-support = { path = "../test-support" }
-serde_json = "1"

@@ -19,6 +19,3 @@ dyn-rt-json-path = { path = "../../../libs/rust/json-path", optional = true }
 dyn-rt-reflect = { path = "../../../libs/rust/reflect", optional = true }
 dyn-rt-shared = { path = "../../../libs/rust/shared", optional = true }
 
-[dev-dependencies]
-dyn-rt-test-support = { path = "../../../libs/rust/test-support" }
-serde_json = "1"

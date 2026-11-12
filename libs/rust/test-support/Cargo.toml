@@ -1,12 +1,8 @@
 [package]
 name = "dyn-rt-test-support"
-description = "Dev-only test helpers: the shared data-driven test harness (ADR 0004) plus fixture loading for suites not yet migrated. Never a runtime dependency."
+description = "Dev-only shared test harness for dyn-rt suites (ADR 0004): TestMetadata, title macros, failure reporting. Never a runtime dependency."
 version.workspace = true
 edition.workspace = true
 license-file.workspace = true
 
 [dependencies]
-dyn-rt-json-path = { path = "../json-path" }
-dyn-rt-reflect = { path = "../reflect" }
-dyn-rt-shared = { path = "../shared" }
-serde_json = { version = "1", features = ["preserve_order"] }

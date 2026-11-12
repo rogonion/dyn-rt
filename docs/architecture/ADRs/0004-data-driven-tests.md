@@ -44,7 +44,7 @@ a JSON encoding; in-language tables show accepted inputs directly.
      explicit reason in a comment directly above the test.
 - Cross-language parity is achieved by mirroring the same case tables in each
   language (same cases, same titles), not by sharing JSON files.
-  `tests/shared/` is no longer used.
+  `tests/shared/` has been removed.
 - When a runtime error is reported, FIRST add a case reproducing the scenario
   to the relevant table, then fix the code — the suite then pins both the old
   and the new behavior.

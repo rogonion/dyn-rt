@@ -17,7 +17,6 @@ libs/       one crate per module (ADR 0007): shared, test-support (dev-only),
             json-path, json-manipulation, json-schema, reflect, metadatamodel —
             each with src/{domain, application, adapters} inside
 packages/   publishable export entrypoints (one per ecosystem, feature/subpath gated)
-tests/shared/  cross-language test fixtures (Rust <-> TS parity)
 docs/       architecture ADRs + descriptions
 ```
 

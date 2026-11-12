@@ -1,9 +1,0 @@
-[
-  { "name": "object is a map", "value": { "a": 1 }, "expect_kind": "map", "expect_type": "object" },
-  { "name": "array is a sequence", "value": [1, 2], "expect_kind": "sequence", "expect_type": "array" },
-  { "name": "string is a scalar", "value": "x", "expect_kind": "scalar", "expect_type": "string" },
-  { "name": "int is a scalar", "value": 1, "expect_kind": "scalar", "expect_type": "number" },
-  { "name": "float is a scalar", "value": 1.5, "expect_kind": "scalar", "expect_type": "number" },
-  { "name": "bool is a scalar", "value": true, "expect_kind": "scalar", "expect_type": "boolean" },
-  { "name": "null is a scalar", "value": null, "expect_kind": "scalar", "expect_type": "null" }
-]
