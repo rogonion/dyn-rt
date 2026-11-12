@@ -149,13 +149,13 @@ fn type_info_table() {
                 case.expected_kind, case.info.kind,
             ));
         }
-        if let Some(expected_name) = case.expected_type_name {
-            if case.info.type_name != expected_name {
-                failures.push(format!(
-                    "{title} || type_name: expected {expected_name:?}, got {:?}",
-                    case.info.type_name,
-                ));
-            }
+        if let Some(expected_name) = case.expected_type_name
+            && case.info.type_name != expected_name
+        {
+            failures.push(format!(
+                "{title} || type_name: expected {expected_name:?}, got {:?}",
+                case.info.type_name,
+            ));
         }
         if case.info.construct().is_some() != case.constructible {
             failures.push(format!(
