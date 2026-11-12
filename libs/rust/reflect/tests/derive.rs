@@ -78,6 +78,26 @@ enum Record {
     Empty,
 }
 
+/// struct variant: named inline fields on an enum variant (Rust's
+/// equivalent of an anonymous struct inside an enum)
+#[derive(ReflectEnum, Clone, Debug, PartialEq)]
+enum Event {
+    Quit,
+    #[reflect(rename = "key")]
+    KeyPress(char),
+    Click {
+        x: i64,
+        y: i64,
+    },
+}
+
+/// struct payload used to set a struct variant by field name
+#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+struct Coords {
+    x: i64,
+    y: i64,
+}
+
 #[derive(Clone)]
 #[allow(dead_code)]
 struct Cloneable(String);
@@ -96,6 +116,7 @@ enum Subject {
     Contact(Contact),
     Expr(Expr),
     Record(Record),
+    Event(Event),
 }
 
 impl Subject {
@@ -109,6 +130,7 @@ impl Subject {
             Subject::Contact(v) => v,
             Subject::Expr(v) => v,
             Subject::Record(v) => v,
+            Subject::Event(v) => v,
         }
     }
 }
@@ -126,6 +148,10 @@ enum Op {
     PayloadKind(&'static str),
     PayloadFieldNames(&'static str),
     PayloadFieldKindAt(usize, &'static str),
+    VariantFieldNames(&'static str),
+    VariantFieldKindAt(usize, &'static str),
+    VariantFieldInfosByName(&'static str, &'static str),
+    SetVariantFields(&'static str),
     CloneRoundtrip,
     ApplyMismatch,
     SetVariant(&'static str, bool), // name, has_payload -> expect UnknownVariant or Ok
@@ -231,6 +257,53 @@ fn observe(subject: &Subject, op: &Op) -> Result<String, &'static str> {
                 None => Ok("<none>".to_string()),
             }
         }
+        Op::VariantFieldNames(_) => {
+            let e = as_enum(r).expect("enum");
+            Ok(e.reflect_active_variant_field_infos()
+                .iter()
+                .map(|f| f.name)
+                .collect::<Vec<_>>()
+                .join(","))
+        }
+        Op::VariantFieldKindAt(index, _) => {
+            let e = as_enum(r).expect("enum");
+            match e.reflect_active_variant_field_at(*index) {
+                Some(field) => Ok(kind_of(field).to_string()),
+                None => Ok("<none>".to_string()),
+            }
+        }
+        Op::VariantFieldInfosByName(variant_name, _) => {
+            let e = as_enum(r).expect("enum");
+            Ok(e.reflect_variant_field_infos(variant_name)
+                .iter()
+                .map(|f| f.name)
+                .collect::<Vec<_>>()
+                .join(","))
+        }
+        Op::SetVariantFields(variant_name) => {
+            let mut target = subject.clone();
+            let mut_ref: &mut dyn Reflect = match &mut target {
+                Subject::Event(v) => v,
+                _ => panic!("SetVariantFields op only on Event"),
+            };
+            let result = match mut_ref.reflect_ref_mut() {
+                dyn_rt_reflect::ReflectRefMut::Enum(e) => {
+                    e.reflect_set_variant(variant_name, Some(Box::new(Coords { x: 9, y: 9 })))
+                }
+                _ => panic!("enum expected"),
+            };
+            match result {
+                Ok(()) => {
+                    let landed = matches!(&target, Subject::Event(Event::Click { x: 9, y: 9 }));
+                    Ok(if landed { "equal" } else { "different" }.to_string())
+                }
+                Err(err) => Err(match err {
+                    dyn_rt_reflect::ReflectError::ShapeMismatch { .. } => "ShapeMismatch",
+                    dyn_rt_reflect::ReflectError::UnknownVariant { .. } => "UnknownVariant",
+                    other_err => panic!("unexpected error: {other_err}"),
+                }),
+            }
+        }
         Op::CloneRoundtrip => {
             let cloned = r.reflect_clone();
             let same = match subject {
@@ -242,6 +315,7 @@ fn observe(subject: &Subject, op: &Op) -> Result<String, &'static str> {
                 Subject::Contact(v) => cloned.reflect_as_any().downcast_ref::<Contact>() == Some(v),
                 Subject::Expr(v) => cloned.reflect_as_any().downcast_ref::<Expr>() == Some(v),
                 Subject::Record(v) => cloned.reflect_as_any().downcast_ref::<Record>() == Some(v),
+                Subject::Event(v) => cloned.reflect_as_any().downcast_ref::<Event>() == Some(v),
             };
             Ok(if same { "equal" } else { "different" }.to_string())
         }
@@ -260,6 +334,7 @@ fn observe(subject: &Subject, op: &Op) -> Result<String, &'static str> {
                 Subject::Contact(v) => v,
                 Subject::Expr(v) => v,
                 Subject::Record(v) => v,
+                Subject::Event(v) => v,
             };
             let result = match subject {
                 Subject::Opaque(_) => mut_ref.reflect_apply(&string_source),
@@ -670,6 +745,109 @@ fn derive_ops() {
             Op::PayloadKind("<none>"),
             Ok("<none>".to_string()),
             test_title = "unit variant of enum has no payload"
+        ),
+        // --- struct variant: Event::Click { x, y }
+        derive_case!(
+            Subject::Event(Event::Quit),
+            Op::Kind("enum"),
+            Ok("enum".to_string()),
+            test_title = "enum with struct variant routes to Enum kind"
+        ),
+        derive_case!(
+            Subject::Event(Event::Quit),
+            Op::VariantNames(""),
+            Ok("Quit,key,Click".to_string()),
+            test_title = "variant table includes struct variant and applies rename"
+        ),
+        derive_case!(
+            Subject::Event(Event::Quit),
+            Op::Variant("Quit"),
+            Ok("Quit".to_string()),
+            test_title = "unit variant active"
+        ),
+        derive_case!(
+            Subject::Event(Event::Quit),
+            Op::PayloadKind("<none>"),
+            Ok("<none>".to_string()),
+            test_title = "unit variant has no payload"
+        ),
+        derive_case!(
+            Subject::Event(Event::Quit),
+            Op::VariantFieldNames(""),
+            Ok("".to_string()),
+            test_title = "unit variant has no fields"
+        ),
+        derive_case!(
+            Subject::Event(Event::KeyPress('a')),
+            Op::Variant("key"),
+            Ok("key".to_string()),
+            test_title = "renamed tuple variant active"
+        ),
+        derive_case!(
+            Subject::Event(Event::KeyPress('a')),
+            Op::PayloadKind("scalar"),
+            Ok("scalar".to_string()),
+            test_title = "char payload of tuple variant has Scalar kind"
+        ),
+        derive_case!(
+            Subject::Event(Event::Click { x: 1, y: 2 }),
+            Op::Variant("Click"),
+            Ok("Click".to_string()),
+            test_title = "struct variant active"
+        ),
+        derive_case!(
+            Subject::Event(Event::Click { x: 1, y: 2 }),
+            Op::PayloadKind("<none>"),
+            Ok("<none>".to_string()),
+            test_title = "struct variant has no single payload (fields instead)"
+        ),
+        derive_case!(
+            Subject::Event(Event::Click { x: 1, y: 2 }),
+            Op::VariantFieldNames(""),
+            Ok("x,y".to_string()),
+            test_title = "struct variant exposes its inline field table"
+        ),
+        derive_case!(
+            Subject::Event(Event::Click { x: 1, y: 2 }),
+            Op::VariantFieldKindAt(1, "scalar"),
+            Ok("scalar".to_string()),
+            test_title = "inline field of struct variant has Scalar kind"
+        ),
+        derive_case!(
+            Subject::Event(Event::Click { x: 1, y: 2 }),
+            Op::VariantFieldInfosByName("Click", ""),
+            Ok("x,y".to_string()),
+            test_title = "field table of struct variant by variant name"
+        ),
+        derive_case!(
+            Subject::Event(Event::Click { x: 1, y: 2 }),
+            Op::VariantFieldInfosByName("Quit", ""),
+            Ok("".to_string()),
+            test_title = "field table of unit variant by name is empty"
+        ),
+        derive_case!(
+            Subject::Event(Event::Click { x: 1, y: 2 }),
+            Op::CloneRoundtrip,
+            Ok("equal".to_string()),
+            test_title = "structural clone of struct variant equals original"
+        ),
+        derive_case!(
+            Subject::Event(Event::Click { x: 1, y: 2 }),
+            Op::ApplyMismatch,
+            Err("ShapeMismatch"),
+            test_title = "apply from a different concrete type fails ShapeMismatch"
+        ),
+        derive_case!(
+            Subject::Event(Event::Quit),
+            Op::SetVariantFields("Click"),
+            Ok("equal".to_string()),
+            test_title = "set_variant on struct variant builds fields from a struct payload"
+        ),
+        derive_case!(
+            Subject::Event(Event::Quit),
+            Op::SetVariantFields("Nope"),
+            Err("UnknownVariant"),
+            test_title = "set_variant with unknown name errors UnknownVariant"
         ),
     ];
 

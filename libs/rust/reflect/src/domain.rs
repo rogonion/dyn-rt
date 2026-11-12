@@ -392,14 +392,64 @@ pub trait ReflectEnum: Reflect {
     /// Returns the full variant table of the enum.
     fn reflect_variants(&self) -> &'static [VariantInfo];
 
-    /// Returns the payload of the active variant, or `None` for unit variants.
+    /// Returns the payload of the active variant, or `None` for unit
+    /// variants and struct variants (`Variant { field: .. }`, whose data is
+    /// reached through the `reflect_active_variant_field_*` methods instead).
     fn reflect_active_variant_payload(&self) -> Option<&dyn Reflect>;
 
     /// Returns the payload of the active variant mutably, or `None`.
     fn reflect_active_variant_payload_mut(&mut self) -> Option<&mut dyn Reflect>;
 
+    /// Field table of the active variant when it is a struct variant
+    /// (`Variant { field: .. }`); empty for unit and tuple variants.
+    fn reflect_active_variant_field_infos(&self) -> &'static [FieldInfo] {
+        &[]
+    }
+
+    /// Returns the field at `index` of the active struct variant, or `None`
+    /// when out of bounds or the active variant is not a struct variant.
+    fn reflect_active_variant_field_at(&self, index: usize) -> Option<&dyn Reflect> {
+        let _ = index;
+        None
+    }
+
+    /// Returns the field at `index` of the active struct variant mutably, or
+    /// `None`.
+    fn reflect_active_variant_field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+        let _ = index;
+        None
+    }
+
+    /// Returns the field named `name` of the active struct variant, or `None`.
+    fn reflect_active_variant_field(&self, name: &str) -> Option<&dyn Reflect> {
+        let index = self
+            .reflect_active_variant_field_infos()
+            .iter()
+            .position(|field| field.name == name)?;
+        self.reflect_active_variant_field_at(index)
+    }
+
+    /// Returns the field named `name` of the active struct variant mutably,
+    /// or `None`.
+    fn reflect_active_variant_field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect> {
+        let index = self
+            .reflect_active_variant_field_infos()
+            .iter()
+            .position(|field| field.name == name)?;
+        self.reflect_active_variant_field_at_mut(index)
+    }
+
+    /// Field table of the variant named `variant_name` when it is a struct
+    /// variant; empty for unit, tuple variants and unknown names.
+    fn reflect_variant_field_infos(&self, variant_name: &str) -> &'static [FieldInfo] {
+        let _ = variant_name;
+        &[]
+    }
+
     /// Switches the enum to `variant_name`, with an optional payload. Fails
-    /// when the variant does not exist or the payload does not match.
+    /// when the variant does not exist or the payload does not match. For
+    /// struct variants the payload must be a struct carrying the variant's
+    /// fields by name.
     fn reflect_set_variant(
         &mut self,
         variant_name: &str,

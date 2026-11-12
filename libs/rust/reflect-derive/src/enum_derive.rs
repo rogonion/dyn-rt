@@ -1,13 +1,30 @@
 //! `#[derive(ReflectEnum)]` expansion: base `Reflect` impl (routing `Enum`)
 //! + the `ReflectEnum` shape impl.
+//!
+//! Supports unit variants, single-payload tuple variants, and struct
+//! variants (`Variant { field: .. }`).
 
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::punctuated::Punctuated;
 use syn::{Data, DeriveInput, Fields, Meta};
 
-use crate::attrs::{lit_str, parse_type_attrs};
+use crate::attrs::{lit_str, parse_field_attrs, parse_type_attrs};
 use crate::base::{base_impl, new_impl};
+
+/// One named field of a struct variant.
+struct VariantField {
+    ident: syn::Ident,
+    external: String,
+    ty: syn::Type,
+}
+
+/// The shape of one enum variant.
+enum VariantShape {
+    Unit,
+    Tuple(syn::Type),
+    Struct(Vec<VariantField>),
+}
 
 pub fn expand(input: DeriveInput) -> TokenStream {
     let attrs = match parse_type_attrs(&input.attrs) {
@@ -33,10 +50,10 @@ pub fn expand(input: DeriveInput) -> TokenStream {
         }
     };
 
-    // Per variant: ident, external name, payload type (unit or single tuple).
+    // Per variant: ident, external name, shape.
     let mut v_idents: Vec<syn::Ident> = Vec::new();
     let mut v_names: Vec<String> = Vec::new();
-    let mut v_payload_tys: Vec<Option<syn::Type>> = Vec::new();
+    let mut v_shapes: Vec<VariantShape> = Vec::new();
     for variant in variants {
         let mut rename: Option<String> = None;
         for attr in &variant.attrs {
@@ -67,15 +84,40 @@ pub fn expand(input: DeriveInput) -> TokenStream {
                 }
             }
         }
-        let payload_ty = match &variant.fields {
-            Fields::Unit => None,
+        let shape = match &variant.fields {
+            Fields::Unit => VariantShape::Unit,
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
-                Some(unnamed.unnamed.first().unwrap().ty.clone())
+                VariantShape::Tuple(unnamed.unnamed.first().unwrap().ty.clone())
+            }
+            Fields::Named(named) => {
+                let mut fields: Vec<VariantField> = Vec::new();
+                for field in &named.named {
+                    let fattrs = match parse_field_attrs(&field.attrs) {
+                        Ok(fattrs) => fattrs,
+                        Err(err) => return err.to_compile_error().into(),
+                    };
+                    if fattrs.skip {
+                        return syn::Error::new_spanned(
+                            field,
+                            "skip is not supported on enum struct-variant fields",
+                        )
+                        .to_compile_error()
+                        .into();
+                    }
+                    let ident = field.ident.clone().expect("named field");
+                    let external = fattrs.rename.unwrap_or_else(|| ident.to_string());
+                    fields.push(VariantField {
+                        ident,
+                        external,
+                        ty: field.ty.clone(),
+                    });
+                }
+                VariantShape::Struct(fields)
             }
             other => {
                 return syn::Error::new_spanned(
                     other,
-                    "ReflectEnum supports unit variants and single-payload tuple variants only",
+                    "ReflectEnum supports unit variants, single-payload tuple variants, and struct variants only",
                 )
                 .to_compile_error()
                 .into();
@@ -83,35 +125,159 @@ pub fn expand(input: DeriveInput) -> TokenStream {
         };
         v_idents.push(variant.ident.clone());
         v_names.push(rename.unwrap_or_else(|| variant.ident.to_string()));
-        v_payload_tys.push(payload_ty);
+        v_shapes.push(shape);
     }
+
+    let has_non_struct = v_shapes
+        .iter()
+        .any(|s| !matches!(s, VariantShape::Struct(_)));
 
     // active variant name
     let active_arms: Vec<_> = v_idents
         .iter()
         .zip(&v_names)
-        .zip(&v_payload_tys)
-        .map(|((ident, name), payload)| match payload {
-            Some(_) => quote!(Self::#ident(_) => #name,),
-            None => quote!(Self::#ident => #name,),
+        .zip(&v_shapes)
+        .map(|((ident, name), shape)| match shape {
+            VariantShape::Unit => quote!(Self::#ident => #name,),
+            VariantShape::Tuple(_) => quote!(Self::#ident(_) => #name,),
+            VariantShape::Struct(_) => quote!(Self::#ident { .. } => #name,),
         })
         .collect();
 
-    // payload access
+    // payload access: only tuple variants have a single payload; struct
+    // variants expose their data through the field_* methods instead
     let payload_arms: Vec<_> = v_idents
         .iter()
-        .zip(&v_payload_tys)
-        .map(|(ident, payload)| match payload {
-            Some(_) => quote!(Self::#ident(payload) => ::core::option::Option::Some(payload as &dyn #crate_path::Reflect),),
-            None => quote!(Self::#ident => ::core::option::Option::None,),
+        .zip(&v_shapes)
+        .map(|(ident, shape)| match shape {
+            VariantShape::Tuple(_) => {
+                quote!(Self::#ident(payload) => ::core::option::Option::Some(payload as &dyn #crate_path::Reflect),)
+            }
+            VariantShape::Unit => quote!(Self::#ident => ::core::option::Option::None,),
+            VariantShape::Struct(_) => quote!(Self::#ident { .. } => ::core::option::Option::None,),
         })
         .collect();
     let payload_mut_arms: Vec<_> = v_idents
         .iter()
-        .zip(&v_payload_tys)
-        .map(|(ident, payload)| match payload {
-            Some(_) => quote!(Self::#ident(payload) => ::core::option::Option::Some(payload as &mut dyn #crate_path::Reflect),),
-            None => quote!(Self::#ident => ::core::option::Option::None,),
+        .zip(&v_shapes)
+        .map(|(ident, shape)| match shape {
+            VariantShape::Tuple(_) => {
+                quote!(Self::#ident(payload) => ::core::option::Option::Some(payload as &mut dyn #crate_path::Reflect),)
+            }
+            VariantShape::Unit => quote!(Self::#ident => ::core::option::Option::None,),
+            VariantShape::Struct(_) => {
+                quote!(Self::#ident { .. } => ::core::option::Option::None,)
+            }
+        })
+        .collect();
+
+    // active-variant field table: one static per struct variant, each in its
+    // own block scope (the impl is non-generic, enforced above)
+    let field_infos_arms: Vec<_> = v_idents
+        .iter()
+        .zip(&v_shapes)
+        .filter_map(|(ident, shape)| match shape {
+            VariantShape::Struct(fields) => {
+                let exts: Vec<&String> = fields.iter().map(|f| &f.external).collect();
+                let tys: Vec<&syn::Type> = fields.iter().map(|f| &f.ty).collect();
+                Some(quote! {
+                    Self::#ident { .. } => {
+                        static FIELDS: ::std::sync::OnceLock<::std::vec::Vec<#crate_path::FieldInfo>> =
+                            ::std::sync::OnceLock::new();
+                        FIELDS
+                            .get_or_init(|| ::std::vec![
+                                #(
+                                    #crate_path::FieldInfo {
+                                        name: #exts,
+                                        type_info: #crate_path::type_info::<#tys>(),
+                                    },
+                                )*
+                            ])
+                            .as_slice()
+                    }
+                })
+            }
+            _ => None,
+        })
+        .collect();
+    let field_infos_fallback = if has_non_struct {
+        Some(quote!(_ => &[],))
+    } else {
+        None
+    };
+
+    // active-variant field access by index
+    let field_at_arms: Vec<_> = v_idents
+        .iter()
+        .zip(&v_shapes)
+        .filter_map(|(ident, shape)| match shape {
+            VariantShape::Struct(fields) => {
+                let fidents: Vec<&syn::Ident> = fields.iter().map(|f| &f.ident).collect();
+                let indices: Vec<usize> = (0..fields.len()).collect();
+                Some(quote! {
+                    Self::#ident { #(#fidents),* } => match index {
+                        #(#indices => ::core::option::Option::Some(#fidents as &dyn #crate_path::Reflect),)*
+                        _ => ::core::option::Option::None,
+                    },
+                })
+            }
+            _ => None,
+        })
+        .collect();
+    let field_at_fallback = if has_non_struct {
+        Some(quote!(_ => ::core::option::Option::None,))
+    } else {
+        None
+    };
+    let field_at_mut_arms: Vec<_> = v_idents
+        .iter()
+        .zip(&v_shapes)
+        .filter_map(|(ident, shape)| match shape {
+            VariantShape::Struct(fields) => {
+                let fidents: Vec<&syn::Ident> = fields.iter().map(|f| &f.ident).collect();
+                let indices: Vec<usize> = (0..fields.len()).collect();
+                Some(quote! {
+                    Self::#ident { #(#fidents),* } => match index {
+                        #(#indices => ::core::option::Option::Some(#fidents as &mut dyn #crate_path::Reflect),)*
+                        _ => ::core::option::Option::None,
+                    },
+                })
+            }
+            _ => None,
+        })
+        .collect();
+    let field_at_mut_fallback = if has_non_struct {
+        Some(quote!(_ => ::core::option::Option::None,))
+    } else {
+        None
+    };
+
+    // field table per variant name (static introspection, e.g. for schema)
+    let variant_field_infos_arms: Vec<_> = v_names
+        .iter()
+        .zip(&v_shapes)
+        .filter_map(|(name, shape)| match shape {
+            VariantShape::Struct(fields) => {
+                let exts: Vec<&String> = fields.iter().map(|f| &f.external).collect();
+                let tys: Vec<&syn::Type> = fields.iter().map(|f| &f.ty).collect();
+                Some(quote! {
+                    #name => {
+                        static FIELDS: ::std::sync::OnceLock<::std::vec::Vec<#crate_path::FieldInfo>> =
+                            ::std::sync::OnceLock::new();
+                        FIELDS
+                            .get_or_init(|| ::std::vec![
+                                #(
+                                    #crate_path::FieldInfo {
+                                        name: #exts,
+                                        type_info: #crate_path::type_info::<#tys>(),
+                                    },
+                                )*
+                            ])
+                            .as_slice()
+                    }
+                })
+            }
+            _ => None,
         })
         .collect();
 
@@ -119,9 +285,9 @@ pub fn expand(input: DeriveInput) -> TokenStream {
     let set_arms: Vec<_> = v_idents
         .iter()
         .zip(&v_names)
-        .zip(&v_payload_tys)
-        .map(|((ident, name), payload)| match payload {
-            None => quote! {
+        .zip(&v_shapes)
+        .map(|((ident, name), shape)| match shape {
+            VariantShape::Unit => quote! {
                 #name => {
                     if payload.is_some() {
                         return ::core::result::Result::Err(#crate_path::ReflectError::ShapeMismatch {
@@ -134,7 +300,7 @@ pub fn expand(input: DeriveInput) -> TokenStream {
                     ::core::result::Result::Ok(())
                 }
             },
-            Some(ty) => quote! {
+            VariantShape::Tuple(ty) => quote! {
                 #name => {
                     let payload = payload.ok_or_else(|| #crate_path::ReflectError::UnknownVariant {
                         variant: ::std::format!("{} (missing payload)", #name),
@@ -152,35 +318,94 @@ pub fn expand(input: DeriveInput) -> TokenStream {
                     ::core::result::Result::Ok(())
                 }
             },
+            VariantShape::Struct(fields) => {
+                let fidents: Vec<&syn::Ident> = fields.iter().map(|f| &f.ident).collect();
+                let exts: Vec<&String> = fields.iter().map(|f| &f.external).collect();
+                let tys: Vec<&syn::Type> = fields.iter().map(|f| &f.ty).collect();
+                quote! {
+                    #name => {
+                        let payload = payload.ok_or_else(|| #crate_path::ReflectError::UnknownVariant {
+                            variant: ::std::format!("{} (missing fields payload)", #name),
+                            type_name: ::core::any::type_name::<Self>().to_string(),
+                        })?;
+                        let source_fields = #crate_path::as_struct(&*payload).ok_or_else(|| #crate_path::ReflectError::ShapeMismatch {
+                            operation: "reflect_set_variant",
+                            target: ::core::any::type_name::<Self>().to_string(),
+                            source: "struct variant payload must be a struct".to_string(),
+                        })?;
+                        *self = Self::#ident {
+                            #(
+                                #fidents: {
+                                    let field = source_fields.reflect_field(#exts).ok_or_else(|| #crate_path::ReflectError::ShapeMismatch {
+                                        operation: "reflect_set_variant",
+                                        target: ::core::any::type_name::<Self>().to_string(),
+                                        source: ::std::format!("payload has no field {}", #exts),
+                                    })?;
+                                    *field.reflect_clone().reflect_into_any().downcast::<#tys>().map_err(|_| #crate_path::ReflectError::ShapeMismatch {
+                                        operation: "reflect_set_variant",
+                                        target: ::core::any::type_name::<Self>().to_string(),
+                                        source: ::std::format!("payload field {} has the wrong type", #exts),
+                                    })?
+                                },
+                            )*
+                        };
+                        ::core::result::Result::Ok(())
+                    }
+                }
+            }
         })
         .collect();
 
     // clone arms
     let clone_arms: Vec<_> = v_idents
         .iter()
-        .zip(&v_payload_tys)
-        .map(|(ident, payload)| match payload {
-            None => quote!(Self::#ident => ::std::boxed::Box::new(Self::#ident),),
-            Some(ty) => quote! {
+        .zip(&v_shapes)
+        .map(|(ident, shape)| match shape {
+            VariantShape::Unit => quote!(Self::#ident => ::std::boxed::Box::new(Self::#ident),),
+            VariantShape::Tuple(ty) => quote! {
                 Self::#ident(payload) => ::std::boxed::Box::new(Self::#ident(
                     *payload.reflect_clone().reflect_into_any().downcast::<#ty>().expect("payload clone returns the payload type")
                 )),
             },
+            VariantShape::Struct(fields) => {
+                let fidents: Vec<&syn::Ident> = fields.iter().map(|f| &f.ident).collect();
+                let tys: Vec<&syn::Type> = fields.iter().map(|f| &f.ty).collect();
+                quote! {
+                    Self::#ident { #(#fidents),* } => ::std::boxed::Box::new(Self::#ident {
+                        #(
+                            #fidents: *#fidents.reflect_clone().reflect_into_any().downcast::<#tys>().expect("field clone returns the field type"),
+                        )*
+                    }),
+                }
+            }
         })
         .collect();
 
-    // apply arms (same variant on both sides; payload applied structurally)
+    // apply arms (same variant on both sides; fields/payload applied structurally)
     let apply_arms: Vec<_> = v_idents
         .iter()
-        .zip(&v_payload_tys)
-        .map(|(ident, payload)| match payload {
-            None => quote!((Self::#ident, Self::#ident) => ::core::result::Result::Ok(()),),
-            Some(_) => quote! {
+        .zip(&v_shapes)
+        .map(|(ident, shape)| match shape {
+            VariantShape::Unit => quote!((Self::#ident, Self::#ident) => ::core::result::Result::Ok(()),),
+            VariantShape::Tuple(_) => quote! {
                 (Self::#ident(target), Self::#ident(source)) => {
                     target.reflect_apply(source)?;
                     ::core::result::Result::Ok(())
                 }
             },
+            VariantShape::Struct(fields) => {
+                let fidents: Vec<&syn::Ident> = fields.iter().map(|f| &f.ident).collect();
+                let src_fidents: Vec<syn::Ident> = fields
+                    .iter()
+                    .map(|f| format_ident!("src_{}", f.ident))
+                    .collect();
+                quote! {
+                    (Self::#ident { #(#fidents),* }, Self::#ident { #(#fidents: #src_fidents),* }) => {
+                        #(#fidents.reflect_apply(#src_fidents)?;)*
+                        ::core::result::Result::Ok(())
+                    }
+                }
+            }
         })
         .collect();
 
@@ -208,11 +433,13 @@ pub fn expand(input: DeriveInput) -> TokenStream {
 
     let variant_infos: Vec<_> = v_names
         .iter()
-        .zip(&v_payload_tys)
-        .map(|(name, payload)| {
-            let payload_info = match payload {
-                Some(ty) => quote!(::core::option::Option::Some(#crate_path::type_info::<#ty>())),
-                None => quote!(::core::option::Option::None),
+        .zip(&v_shapes)
+        .map(|(name, shape)| {
+            let payload_info = match shape {
+                VariantShape::Tuple(ty) => {
+                    quote!(::core::option::Option::Some(#crate_path::type_info::<#ty>()))
+                }
+                _ => quote!(::core::option::Option::None),
             };
             quote! {
                 #crate_path::VariantInfo {
@@ -250,6 +477,34 @@ pub fn expand(input: DeriveInput) -> TokenStream {
             fn reflect_active_variant_payload_mut(&mut self) -> ::core::option::Option<&mut dyn #crate_path::Reflect> {
                 match self {
                     #(#payload_mut_arms)*
+                }
+            }
+
+            fn reflect_active_variant_field_infos(&self) -> &'static [#crate_path::FieldInfo] {
+                match self {
+                    #(#field_infos_arms)*
+                    #field_infos_fallback
+                }
+            }
+
+            fn reflect_active_variant_field_at(&self, index: usize) -> ::core::option::Option<&dyn #crate_path::Reflect> {
+                match self {
+                    #(#field_at_arms)*
+                    #field_at_fallback
+                }
+            }
+
+            fn reflect_active_variant_field_at_mut(&mut self, index: usize) -> ::core::option::Option<&mut dyn #crate_path::Reflect> {
+                match self {
+                    #(#field_at_mut_arms)*
+                    #field_at_mut_fallback
+                }
+            }
+
+            fn reflect_variant_field_infos(&self, variant_name: &str) -> &'static [#crate_path::FieldInfo] {
+                match variant_name {
+                    #(#variant_field_infos_arms)*
+                    _ => &[],
                 }
             }
 

@@ -101,6 +101,13 @@ fn type_info_table() {
             test_title = "bool type info"
         ),
         type_info_case!(
+            TypeInfo::of::<char>(),
+            ReflectKind::Scalar,
+            Some("char"),
+            false,
+            test_title = "char type info"
+        ),
+        type_info_case!(
             TypeInfo::of::<i64>(),
             ReflectKind::Scalar,
             Some("i64"),

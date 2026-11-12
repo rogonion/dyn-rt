@@ -60,6 +60,7 @@ macro_rules! impl_reflect_scalar {
 
 impl_reflect_scalar!(
     bool => "bool",
+    char => "char",
     i64 => "i64",
     u64 => "u64",
     f64 => "f64",
