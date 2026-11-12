@@ -6,7 +6,7 @@ edition.workspace = true
 license-file.workspace = true
 
 [dependencies]
-# imported ONLY in src/adapters.rs (impl Reflect for shared::Value)
+# imported ONLY in src/adapters/ (impl Reflect for shared::Value)
 dyn-rt-shared = { path = "../shared" }
 
 [dev-dependencies]

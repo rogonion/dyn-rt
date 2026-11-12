@@ -6,7 +6,8 @@
 //! A value's kind is never queried independently of the operations it supports:
 //! [`Reflect::reflect_ref`] returns the shape handle (e.g. `&dyn ReflectSequence`)
 //! directly, so the kind of a value and the operations available on it cannot
-//! disagree. Use [`ReflectRef::kind`] when only the classification is needed.
+//! disagree — except `Unknown`, which by definition offers no shape operations.
+//! Use [`ReflectRef::kind`] when only the classification is needed.
 //!
 //! All methods are prefixed with `reflect_` to avoid collisions with
 //! user-defined methods.
@@ -30,10 +31,46 @@ use std::sync::OnceLock;
 
 use crate::error::ReflectError;
 
+/// Structural categories of reflectable types. Classification only — never a
+/// dispatch input; dispatch happens by matching [`ReflectRef`].
+///
+/// `Unknown` is the base fallback: a type that implements only [`Reflect`] and
+/// no shape trait routes here, so uncovered types (e.g. `Cow`) are
+/// representable in the dynamic plane without forcing a `Reflect*` impl
+/// (ADR 0008).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ReflectKind {
+    Scalar,
+    Sequence,
+    Map,
+    Struct,
+    Enum,
+    Indirection,
+    /// Base fallback for types implementing only `Reflect` (no shape trait).
+    Unknown,
+}
+
+impl std::fmt::Display for ReflectKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            ReflectKind::Scalar => "scalar",
+            ReflectKind::Sequence => "sequence",
+            ReflectKind::Map => "map",
+            ReflectKind::Struct => "struct",
+            ReflectKind::Enum => "enum",
+            ReflectKind::Indirection => "indirection",
+            ReflectKind::Unknown => "unknown",
+        };
+        f.write_str(name)
+    }
+}
+
 /// The root gateway trait for runtime reflection.
 ///
-/// Scalars implement only this trait; containers and nominal types additionally
-/// implement the shape trait matching their structure.
+/// Scalars implement only this trait (routing to `Scalar`); containers and
+/// nominal types additionally implement the shape trait matching their
+/// structure. Types with no shape implement only this trait and route to
+/// [`ReflectRef::Unknown`].
 pub trait Reflect: Any {
     /// Human-readable, stable type identifier.
     fn reflect_type_name(&self) -> &'static str;
@@ -85,6 +122,8 @@ pub enum ReflectRef<'a> {
     Enum(&'a dyn ReflectEnum),
     /// Pointer-like types wrapping another value (e.g. `Box<T>`, `Rc<T>`, `RefCell<T>`).
     Indirection(&'a dyn ReflectIndirection),
+    /// Base fallback: the type implements only `Reflect`, no shape trait.
+    Unknown(&'a dyn Reflect),
 }
 
 impl ReflectRef<'_> {
@@ -96,6 +135,7 @@ impl ReflectRef<'_> {
             ReflectRef::Struct(_) => ReflectKind::Struct,
             ReflectRef::Enum(_) => ReflectKind::Enum,
             ReflectRef::Indirection(_) => ReflectKind::Indirection,
+            ReflectRef::Unknown(_) => ReflectKind::Unknown,
         }
     }
 }
@@ -108,6 +148,7 @@ pub enum ReflectRefMut<'a> {
     Struct(&'a mut dyn ReflectStruct),
     Enum(&'a mut dyn ReflectEnum),
     Indirection(&'a mut dyn ReflectIndirection),
+    Unknown(&'a mut dyn Reflect),
 }
 
 impl ReflectRefMut<'_> {
@@ -119,33 +160,8 @@ impl ReflectRefMut<'_> {
             ReflectRefMut::Struct(_) => ReflectKind::Struct,
             ReflectRefMut::Enum(_) => ReflectKind::Enum,
             ReflectRefMut::Indirection(_) => ReflectKind::Indirection,
+            ReflectRefMut::Unknown(_) => ReflectKind::Unknown,
         }
-    }
-}
-
-/// Structural categories of reflectable types. Classification only — never a
-/// dispatch input; dispatch happens by matching [`ReflectRef`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ReflectKind {
-    Scalar,
-    Sequence,
-    Map,
-    Struct,
-    Enum,
-    Indirection,
-}
-
-impl std::fmt::Display for ReflectKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let name = match self {
-            ReflectKind::Scalar => "scalar",
-            ReflectKind::Sequence => "sequence",
-            ReflectKind::Map => "map",
-            ReflectKind::Struct => "struct",
-            ReflectKind::Enum => "enum",
-            ReflectKind::Indirection => "indirection",
-        };
-        f.write_str(name)
     }
 }
 
@@ -222,7 +238,8 @@ pub struct VariantInfo {
 }
 
 /// Shape of a sequence (array/slice-like): positional access. Fixed-size
-/// sequences implement `reflect_push` as an unsupported operation.
+/// sequences implement `reflect_push` as an unsupported operation, mirroring
+/// the slice/array distinction.
 pub trait ReflectSequence: Reflect {
     /// Returns the element at `index`, or `None` when out of bounds.
     fn reflect_get(&self, index: usize) -> Option<&dyn Reflect>;

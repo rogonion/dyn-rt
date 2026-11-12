@@ -20,14 +20,22 @@ handle directly, so kind and access are one fact.
   - `domain` (std only, Value-agnostic): `Reflect` trait (`reflect_type_name`,
     `reflect_ref`, `reflect_ref_mut`, `reflect_clone`, `reflect_apply`,
     `reflect_as_any`, `reflect_as_any_mut`, `reflect_into_any`, type-level
-    `reflect_kind()`), `ReflectRef`/`ReflectRefMut` with all six variants
-    (`Scalar(&dyn Reflect)`, `Sequence`, `Map`, `Struct`, `Enum`, `Indirection`),
-    `ReflectKind` (6 kinds), shape traits `ReflectSequence` / `ReflectMap` /
+    `reflect_kind()`), `ReflectRef`/`ReflectRefMut` with all SEVEN variants
+    (`Scalar(&dyn Reflect)`, `Sequence`, `Map`, `Struct`, `Enum`, `Indirection`,
+    and `Unknown(&dyn Reflect)` — the base fallback: a type that implements
+    only `Reflect` and no shape trait routes to `Unknown`, so uncovered types
+    (e.g. `Cow`) are representable without forcing a `Reflect*` impl),
+    `ReflectKind` (7 kinds), shape traits `ReflectSequence` / `ReflectMap` /
     `ReflectStruct` / `ReflectEnum` / `ReflectIndirection`, `ReflectNew` +
     `TypeInfo` + cached `type_info()`, `FieldInfo` / `VariantInfo`, and the
     full `ReflectError` vocabulary (`#[non_exhaustive]`).
-  - `application`: thin semantic helpers (`kind_of`, `as_*` downcasts,
+  - `application`: thin semantic helpers (`kind_of`, per-kind `as_*` downcasts,
     `children`, `reflect_with_inner` / `reflect_with_inner_mut`).
+  - Folder organization: `domain.rs` and `application.rs` stay flat single
+    files (the whole trait system / all downcast helpers); only `adapters/`
+    is split one file per `ReflectKind` (scalar, sequence, map, struct_shape,
+    enum_shape, indirection, unknown, value), so the folder listing shows at
+    a glance which built-in types are covered.
   - `adapters`: `impl Reflect` for `shared::Value` (Object→Map, Array→Sequence,
     scalars→Scalar; clone/apply/kind included), scalar primitives via a
     declarative macro (sanctioned by ADR 0005), `Vec<T>`→Sequence,
