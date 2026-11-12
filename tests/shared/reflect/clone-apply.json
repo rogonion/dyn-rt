@@ -1,0 +1,7 @@
+[
+  { "name": "clone of object is deep and equal", "op": "clone", "value": { "a": [1, 2] }, "expected": { "a": [1, 2] } },
+  { "name": "clone of scalar", "op": "clone", "value": 5, "expected": 5 },
+  { "name": "clone of array", "op": "clone", "value": [1, "x"], "expected": [1, "x"] },
+  { "name": "apply copies structurally", "op": "apply", "value": { "a": 1 }, "source": { "a": 1, "b": 2 }, "expected": { "a": 1, "b": 2 } },
+  { "name": "apply with wrong concrete type fails", "op": "apply", "value": { "a": 1 }, "source_string": "hello", "expect_error": "ShapeMismatch" }
+]

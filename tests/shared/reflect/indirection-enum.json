@@ -1,0 +1,11 @@
+[
+  { "name": "box inner read", "build": { "box": { "a": 1 } }, "op": "inner", "expected": { "a": 1 } },
+  { "name": "box set_inner replaces", "build": { "box": { "a": 1 } }, "op": "set_inner", "set": { "b": 2 }, "expected": { "b": 2 } },
+  { "name": "box delete_inner unsupported", "build": { "box": 1 }, "op": "delete_inner", "expect_error": "UnsupportedOperation" },
+  { "name": "box kind is indirection", "build": { "box": 1 }, "op": "kind", "expected": "indirection" },
+  { "name": "option some reports Some variant", "build": { "some": 5 }, "op": "variant", "expected": "Some" },
+  { "name": "option none reports None variant", "build": { "none": true }, "op": "variant", "expected": "None" },
+  { "name": "option some payload readable", "build": { "some": 5 }, "op": "payload", "expected": 5 },
+  { "name": "option set_variant to None", "build": { "some": 5 }, "op": "set_variant", "variant": "None", "expected_none": true },
+  { "name": "option set_variant unknown fails", "build": { "some": 5 }, "op": "set_variant", "variant": "Maybe", "expect_error": "UnknownVariant" }
+]

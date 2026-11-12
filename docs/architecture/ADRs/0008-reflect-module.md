@@ -13,22 +13,28 @@ handle directly, so kind and access are one fact.
 
 ## Decision
 
-- `libs/rust/reflect` = crate `dyn-rt-reflect`, independent and general-purpose:
+- `libs/rust/reflect` = crate `dyn-rt-reflect`, independent and general-purpose,
+  porting the FULL dyn-rt-rs-old-3 reflection surface, not a trimmed subset —
+  json-manipulation AND metadatamodel both consume it (metadatamodel needs
+  `reflect_clone`, schema needs `TypeInfo`/`ReflectNew` construction):
   - `domain` (std only, Value-agnostic): `Reflect` trait (`reflect_type_name`,
-    `reflect_ref`, `reflect_ref_mut`), `ReflectRef`/`ReflectRefMut` enums
-    carrying the shape handle (`Scalar` / `Sequence(&dyn ReflectSequence)` /
-    `Map(&dyn ReflectMap)` / `Indirection(&dyn ReflectIndirection)`), `Kind`,
-    and a closed `ReflectError` vocabulary. Deliberately trimmed from old-3:
-    no `TypeInfo`/`ReflectNew` construction, no `ReflectEnum`/`ReflectStruct` —
-    the JSON runtime needs kind + access + map/sequence/indirection only;
-    schema-driven construction is the schema module's job later.
-  - `application`: thin semantic helpers (`kind_of`, `as_map`/`as_sequence`
-    (+ `_mut`), `children` for recursive descent).
+    `reflect_ref`, `reflect_ref_mut`, `reflect_clone`, `reflect_apply`,
+    `reflect_as_any`, `reflect_as_any_mut`, `reflect_into_any`, type-level
+    `reflect_kind()`), `ReflectRef`/`ReflectRefMut` with all six variants
+    (`Scalar(&dyn Reflect)`, `Sequence`, `Map`, `Struct`, `Enum`, `Indirection`),
+    `ReflectKind` (6 kinds), shape traits `ReflectSequence` / `ReflectMap` /
+    `ReflectStruct` / `ReflectEnum` / `ReflectIndirection`, `ReflectNew` +
+    `TypeInfo` + cached `type_info()`, `FieldInfo` / `VariantInfo`, and the
+    full `ReflectError` vocabulary (`#[non_exhaustive]`).
+  - `application`: thin semantic helpers (`kind_of`, `as_*` downcasts,
+    `children`, `reflect_with_inner` / `reflect_with_inner_mut`).
   - `adapters`: `impl Reflect` for `shared::Value` (Object→Map, Array→Sequence,
-    scalars→Scalar), scalar primitives via a declarative macro (sanctioned by
-    ADR 0005), `Vec<T>`→Sequence, `Box<T>`→Indirection. This is the only place
-    the crate imports `shared`; later a `serde_json::Value` adapter lands here
-    too (serde allowed in adapters only).
+    scalars→Scalar; clone/apply/kind included), scalar primitives via a
+    declarative macro (sanctioned by ADR 0005), `Vec<T>`→Sequence,
+    `Box<T>`→Indirection, `Option<T>`→Enum, `Rc<T>`/`Arc<T>`/`RefCell<T>`/
+    `Mutex<T>`→Indirection (share-clone for Rc/Arc, borrow-failure errors for
+    guards). This is the only place the crate imports `shared`; later a
+    `serde_json::Value` adapter lands here too (serde allowed in adapters only).
 - Public APIs of dependent modules (json-manipulation, json-schema) take
   documents as `&dyn Reflect` — any type implementing `Reflect` is traversable;
   a value that does not implement a more concrete `Reflect*` shape simply
