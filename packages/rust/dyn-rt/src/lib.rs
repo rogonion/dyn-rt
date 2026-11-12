@@ -43,4 +43,14 @@ pub mod json {
             parse_path(&RegexPathTokenizer, path)
         }
     }
+
+    #[cfg(feature = "json-schema")]
+    pub mod schema {
+        //! JSON-like schema: model (domain), validation + schema-path
+        //! (application), format deserialization adapters.
+        pub use dyn_rt_json_schema::adapters::*;
+        pub use dyn_rt_json_schema::application::*;
+        pub use dyn_rt_json_schema::domain::*;
+        pub use dyn_rt_json_schema::error::SchemaError;
+    }
 }

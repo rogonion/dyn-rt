@@ -1,0 +1,14 @@
+[package]
+name = "dyn-rt-json-schema"
+description = "dyn-rt json-schema module: schema model (domain), validation + schema-path use cases (application), format deserialization adapters (adapters). Depends on reflect, json-path, shared."
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+
+[dependencies]
+dyn-rt-shared = { path = "../shared" }
+dyn-rt-reflect = { path = "../reflect" }
+dyn-rt-json-path = { path = "../json-path" }
+
+[dev-dependencies]
+dyn-rt-test-support = { path = "../test-support" }

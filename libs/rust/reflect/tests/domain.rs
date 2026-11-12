@@ -108,6 +108,34 @@ fn type_info_table() {
             test_title = "char type info"
         ),
         type_info_case!(
+            TypeInfo::of::<i32>(),
+            ReflectKind::Scalar,
+            Some("i32"),
+            false,
+            test_title = "i32 type info"
+        ),
+        type_info_case!(
+            TypeInfo::of::<u8>(),
+            ReflectKind::Scalar,
+            Some("u8"),
+            false,
+            test_title = "u8 type info"
+        ),
+        type_info_case!(
+            TypeInfo::of::<usize>(),
+            ReflectKind::Scalar,
+            Some("usize"),
+            false,
+            test_title = "usize type info"
+        ),
+        type_info_case!(
+            TypeInfo::of::<f32>(),
+            ReflectKind::Scalar,
+            Some("f32"),
+            false,
+            test_title = "f32 type info"
+        ),
+        type_info_case!(
             TypeInfo::of::<i64>(),
             ReflectKind::Scalar,
             Some("i64"),

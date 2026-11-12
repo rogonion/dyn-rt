@@ -16,6 +16,7 @@ name = "dyn-rt"
 version = "0.1.0"
 dependencies = [
  "dyn-rt-json-path",
+ "dyn-rt-json-schema",
  "dyn-rt-reflect",
  "dyn-rt-shared",
 ]
@@ -33,6 +34,16 @@ version = "0.1.0"
 dependencies = [
  "dyn-rt-test-support",
  "regex",
+]
+
+[[package]]
+name = "dyn-rt-json-schema"
+version = "0.1.0"
+dependencies = [
+ "dyn-rt-json-path",
+ "dyn-rt-reflect",
+ "dyn-rt-shared",
+ "dyn-rt-test-support",
 ]
 
 [[package]]

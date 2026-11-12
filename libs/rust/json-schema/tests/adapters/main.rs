@@ -1,0 +1,166 @@
+//! Data-driven suite for the json-schema ADAPTERS layer (ADR 0004/0009):
+//! schema-path resolution from JSONPath strings (src/adapters/mod.rs).
+
+#[path = "../common/mod.rs"]
+mod common;
+
+use common::*;
+use dyn_rt_json_schema::Schema;
+use dyn_rt_json_schema::adapters::schema_at_path_str;
+use dyn_rt_reflect::ReflectKind;
+use dyn_rt_shared::Value;
+use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use std::collections::HashMap;
+
+struct PathCase {
+    meta: TestMetadata,
+    path: &'static str,
+    schema: Schema,
+    /// Ok((kind, type_name, valid_set_keys)) or Err(message fragment)
+    expected: Result<(ReflectKind, String, Vec<String>), &'static str>,
+}
+
+macro_rules! path_case {
+    ($path:expr, $schema:expr, $expected:expr $(, test_title = $title:expr)?) => {
+        PathCase {
+            meta: new_test_metadata!(
+                $(
+                    test_title = Some($title.to_string())
+                )?
+            ),
+            path: $path,
+            schema: $schema,
+            expected: $expected,
+        }
+    };
+}
+
+#[test]
+fn schema_path_cases() {
+    let test_data: Vec<_> = vec![
+        path_case!(
+            "$",
+            Schema::Node(user_schema()),
+            Ok((
+                ReflectKind::Struct,
+                std::any::type_name::<User>().to_string(),
+                vec![]
+            )),
+            test_title = "root resolves to the schema root node"
+        ),
+        path_case!(
+            "$.Name",
+            Schema::Node(user_schema()),
+            Ok((
+                ReflectKind::Scalar,
+                std::any::type_name::<String>().to_string(),
+                vec![]
+            )),
+            test_title = "struct field resolves to its scalar node"
+        ),
+        path_case!(
+            "$.Address.Street",
+            Schema::Node(user_profile_schema()),
+            Ok((
+                ReflectKind::Scalar,
+                std::any::type_name::<String>().to_string(),
+                vec![]
+            )),
+            test_title = "nested struct field path"
+        ),
+        path_case!(
+            "$.Employees[0].Name",
+            Schema::Node(company_schema()),
+            Ok((
+                ReflectKind::Scalar,
+                std::any::type_name::<String>().to_string(),
+                vec![]
+            )),
+            test_title = "sequence index through an indirection into a struct field"
+        ),
+        path_case!(
+            "$.MapData",
+            Schema::Node(nested_item_schema()),
+            Ok((
+                ReflectKind::Map,
+                std::any::type_name::<HashMap<String, Value>>().to_string(),
+                vec![]
+            )),
+            test_title = "map-typed field resolves to the map node"
+        ),
+        path_case!(
+            "$.ZipCode",
+            Schema::Node(address_schema()),
+            Ok((
+                ReflectKind::Enum,
+                std::any::type_name::<Option<String>>().to_string(),
+                vec![]
+            )),
+            test_title = "Option field resolves to the enum node"
+        ),
+        path_case!(
+            "$[0]",
+            Schema::Node(list_of_products_schema()),
+            Ok((
+                ReflectKind::Struct,
+                std::any::type_name::<Product>().to_string(),
+                vec![]
+            )),
+            test_title = "sequence index resolves to the element schema"
+        ),
+        path_case!(
+            "$[0]",
+            Schema::Node(list_of_shapes_schema()),
+            Ok((
+                ReflectKind::Struct,
+                std::any::type_name::<Circle>().to_string(),
+                vec!["Circle".to_string()]
+            )),
+            test_title =
+                "set-valued element resolves to its default/first node and records the key"
+        ),
+        path_case!(
+            "$.Unknown",
+            Schema::Node(user_schema()),
+            Err("not found"),
+            test_title = "unknown struct field errors"
+        ),
+        path_case!(
+            "$..Name",
+            Schema::Node(user_schema()),
+            Err("multiple recursive descent"),
+            test_title = "recursive descent paths are rejected"
+        ),
+    ];
+
+    let mut failures: Vec<String> = Vec::new();
+    for (test_index, case) in test_data.iter().enumerate() {
+        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let got = schema_at_path_str(case.path, &case.schema);
+        match (&case.expected, &got) {
+            (Ok((kind, type_name, keys)), Ok(resolved)) => {
+                let got_kind = resolved.node.kind();
+                let got_type = resolved.node.type_info.type_name.to_string();
+                if &got_kind != kind || &got_type != type_name || &resolved.valid_set_keys != keys {
+                    failures.push(format!(
+                        "{title} || expected ({:?}, {:?}, {:?}), got ({:?}, {:?}, {:?})",
+                        kind, type_name, keys, got_kind, got_type, resolved.valid_set_keys
+                    ));
+                }
+            }
+            (Err(fragment), Err(err)) => {
+                if !err.to_string().contains(fragment) {
+                    failures.push(format!(
+                        "{title} || error: expected fragment {:?}, got {:?}",
+                        fragment, err
+                    ));
+                }
+            }
+            _ => failures.push(format!(
+                "{title} || expected {:?}, got {:?}",
+                case.expected, got
+            )),
+        }
+    }
+    report_failures(failures, test_data.len());
+}
