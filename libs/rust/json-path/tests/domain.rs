@@ -1,44 +1,29 @@
-//! Data-driven suite for full path parse + Display round-trip (ADR 0004).
-//! Case table built with `parse_case!` and the `json_path_*_segment!` /
-//! `new_recursive_descent_segment(s)!` constructor macros, so the expected
-//! AST reads like the path itself.
+//! Domain-layer suite for json-path (ADR 0009): Display rendering of the AST,
+//! built with the `json_path_*_segment!` / `new_recursive_descent_segment(s)!`
+//! constructor macros so the table reads like the paths themselves.
 
 mod common;
 
-use common::{ParseCase, parse_case};
+use common::{RenderCase, render_case};
 use dyn_rt_json_path::domain::AccessStrategy;
 use dyn_rt_json_path::{
-    RegexPathTokenizer, json_path_index_selector_segment, json_path_key_selector_segment,
-    json_path_root_segment, json_path_slice_selector_segment, json_path_union_selector_segment,
-    json_path_wildcard_segment, new_recursive_descent_segment, new_recursive_descent_segments,
+    json_path_index_selector_segment, json_path_key_selector_segment, json_path_root_segment,
+    json_path_slice_selector_segment, json_path_union_selector_segment, json_path_wildcard_segment,
+    new_recursive_descent_segment, new_recursive_descent_segments,
 };
-use dyn_rt_test_support::new_test_metadata;
-use dyn_rt_test_support::{new_test_title, report_failures};
+use dyn_rt_test_support::{new_test_metadata, new_test_title, report_failures};
 
 #[test]
-fn path_parse() {
-    let test_data = yield_parse_data();
+fn ast_render_roundtrip() {
+    let test_data = yield_render_data();
     let mut failures: Vec<String> = Vec::new();
 
     for (test_index, case) in test_data.iter().enumerate() {
-        let result = dyn_rt_json_path::parse_path(&RegexPathTokenizer, case.source);
-
-        if result != case.expected {
-            failures.push(format!(
-                "{} || parse mismatch for path {} || expected {:?} ; got {:?}",
-                new_test_title!(test_index + 1, case.meta.test_title),
-                case.source,
-                case.expected,
-                result,
-            ));
-        }
-
-        let rendered = result.to_string();
+        let rendered = case.segments.to_string();
         if rendered != case.roundtrip {
             failures.push(format!(
-                "{} || round-trip mismatch for path {} || expected {:?} ; got {:?}",
+                "{} || expected {:?}, got {:?}",
                 new_test_title!(test_index + 1, case.meta.test_title),
-                case.source,
                 case.roundtrip,
                 rendered,
             ));
@@ -48,10 +33,9 @@ fn path_parse() {
     report_failures(failures, test_data.len());
 }
 
-fn yield_parse_data() -> Vec<ParseCase> {
+fn yield_render_data() -> Vec<RenderCase> {
     vec![
-        parse_case!(
-            "$.store.book[0].title",
+        render_case!(
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),
                 json_path_key_selector_segment!("store"),
@@ -62,8 +46,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$.store.book[0].title",
             test_title = "standard dot and index path"
         ),
-        parse_case!(
-            "$.store..book[0].title",
+        render_case!(
             new_recursive_descent_segments!(
                 new_recursive_descent_segment!(
                     json_path_root_segment!(),
@@ -78,8 +61,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$.store..book[0].title",
             test_title = "basic path with recursive descent"
         ),
-        parse_case!(
-            "$..store..book..*",
+        render_case!(
             new_recursive_descent_segments!(
                 new_recursive_descent_segment!(json_path_root_segment!()),
                 new_recursive_descent_segment!(json_path_key_selector_segment!("store")),
@@ -89,8 +71,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$..store..book..*",
             test_title = "multiple recursive descents ending in wildcard"
         ),
-        parse_case!(
-            "$['a..b']..['c..d']",
+        render_case!(
             new_recursive_descent_segments!(
                 new_recursive_descent_segment!(
                     json_path_root_segment!(),
@@ -101,8 +82,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$['a..b']..['c..d']",
             test_title = "string literals containing .. inside brackets"
         ),
-        parse_case!(
-            "$['report-data']..['total.sum..()&^']..store.bicycle['item-code']",
+        render_case!(
             new_recursive_descent_segments!(
                 new_recursive_descent_segment!(
                     json_path_root_segment!(),
@@ -118,8 +98,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$['report-data']..['total.sum..()&^']..store.bicycle['item-code']",
             test_title = "complex symbols with .. inside bracket quotes"
         ),
-        parse_case!(
-            "$['report-data']..['total.sum']..store.bicycle['item-code']",
+        render_case!(
             new_recursive_descent_segments!(
                 new_recursive_descent_segment!(
                     json_path_root_segment!(),
@@ -135,8 +114,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$['report-data']..['total.sum']..store.bicycle['item-code']",
             test_title = "multiple recursive descents with hyphenated keys"
         ),
-        parse_case!(
-            "$.transactions[1:5:2].amount",
+        render_case!(
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),
                 json_path_key_selector_segment!("transactions"),
@@ -146,8 +124,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$.transactions[1:5:2].amount",
             test_title = "slice selector"
         ),
-        parse_case!(
-            "$.transactions[1:-5].amount",
+        render_case!(
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),
                 json_path_key_selector_segment!("transactions"),
@@ -157,8 +134,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$.transactions[1:-5].amount",
             test_title = "slice selector with negative end"
         ),
-        parse_case!(
-            "$.data.user.preferences['theme-settings',\"font-size\",-3]",
+        render_case!(
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),
                 json_path_key_selector_segment!("data"),
@@ -174,8 +150,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$.data.user.preferences['theme-settings','font-size',-3]",
             test_title = "union selector with mixed member types"
         ),
-        parse_case!(
-            "$[1,3,5]",
+        render_case!(
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),
                 json_path_union_selector_segment!(
@@ -188,8 +163,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$[1,3,5]",
             test_title = "union of indices"
         ),
-        parse_case!(
-            "$..['1st_category'].name",
+        render_case!(
             new_recursive_descent_segments!(
                 new_recursive_descent_segment!(json_path_root_segment!()),
                 new_recursive_descent_segment!(
@@ -200,8 +174,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$..['1st_category'].name",
             test_title = "recursive descent into bracketed numeric-leading key"
         ),
-        parse_case!(
-            "$.products['item-details..'].dimensions[0].width.dimensions[-2][3].width",
+        render_case!(
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),
                 json_path_key_selector_segment!("products"),
@@ -217,8 +190,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$.products['item-details..'].dimensions[0].width.dimensions[-2][3].width",
             test_title = "dots inside property key plus chained array indices"
         ),
-        parse_case!(
-            "$['user info']['address.wind'][1].street",
+        render_case!(
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),
                 json_path_key_selector_segment!("user info"),
@@ -229,8 +201,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$['user info']['address.wind'][1].street",
             test_title = "spaces and dots in quoted keys"
         ),
-        parse_case!(
-            "$.data[*].price",
+        render_case!(
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),
                 json_path_key_selector_segment!("data"),
@@ -240,8 +211,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$.data.*.price",
             test_title = "wildcard member"
         ),
-        parse_case!(
-            "$.store.bicycle['item-code']",
+        render_case!(
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),
                 json_path_key_selector_segment!("store"),
@@ -251,8 +221,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$.store.bicycle['item-code']",
             test_title = "bracketed property key"
         ),
-        parse_case!(
-            "$..author",
+        render_case!(
             new_recursive_descent_segments!(
                 new_recursive_descent_segment!(json_path_root_segment!()),
                 new_recursive_descent_segment!(json_path_key_selector_segment!("author"))
@@ -260,8 +229,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$..author",
             test_title = "single recursive descent"
         ),
-        parse_case!(
-            "$['store\\'s..item']..id",
+        render_case!(
             new_recursive_descent_segments!(
                 new_recursive_descent_segment!(
                     json_path_root_segment!(),
@@ -272,8 +240,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$['store\\'s..item']..id",
             test_title = "escaped single quote inside key containing .."
         ),
-        parse_case!(
-            "$[\"user\\\"name..data\"]..title",
+        render_case!(
             new_recursive_descent_segments!(
                 new_recursive_descent_segment!(
                     json_path_root_segment!(),
@@ -284,8 +251,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$['user\\\"name..data']..title",
             test_title = "escaped double quote inside key containing .."
         ),
-        parse_case!(
-            "$['']..author",
+        render_case!(
             new_recursive_descent_segments!(
                 new_recursive_descent_segment!(
                     json_path_root_segment!(),
@@ -296,8 +262,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$['']..author",
             test_title = "empty bracketed string key"
         ),
-        parse_case!(
-            "$['title_\"main\"..part']..id",
+        render_case!(
             new_recursive_descent_segments!(
                 new_recursive_descent_segment!(
                     json_path_root_segment!(),
@@ -308,8 +273,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$['title_\"main\"..part']..id",
             test_title = "double quotes inside single-quoted key with .."
         ),
-        parse_case!(
-            "$['report-data']..['total.sum']",
+        render_case!(
             new_recursive_descent_segments!(
                 new_recursive_descent_segment!(
                     json_path_root_segment!(),
@@ -320,8 +284,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$['report-data']..['total.sum']",
             test_title = "two recursive descent groups with hyphenated keys (go/js variant)"
         ),
-        parse_case!(
-            "$.transactions[1:5:2].*",
+        render_case!(
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),
                 json_path_key_selector_segment!("transactions"),
@@ -331,8 +294,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$.transactions[1:5:2].*",
             test_title = "slice followed by wildcard (js variant)"
         ),
-        parse_case!(
-            "$.data.user.preferences['theme-settings','font-size']",
+        render_case!(
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),
                 json_path_key_selector_segment!("data"),
@@ -347,8 +309,7 @@ fn yield_parse_data() -> Vec<ParseCase> {
             roundtrip = "$.data.user.preferences['theme-settings','font-size']",
             test_title = "union of two named keys (go/js variant)"
         ),
-        parse_case!(
-            "$.products['item-details'].dimensions[0].width",
+        render_case!(
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),
                 json_path_key_selector_segment!("products"),

@@ -1,9 +1,7 @@
-//! Data-driven suites for the three PathTokenizer split steps (ADR 0004).
-//! Case tables are plain Rust built with `split_case!` (old-3 style).
+//! Adapter suite for `src/adapters.rs`'s RegexPathTokenizer: the three split
+//! steps of the tokenizer port.
 
-mod common;
-
-use common::{SplitCase, split_case};
+use crate::common::{SplitCase, split_case};
 use dyn_rt_json_path::RegexPathTokenizer;
 use dyn_rt_json_path::domain::PathTokenizer;
 use dyn_rt_test_support::{new_test_metadata, new_test_title, report_failures};

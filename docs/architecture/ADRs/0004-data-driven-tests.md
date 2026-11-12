@@ -20,7 +20,8 @@ a JSON encoding; in-language tables show accepted inputs directly.
 - In EVERY language (Rust, TypeScript, Go, ...), tests are data-driven by
   default and the test data is written in that language, in code, close to the
   module under test (the module crate/package's own `tests/` dir — e.g. the
-  json-path parse suite lives in `libs/rust/json-path/tests/`).
+  json-path parse suite lives in `libs/rust/json-path/tests/`). Where the
+  tests sit inside `tests/` mirrors the crate's layers — see ADR 0009.
 - Every suite is a custom loop over a case table — no framework-enforced
   shape. Typically one `#[test]` per suite iterating a `yield_test_data()`-style
   table; adding a new case means adding one entry to the table in code.

@@ -1,0 +1,11 @@
+# Clippy configuration for the dyn-rt workspace. Lints are enforced with
+# `cargo clippy --workspace --all-targets -- -D warnings` (poe rs-clippy).
+
+# Edition 2024 (workspace Cargo.toml) requires Rust 1.85+.
+msrv = "1.85"
+
+# Test suites are data-driven in-language case tables (ADR 0004/0009) and
+# legitimately unwrap/expect while checking case data — allowed in tests only,
+# in case the restriction lints get enabled.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true

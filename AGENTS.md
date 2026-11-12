@@ -63,6 +63,10 @@ misc/                     scratch notes, drawio MCP notes
   per-language equivalents; case-data constructor macros (e.g.
   `json_path_key_selector_segment!`) live in the module crates. Parity
   between languages is by mirroring the same tables, not shared JSON files.
+  Test files mirror the crate's layers (ADR 0009): `tests/domain.rs`,
+  `tests/application.rs`, `tests/adapters/<file>.rs` per `src/adapters/` file,
+  shared helpers in `tests/common/mod.rs`; each suite's header names the
+  `src/` file(s) under test.
 - `serde_json` may appear in `dev-dependencies` and in
   `libs/rust/test-support` ONLY to parse/emit fixtures — never in shipped
   domain/application code.
