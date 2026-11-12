@@ -38,6 +38,36 @@ enum Message {
 #[derive(Reflect, Clone, Debug, PartialEq)]
 struct Opaque(String);
 
+// --- complex / non-terminal shapes: nested struct, embedded struct in an
+// --- enum payload, recursive enum behind an indirection
+
+#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+struct Address {
+    street: String,
+    city: String,
+}
+
+/// nested struct field: `address` is itself a ReflectStruct
+#[derive(ReflectStruct, Clone, Debug, PartialEq)]
+struct Person {
+    name: String,
+    address: Address,
+}
+
+/// enum with a struct payload (embedded struct as variant payload)
+#[derive(ReflectEnum, Clone, Debug, PartialEq)]
+enum Contact {
+    Email(String),
+    Home(Address),
+}
+
+/// recursive enum behind Box (indirection payload)
+#[derive(ReflectEnum, Clone, Debug, PartialEq)]
+enum Expr {
+    Lit(i64),
+    Wrap(Box<Expr>),
+}
+
 #[derive(Clone)]
 #[allow(dead_code)]
 struct Cloneable(String);
@@ -52,6 +82,9 @@ enum Subject {
     Point(Point),
     Message(Message),
     Opaque(Opaque),
+    Person(Person),
+    Contact(Contact),
+    Expr(Expr),
 }
 
 impl Subject {
@@ -61,6 +94,9 @@ impl Subject {
             Subject::Point(v) => v,
             Subject::Message(v) => v,
             Subject::Opaque(v) => v,
+            Subject::Person(v) => v,
+            Subject::Contact(v) => v,
+            Subject::Expr(v) => v,
         }
     }
 }
@@ -71,9 +107,11 @@ enum Op {
     TypeName(&'static str),
     FieldNames(&'static str),
     FieldTypeAt(usize, &'static str),
+    FieldKindAt(usize, &'static str),
     FieldByName(&'static str, bool),
     Variant(&'static str),
     VariantNames(&'static str),
+    PayloadKind(&'static str),
     CloneRoundtrip,
     ApplyMismatch,
     SetVariant(&'static str, bool), // name, has_payload -> expect UnknownVariant or Ok
@@ -125,6 +163,13 @@ fn observe(subject: &Subject, op: &Op) -> Result<String, &'static str> {
                 None => Ok("<none>".to_string()),
             }
         }
+        Op::FieldKindAt(index, _) => {
+            let s = as_struct(r).expect("struct");
+            match s.reflect_field_at(*index) {
+                Some(field) => Ok(kind_of(field).to_string()),
+                None => Ok("<none>".to_string()),
+            }
+        }
         Op::FieldByName(name, _) => {
             let s = as_struct(r).expect("struct");
             Ok(if s.reflect_field(name).is_some() {
@@ -146,6 +191,13 @@ fn observe(subject: &Subject, op: &Op) -> Result<String, &'static str> {
                 .collect::<Vec<_>>()
                 .join(","))
         }
+        Op::PayloadKind(_) => {
+            let e = as_enum(r).expect("enum");
+            match e.reflect_active_variant_payload() {
+                Some(payload) => Ok(kind_of(payload).to_string()),
+                None => Ok("<none>".to_string()),
+            }
+        }
         Op::CloneRoundtrip => {
             let cloned = r.reflect_clone();
             let same = match subject {
@@ -153,6 +205,9 @@ fn observe(subject: &Subject, op: &Op) -> Result<String, &'static str> {
                 Subject::Point(v) => cloned.reflect_as_any().downcast_ref::<Point>() == Some(v),
                 Subject::Message(v) => cloned.reflect_as_any().downcast_ref::<Message>() == Some(v),
                 Subject::Opaque(v) => cloned.reflect_as_any().downcast_ref::<Opaque>() == Some(v),
+                Subject::Person(v) => cloned.reflect_as_any().downcast_ref::<Person>() == Some(v),
+                Subject::Contact(v) => cloned.reflect_as_any().downcast_ref::<Contact>() == Some(v),
+                Subject::Expr(v) => cloned.reflect_as_any().downcast_ref::<Expr>() == Some(v),
             };
             Ok(if same { "equal" } else { "different" }.to_string())
         }
@@ -167,6 +222,9 @@ fn observe(subject: &Subject, op: &Op) -> Result<String, &'static str> {
                 Subject::Point(v) => v,
                 Subject::Message(v) => v,
                 Subject::Opaque(v) => v,
+                Subject::Person(v) => v,
+                Subject::Contact(v) => v,
+                Subject::Expr(v) => v,
             };
             let result = match subject {
                 Subject::Opaque(_) => mut_ref.reflect_apply(&string_source),
@@ -377,6 +435,117 @@ fn derive_ops() {
             Op::ApplyMismatch,
             Err("ShapeMismatch"),
             test_title = "base derive apply from other type fails ShapeMismatch"
+        ),
+        // --- nested struct: Person has an Address struct field
+        derive_case!(
+            Subject::Person(Person {
+                name: "amy".to_string(),
+                address: Address {
+                    street: "1 Main St".to_string(),
+                    city: "Springfield".to_string()
+                }
+            }),
+            Op::Kind("struct"),
+            Ok("struct".to_string()),
+            test_title = "nested struct subject routes to Struct kind"
+        ),
+        derive_case!(
+            Subject::Person(Person {
+                name: "amy".to_string(),
+                address: Address {
+                    street: "1 Main St".to_string(),
+                    city: "Springfield".to_string()
+                }
+            }),
+            Op::FieldNames(""),
+            Ok("name,address".to_string()),
+            test_title = "nested struct field table lists all fields"
+        ),
+        derive_case!(
+            Subject::Person(Person {
+                name: "amy".to_string(),
+                address: Address {
+                    street: "1 Main St".to_string(),
+                    city: "Springfield".to_string()
+                }
+            }),
+            Op::FieldKindAt(1, "struct"),
+            Ok("struct".to_string()),
+            test_title = "nested struct field at index 1 has Struct kind"
+        ),
+        derive_case!(
+            Subject::Person(Person {
+                name: "amy".to_string(),
+                address: Address {
+                    street: "1 Main St".to_string(),
+                    city: "Springfield".to_string()
+                }
+            }),
+            Op::CloneRoundtrip,
+            Ok("equal".to_string()),
+            test_title = "clone of struct with nested struct field equals original"
+        ),
+        // --- enum with embedded struct payload: Contact::Home(Address)
+        derive_case!(
+            Subject::Contact(Contact::Home(Address {
+                street: "2 Oak Ave".to_string(),
+                city: "Shelbyville".to_string()
+            })),
+            Op::Kind("enum"),
+            Ok("enum".to_string()),
+            test_title = "enum with struct payload routes to Enum kind"
+        ),
+        derive_case!(
+            Subject::Contact(Contact::Home(Address {
+                street: "2 Oak Ave".to_string(),
+                city: "Shelbyville".to_string()
+            })),
+            Op::Variant("Home"),
+            Ok("Home".to_string()),
+            test_title = "active variant of enum with struct payload"
+        ),
+        derive_case!(
+            Subject::Contact(Contact::Home(Address {
+                street: "2 Oak Ave".to_string(),
+                city: "Shelbyville".to_string()
+            })),
+            Op::PayloadKind("struct"),
+            Ok("struct".to_string()),
+            test_title = "payload of struct-carrying variant has Struct kind"
+        ),
+        derive_case!(
+            Subject::Contact(Contact::Email("a@b.c".to_string())),
+            Op::PayloadKind("scalar"),
+            Ok("scalar".to_string()),
+            test_title = "payload of scalar-carrying variant has Scalar kind"
+        ),
+        derive_case!(
+            Subject::Contact(Contact::Home(Address {
+                street: "2 Oak Ave".to_string(),
+                city: "Shelbyville".to_string()
+            })),
+            Op::CloneRoundtrip,
+            Ok("equal".to_string()),
+            test_title = "clone of enum with struct payload equals original"
+        ),
+        // --- recursive enum behind Box indirection: Expr::Wrap(Box<Expr>)
+        derive_case!(
+            Subject::Expr(Expr::Wrap(Box::new(Expr::Lit(7)))),
+            Op::Variant("Wrap"),
+            Ok("Wrap".to_string()),
+            test_title = "recursive enum active variant"
+        ),
+        derive_case!(
+            Subject::Expr(Expr::Wrap(Box::new(Expr::Lit(7)))),
+            Op::PayloadKind("indirection"),
+            Ok("indirection".to_string()),
+            test_title = "Box payload of recursive variant has Indirection kind"
+        ),
+        derive_case!(
+            Subject::Expr(Expr::Wrap(Box::new(Expr::Lit(7)))),
+            Op::CloneRoundtrip,
+            Ok("equal".to_string()),
+            test_title = "clone of recursive enum through Box equals original"
         ),
     ];
 
