@@ -143,6 +143,92 @@ pub fn check_value_cardinality(
     }
 }
 
+/// Whether a field/group props object is a group (has a `group:fields`
+/// array). go's IsFieldAGroup additionally requires read order; here the
+/// fields array alone decides, and read order defaults to the fields' key
+/// order (see [`read_order_of`]).
+pub fn is_group(field_group: &MetadataModel) -> bool {
+    field_group
+        .get(FIELDS_KEY)
+        .and_then(Value::as_array)
+        .is_some_and(|fields| !fields.is_empty())
+}
+
+/// The read order of a group's fields: `group:read_order_of_fields` when
+/// present, else the `group:fields[0]` object's key order (Rust refinement —
+/// go errors when the property is absent).
+pub fn read_order_of(field_group: &MetadataModel) -> Result<Vec<String>, MetadatamodelError> {
+    if let Some(order) = field_group.get(props::GROUP_READ_ORDER_OF_FIELDS) {
+        let array = order
+            .as_array()
+            .ok_or_else(|| MetadatamodelError::InvalidModel {
+                message: format!("{:?} is not an array", props::GROUP_READ_ORDER_OF_FIELDS),
+            })?;
+        let mut out = Vec::with_capacity(array.len());
+        for entry in array {
+            let key = entry
+                .as_str()
+                .ok_or_else(|| MetadatamodelError::InvalidModel {
+                    message: format!(
+                        "{:?} entry is not a string",
+                        props::GROUP_READ_ORDER_OF_FIELDS
+                    ),
+                })?;
+            out.push(key.to_string());
+        }
+        return Ok(out);
+    }
+    let fields = fields_of(field_group)?;
+    let object = fields
+        .as_object()
+        .ok_or_else(|| MetadatamodelError::InvalidModel {
+            message: format!("{FIELDS_KEY}[0] is not an object"),
+        })?;
+    Ok(object.iter().map(|(key, _)| key.clone()).collect())
+}
+
+/// Whether any of the group's fields is itself a group (go's
+/// DoesFieldGroupFieldsContainNestedGroupFields).
+pub fn contains_nested_groups(field_group: &MetadataModel) -> Result<bool, MetadatamodelError> {
+    let fields = fields_of(field_group)?;
+    let object = fields
+        .as_object()
+        .ok_or_else(|| MetadatamodelError::InvalidModel {
+            message: format!("{FIELDS_KEY}[0] is not an object"),
+        })?;
+    for (_, entry) in object {
+        if let Ok(props) = props_of(entry)
+            && is_group(props)
+        {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+/// Sets property `key` on an object value, replacing any existing entry.
+pub fn set_prop(object: &mut Value, key: &str, value: Value) {
+    if let Some(obj) = object.as_object_mut() {
+        match obj.iter_mut().find(|(k, _)| k == key) {
+            Some((_, slot)) => *slot = value,
+            None => obj.push((key.to_string(), value)),
+        }
+    }
+}
+
+/// Merges `from`'s properties into `into` (right wins), object-to-object.
+/// go's MergeRightJsonObjectIntoLeft.
+pub fn merge_props(into: &mut Value, from: &Value) {
+    if let (Some(into_obj), Some(from_obj)) = (into.as_object_mut(), from.as_object()) {
+        for (key, value) in from_obj {
+            match into_obj.iter_mut().find(|(k, _)| k == key) {
+                Some((_, slot)) => *slot = value.clone(),
+                None => into_obj.push((key.clone(), value.clone())),
+            }
+        }
+    }
+}
+
 fn unwrap_ref(value: &dyn Reflect) -> Option<&dyn Reflect> {
     match value.reflect_ref() {
         ReflectRef::Indirection(indirection) => indirection.reflect_inner_ref(),
@@ -170,7 +256,7 @@ pub fn parse_template(template: &str) -> Result<RecursiveDescentSegments, Metada
 
 /// Schema path: the template with every `[*]` wildcard replaced, in order,
 /// by the given indices — the actual path to the field/group props inside
-/// the metadata model. Errors when there are more wildcards than indices.
+/// the metadata model. Missing indices default to 0 (go behavior).
 pub fn schema_path(template: &str, indices: &[usize]) -> Result<String, MetadatamodelError> {
     let segments = parse_template(template)?;
     let mut indices = indices.iter();
@@ -180,16 +266,9 @@ pub fn schema_path(template: &str, indices: &[usize]) -> Result<String, Metadata
         for segment in &group.0 {
             let selector = match &segment.selector {
                 PathSelector::Wildcard => {
-                    let index =
-                        indices
-                            .next()
-                            .ok_or_else(|| MetadatamodelError::PathTemplateInvalid {
-                                message: format!(
-                                    "template {template:?} has more [*] than the {} indices given",
-                                    indices.len()
-                                ),
-                            })?;
-                    PathSelector::Index(*index as isize)
+                    // go behavior: missing indices default to 0
+                    let index = indices.next().copied().unwrap_or(0);
+                    PathSelector::Index(index as isize)
                 }
                 other => other.clone(),
             };
@@ -208,8 +287,8 @@ pub fn schema_path(template: &str, indices: &[usize]) -> Result<String, Metadata
 /// Every structural `group:fields[*]` (key + following wildcard) segment is
 /// removed; each remaining `[*]` is replaced in order by the given indices.
 /// When `cardinality` is [`Cardinality::Single`], a trailing `[*]` is
-/// trimmed instead of indexed (single values have no index). Errors when a
-/// non-trailing wildcard has no index left.
+/// trimmed instead of indexed (single values have no index). Missing indices
+/// default to 0 (go behavior).
 pub fn data_path(
     template: &str,
     indices: &[usize],
@@ -242,17 +321,11 @@ pub fn data_path(
                     if is_trailing_wildcard && cardinality == Cardinality::Single {
                         continue; // single values have no index: trim the [*]
                     }
-                    let index =
-                        indices
-                            .next()
-                            .ok_or_else(|| MetadatamodelError::PathTemplateInvalid {
-                                message: format!(
-                                    "template {template:?} needs more indices for its [*] wildcards"
-                                ),
-                            })?;
+                    // go behavior: missing indices default to 0
+                    let index = indices.next().copied().unwrap_or(0);
                     new_group.0.push(PathSegment {
                         access_strategy: AccessStrategy::Positional,
-                        selector: PathSelector::Index(*index as isize),
+                        selector: PathSelector::Index(index as isize),
                     });
                 }
                 other => {

@@ -11,5 +11,6 @@
 
 pub mod core;
 pub mod error;
+pub mod fieldcolumns;
 
 pub use error::MetadatamodelError;

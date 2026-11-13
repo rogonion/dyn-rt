@@ -116,11 +116,12 @@ fn template_cases() {
             "$",
             test_title = "root template data path is the root"
         ),
+        // go behavior: missing indices default to 0
         template_case!(
             "$['group:fields'][*].Bio[*]",
             TemplateOp::SchemaPath { indices: vec![0] },
-            expect_error = "path template invalid",
-            test_title = "schema path errors when wildcards outnumber indices"
+            "$['group:fields'][0].Bio[0]",
+            test_title = "schema path defaults missing indices to 0"
         ),
         template_case!(
             "$['group:fields'][*].Site[*]['group:fields'][*].Country[*]",
@@ -128,8 +129,8 @@ fn template_cases() {
                 indices: vec![1],
                 cardinality: Cardinality::Array
             },
-            expect_error = "path template invalid",
-            test_title = "data path errors when a data wildcard has no index"
+            "$.Site[1].Country[0]",
+            test_title = "data path defaults a missing trailing index to 0"
         ),
     ];
 
