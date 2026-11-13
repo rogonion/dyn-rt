@@ -15,6 +15,7 @@ dependencies = [
 name = "dyn-rt"
 version = "0.1.0"
 dependencies = [
+ "dyn-rt-json-manipulation",
  "dyn-rt-json-path",
  "dyn-rt-json-schema",
  "dyn-rt-reflect",
@@ -26,6 +27,17 @@ name = "dyn-rt-cli"
 version = "0.1.0"
 dependencies = [
  "dyn-rt",
+]
+
+[[package]]
+name = "dyn-rt-json-manipulation"
+version = "0.1.0"
+dependencies = [
+ "dyn-rt-json-path",
+ "dyn-rt-json-schema",
+ "dyn-rt-reflect",
+ "dyn-rt-shared",
+ "dyn-rt-test-support",
 ]
 
 [[package]]
@@ -80,6 +92,11 @@ dependencies = [
 [[package]]
 name = "dyn-rt-test-support"
 version = "0.1.0"
+dependencies = [
+ "dyn-rt-json-schema",
+ "dyn-rt-reflect",
+ "dyn-rt-shared",
+]
 
 [[package]]
 name = "equivalent"

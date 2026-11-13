@@ -1,0 +1,9 @@
+//! Application-layer test suites for json-manipulation (ADR 0009): one file
+//! per src/application/ use case.
+
+#[path = "../common/mod.rs"]
+mod common;
+
+mod delete;
+mod get;
+mod set;

@@ -43,6 +43,11 @@ impl<T: Reflect> Reflect for Option<T> {
         Box::new(self.as_ref().map(|v| cloned_t::<T>(v)))
     }
 
+    fn reflect_zero(&self) -> Option<Box<dyn Reflect>> {
+        let none: Option<T> = None;
+        Some(Box::new(none))
+    }
+
     fn reflect_apply(&mut self, value: &dyn Reflect) -> Result<(), ReflectError> {
         if value.reflect_as_any().type_id() != TypeId::of::<Self>() {
             return Err(ReflectError::ShapeMismatch {

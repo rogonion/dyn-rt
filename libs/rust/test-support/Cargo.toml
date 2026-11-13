@@ -1,8 +1,13 @@
 [package]
 name = "dyn-rt-test-support"
-description = "Dev-only shared test harness for dyn-rt suites (ADR 0004): TestMetadata, title macros, failure reporting. Never a runtime dependency."
+description = "Dev-only shared test harness for dyn-rt suites (ADR 0004): TestReport, title macros, and shared test fixtures. Never a runtime dependency."
 version.workspace = true
 edition.workspace = true
 license-file.workspace = true
 
 [dependencies]
+# fixtures reuse the shared value model, reflection, and schema model so every
+# module's test suites can share the same test shapes (go's misc_test.go)
+dyn-rt-shared = { path = "../shared" }
+dyn-rt-reflect = { path = "../reflect" }
+dyn-rt-json-schema = { path = "../json-schema" }

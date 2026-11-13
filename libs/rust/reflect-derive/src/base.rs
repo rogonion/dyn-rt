@@ -19,6 +19,16 @@ pub fn base_impl(
     apply_body: TokenStream2,
     require_clone: bool,
 ) -> TokenStream2 {
+    let zero_body = if attrs.new {
+        let crate_path = &attrs.crate_path;
+        quote! {
+            fn reflect_zero(&self) -> ::core::option::Option<::std::boxed::Box<dyn #crate_path::Reflect>> {
+                ::core::option::Option::Some(<Self as #crate_path::ReflectNew>::reflect_new())
+            }
+        }
+    } else {
+        TokenStream2::new()
+    };
     let crate_path = &attrs.crate_path;
     let name = &input.ident;
     let mut generics = input.generics.clone();
@@ -52,6 +62,8 @@ pub fn base_impl(
             fn reflect_clone(&self) -> ::std::boxed::Box<dyn #crate_path::Reflect> {
                 #clone_body
             }
+
+            #zero_body
 
             fn reflect_apply(&mut self, value: &dyn #crate_path::Reflect)
                 -> ::core::result::Result<(), #crate_path::ReflectError>

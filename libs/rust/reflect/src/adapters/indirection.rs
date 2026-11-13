@@ -75,6 +75,14 @@ impl<T: Reflect> ReflectIndirection for Box<T> {
         callback(Ok(&mut **self))
     }
 
+    fn reflect_inner_ref(&self) -> Option<&dyn Reflect> {
+        Some(&**self)
+    }
+
+    fn reflect_inner_mut(&mut self) -> Option<&mut dyn Reflect> {
+        Some(&mut **self)
+    }
+
     fn reflect_set_inner(&mut self, value: Box<dyn Reflect>) -> Result<(), ReflectError> {
         **self = into_t::<T>(value)?;
         Ok(())
@@ -150,6 +158,14 @@ macro_rules! impl_reflect_shared_ptr {
                 callback: &mut dyn FnMut(Result<&dyn Reflect, ReflectError>),
             ) {
                 callback(Ok(&**self))
+            }
+
+            fn reflect_inner_ref(&self) -> Option<&dyn Reflect> {
+                Some(&**self)
+            }
+
+            fn reflect_inner_mut(&mut self) -> Option<&mut dyn Reflect> {
+                <$t>::get_mut(self).map(|inner| inner as &mut dyn Reflect)
             }
 
             fn reflect_get_inner_mut(

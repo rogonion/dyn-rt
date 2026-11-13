@@ -26,6 +26,10 @@ macro_rules! impl_reflect_scalar {
                     Box::new(self.clone())
                 }
 
+                fn reflect_zero(&self) -> Option<Box<dyn Reflect>> {
+                    Some(Box::new(<$t as Default>::default()))
+                }
+
                 fn reflect_apply(&mut self, value: &dyn Reflect) -> Result<(), ReflectError> {
                     let source = value.reflect_as_any().downcast_ref::<$t>().ok_or_else(|| {
                         ReflectError::ShapeMismatch {

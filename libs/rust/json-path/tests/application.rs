@@ -314,6 +314,19 @@ fn yield_parse_data() -> Vec<ParseCase> {
             test_title = "union of two named keys (go/js variant)"
         ),
         parse_case!(
+            "$.User['ID', 'Name']",
+            new_recursive_descent_segments!(new_recursive_descent_segment!(
+                json_path_root_segment!(),
+                json_path_key_selector_segment!("User"),
+                json_path_union_selector_segment!(
+                    AccessStrategy::Named,
+                    json_path_key_selector_segment!("ID"),
+                    json_path_key_selector_segment!("Name")
+                )
+            )),
+            test_title = "union members after a comma+space are still unquoted"
+        ),
+        parse_case!(
             "$.products['item-details'].dimensions[0].width",
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),

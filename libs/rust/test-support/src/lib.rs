@@ -9,4 +9,6 @@
 
 mod harness;
 
+pub mod fixtures;
+
 pub use harness::*;

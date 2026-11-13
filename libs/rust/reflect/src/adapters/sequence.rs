@@ -105,6 +105,10 @@ impl<T: Reflect> Reflect for Vec<T> {
         Box::new(self.iter().map(|v| cloned_t::<T>(v)).collect::<Vec<T>>())
     }
 
+    fn reflect_zero(&self) -> Option<Box<dyn Reflect>> {
+        Some(Box::new(Vec::<T>::new()))
+    }
+
     fn reflect_apply(&mut self, value: &dyn Reflect) -> Result<(), ReflectError> {
         if value.reflect_as_any().type_id() != TypeId::of::<Self>() {
             return Err(ReflectError::ShapeMismatch {

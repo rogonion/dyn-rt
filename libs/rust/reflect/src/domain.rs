@@ -92,6 +92,14 @@ pub trait Reflect: Any {
     /// contract — see the module docs for per-wrapper clone semantics.
     fn reflect_clone(&self) -> Box<dyn Reflect>;
 
+    /// A fresh zero/default instance of the same concrete type, when the type
+    /// is constructible. Default `None`; the derive emits
+    /// `Some(T::reflect_new())` under `#[reflect(new)]` and the scalar/value
+    /// adapters override with their zero. Used by delete-to-zero semantics.
+    fn reflect_zero(&self) -> Option<Box<dyn Reflect>> {
+        None
+    }
+
     /// Writes `value` into this one, in place, without taking ownership of
     /// `value`. Both sides must be the same concrete type; the copy is
     /// structural. Cross-shape conversion is a schema-layer concern.
@@ -507,6 +515,21 @@ pub trait ReflectIndirection: Reflect {
         &mut self,
         callback: &mut dyn FnMut(Result<&mut dyn Reflect, ReflectError>),
     );
+
+    /// Direct read access to the inner value, when the wrapper can hand out a
+    /// plain reference (e.g. `Box<T>`, `Rc<T>`, `Option<T>`). Default `None` —
+    /// guard-based wrappers (`RefCell<T>`, `Mutex<T>`) can only borrow inside
+    /// the callback, so they keep the default and are treated as leaves by
+    /// reference-returning traversals.
+    fn reflect_inner_ref(&self) -> Option<&dyn Reflect> {
+        None
+    }
+
+    /// Direct mutable access to the inner value, when the wrapper can hand out
+    /// a plain `&mut` (e.g. `Box<T>`). Default `None` (see [`Self::reflect_inner_ref`]).
+    fn reflect_inner_mut(&mut self) -> Option<&mut dyn Reflect> {
+        None
+    }
 
     /// Replaces the inner value.
     fn reflect_set_inner(&mut self, value: Box<dyn Reflect>) -> Result<(), ReflectError>;

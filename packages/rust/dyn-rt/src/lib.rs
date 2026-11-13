@@ -53,4 +53,15 @@ pub mod json {
         pub use dyn_rt_json_schema::domain::*;
         pub use dyn_rt_json_schema::error::SchemaError;
     }
+
+    #[cfg(feature = "json-manipulation")]
+    pub mod manipulation {
+        //! JSON manipulation over reflected data: get / set / delete at a
+        //! JSONPath (domain cursor, application use cases, string-path
+        //! adapters).
+        pub use dyn_rt_json_manipulation::adapters::*;
+        pub use dyn_rt_json_manipulation::application::*;
+        pub use dyn_rt_json_manipulation::domain::*;
+        pub use dyn_rt_json_manipulation::error::ManipulationError;
+    }
 }

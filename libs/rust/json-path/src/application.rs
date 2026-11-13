@@ -67,8 +67,9 @@ pub fn extract_segment(tokenizer: &dyn PathTokenizer, token: &str) -> PathSegmen
         return extract_union_segment(tokenizer, &union_parts);
     }
 
-    // Quoted text key
-    if let Some(key) = tokenizer.extract_quoted(token) {
+    // Quoted text key (leading/trailing whitespace, e.g. after a union comma,
+    // does not prevent quote extraction)
+    if let Some(key) = tokenizer.extract_quoted(token.trim()) {
         return PathSegment {
             access_strategy: AccessStrategy::Named,
             selector: PathSelector::Key(key),

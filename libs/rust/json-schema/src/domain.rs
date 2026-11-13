@@ -209,6 +209,25 @@ impl SchemaNode {
         Self::base_new::<T>(SchemaShape::Scalar)
     }
 
+    /// A scalar node for a runtime-known type, via its [`TypeInfo`]. Returns
+    /// `None` when the type info carries no `ReflectNew` constructor (a
+    /// scalar node needs one so conversion can build the target value) —
+    /// used e.g. by json-manipulation to convert a path key string into a
+    /// map's key type.
+    pub fn scalar_of(type_info: &'static TypeInfo) -> Option<Self> {
+        type_info.new_instance?;
+        Some(SchemaNode {
+            type_info: type_info.clone(),
+            shape: SchemaShape::Scalar,
+            nilable: false,
+            default: None,
+            children_must_be_valid: false,
+            entry_key_schema: None,
+            validator: None,
+            converter: None,
+        })
+    }
+
     /// A scalar node for a `shared::Value` scalar variant (e.g. `"string"`,
     /// `"number"`, `"boolean"`, `"null"`), matched by variant name.
     pub fn json_scalar(variant_name: &'static str) -> Self {
@@ -231,7 +250,7 @@ impl SchemaNode {
 
     /// A node accepting any value.
     pub fn any() -> Self {
-        Self::base::<Value>(SchemaShape::Any)
+        Self::base_new::<Value>(SchemaShape::Any)
     }
 
     pub fn struct_node<T: Reflect + ReflectNew>(fields: Vec<(&str, Schema)>) -> Self {

@@ -116,6 +116,10 @@ macro_rules! impl_reflect_std_map {
                 )
             }
 
+            fn reflect_zero(&self) -> Option<Box<dyn Reflect>> {
+                Some(Box::new(<$map as Default>::default()))
+            }
+
             fn reflect_apply(&mut self, value: &dyn Reflect) -> Result<(), ReflectError> {
                 if value.reflect_as_any().type_id() != TypeId::of::<Self>() {
                     return Err(ReflectError::ShapeMismatch {

@@ -1,0 +1,15 @@
+[package]
+name = "dyn-rt-json-manipulation"
+description = "dyn-rt json-manipulation module: get/set/delete over reflected data via JSONPath (application use cases over reflect; adapters parse string paths). Depends on shared, reflect, json-path, json-schema."
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+
+[dependencies]
+dyn-rt-shared = { path = "../shared" }
+dyn-rt-reflect = { path = "../reflect" }
+dyn-rt-json-path = { path = "../json-path" }
+dyn-rt-json-schema = { path = "../json-schema" }
+
+[dev-dependencies]
+dyn-rt-test-support = { path = "../test-support" }
