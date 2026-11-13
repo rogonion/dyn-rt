@@ -199,8 +199,8 @@ fn validation_cases() {
             test_title = "with children_must_be_valid, Square matches only the Square node"
         ),
         validation_case!(
-            Shape::Circle(Circle { radius: 1.5 }),
-            Schema::Node(SchemaNode::enum_node::<Shape>(vec![
+            ShapeEnum::Circle(Circle { radius: 1.5 }),
+            Schema::Node(SchemaNode::enum_node::<ShapeEnum>(vec![
                 ("Circle", Some(Schema::Node(circle_schema()))),
                 ("Square", Some(Schema::Node(square_schema()))),
             ])),

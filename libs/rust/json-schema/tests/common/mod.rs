@@ -120,9 +120,30 @@ pub struct Square {
 }
 
 #[derive(ReflectEnum, Clone, Debug, PartialEq)]
-pub enum Shape {
+pub enum ShapeEnum {
     Circle(Circle),
     Square(Square),
+}
+
+/// go's `Shape` interface as a Rust trait: every shape implements it. With
+/// `Reflect` as a supertrait, `Box<dyn Shape>` / `&dyn Shape` upcast to
+/// `Box<dyn Reflect>` / `&dyn Reflect` (trait upcasting), so a conversion
+/// target can be written against `dyn Shape` and still participate in
+/// reflection.
+pub trait Shape: dyn_rt_reflect::Reflect {
+    fn is_shape(&self) -> bool;
+}
+
+impl Shape for Circle {
+    fn is_shape(&self) -> bool {
+        true
+    }
+}
+
+impl Shape for Square {
+    fn is_shape(&self) -> bool {
+        true
+    }
 }
 
 #[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
@@ -291,7 +312,7 @@ pub fn shape_schema() -> Schema {
 }
 
 pub fn list_of_shapes_schema() -> SchemaNode {
-    SchemaNode::sequence_node::<Vec<Shape>>(shape_schema())
+    SchemaNode::sequence_node::<Vec<ShapeEnum>>(shape_schema())
 }
 
 /// go's MapUserSchema: map[int]*User

@@ -81,6 +81,42 @@ fn empty_user() -> Box<dyn Reflect> {
     Box::new(User::default())
 }
 
+fn circle_value(radius: f64) -> Value {
+    Value::object([("Radius", Value::from(radius))])
+}
+
+fn square_value(side: f64) -> Value {
+    Value::object([("Side", Value::from(side))])
+}
+
+fn empty_circle() -> Box<dyn Reflect> {
+    Box::new(Circle::default())
+}
+
+fn empty_square() -> Box<dyn Reflect> {
+    Box::new(Square::default())
+}
+
+/// A conversion target written against the `dyn Shape` trait; the
+/// `Box<dyn Shape>` upcasts to `Box<dyn Reflect>` via trait upcasting.
+fn empty_shape_trait() -> Box<dyn Reflect> {
+    let boxed: Box<dyn Shape> = Box::new(Circle::default());
+    boxed
+}
+
+/// Renders the converted target through the `Shape` trait after downcasting
+/// to the concrete type, showing the value still satisfies `dyn Shape`.
+fn render_shape_trait(r: &dyn Reflect) -> String {
+    match r.reflect_as_any().downcast_ref::<Circle>() {
+        Some(circle) => format!(
+            "Circle {{ radius: {} }} is_shape={}",
+            circle.radius,
+            circle.is_shape()
+        ),
+        None => "<not Circle>".to_string(),
+    }
+}
+
 #[test]
 fn conversion_cases() {
     let test_data: Vec<_> = vec![
@@ -234,6 +270,39 @@ fn conversion_cases() {
             debug_downcast::<User>,
             Ok((format!("{:?}", sample_user()), vec!["User".to_string()])),
             test_title = "polymorphic set converts via the matching node and reports the key"
+        ),
+        conversion_case!(
+            circle_value(2.5),
+            shape_schema(),
+            empty_circle,
+            debug_downcast::<Circle>,
+            Ok((
+                format!("{:?}", Circle { radius: 2.5 }),
+                vec!["Circle".to_string()]
+            )),
+            test_title = "shape set converts circle data via the Circle node and reports the key"
+        ),
+        conversion_case!(
+            square_value(3.0),
+            shape_schema(),
+            empty_square,
+            debug_downcast::<Square>,
+            Ok((
+                format!("{:?}", Square { side: 3.0 }),
+                vec!["Square".to_string()]
+            )),
+            test_title = "shape set falls through to the Square node for square data"
+        ),
+        conversion_case!(
+            circle_value(4.5),
+            shape_schema(),
+            empty_shape_trait,
+            render_shape_trait,
+            Ok((
+                "Circle { radius: 4.5 } is_shape=true".to_string(),
+                vec!["Circle".to_string()]
+            )),
+            test_title = "shape set target can be a dyn Shape (trait upcast to dyn Reflect)"
         ),
         conversion_case!(
             42i64,
