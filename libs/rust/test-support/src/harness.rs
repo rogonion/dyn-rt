@@ -160,7 +160,7 @@ impl TestReport {
             );
         }
 
-        println!("--- {} / {} tests passed ---\n", total, total);
+        println!("\n--- {} / {} tests passed ---", total, total);
     }
 }
 
