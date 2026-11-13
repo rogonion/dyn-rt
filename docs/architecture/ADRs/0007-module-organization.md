@@ -27,7 +27,7 @@ one export per ecosystem (ADR 0003). How do modules map to crates/dirs?
 - `shared` (crate `dyn-rt-shared`) holds the substrate all json modules use:
   `Value`, `Number`, the json error vocabulary, and future shared helpers.
   `test-support` stays dev-only and hosts the shared test harness
-  (`TestMetadata`, title macros, failure reporting — ADR 0004).
+  (`TestReport`, `new_test_title!`, `report_failures` — ADR 0004).
 - `metadatamodel` is ONE crate (`dyn-rt-metadatamodel`) with one submodule per
   subdomain under `src/` (`core`, `unflattener`, `iter`, `flattener`,
   `filter`, `fieldcolumns`, `database`); each submodule is internally

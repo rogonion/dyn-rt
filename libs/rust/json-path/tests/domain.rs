@@ -11,26 +11,23 @@ use dyn_rt_json_path::{
     json_path_slice_selector_segment, json_path_union_selector_segment, json_path_wildcard_segment,
     new_recursive_descent_segment, new_recursive_descent_segments,
 };
-use dyn_rt_test_support::{new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 #[test]
 fn ast_render_roundtrip() {
     let test_data = yield_render_data();
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
 
     for (test_index, case) in test_data.iter().enumerate() {
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let rendered = case.segments.to_string();
         if rendered != case.roundtrip {
-            failures.push(format!(
-                "{} || expected {:?}, got {:?}",
-                new_test_title!(test_index + 1, case.meta.test_title),
-                case.roundtrip,
-                rendered,
-            ));
+            report.fail_case(format!("expected {:?}, got {:?}", case.roundtrip, rendered,));
         }
     }
 
-    report_failures(failures, test_data.len());
+    report.finish();
 }
 
 fn yield_render_data() -> Vec<RenderCase> {

@@ -11,10 +11,10 @@ use common::*;
 use dyn_rt_json_schema::Schema;
 use dyn_rt_json_schema::adapters::schema_at_path_str;
 use dyn_rt_reflect::ReflectKind;
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 struct AdapterCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     path: &'static str,
     schema: Schema,
     /// Ok((kind, type_name)) or Err(message fragment)
@@ -24,11 +24,7 @@ struct AdapterCase {
 macro_rules! adapter_case {
     ($path:expr, $schema:expr, $expected:expr $(, test_title = $title:expr)?) => {
         AdapterCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             path: $path,
             schema: $schema,
             expected: $expected,
@@ -65,34 +61,32 @@ fn schema_at_path_str_cases() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let got = schema_at_path_str(case.path, &case.schema);
         match (&case.expected, &got) {
             (Ok((kind, type_name)), Ok(resolved)) => {
                 let got_kind = resolved.node.kind();
                 let got_type = resolved.node.type_info.type_name.to_string();
                 if &got_kind != kind || &got_type != type_name {
-                    failures.push(format!(
-                        "{title} || expected ({:?}, {:?}), got ({:?}, {:?})",
+                    report.fail_case(format!(
+                        "expected ({:?}, {:?}), got ({:?}, {:?})",
                         kind, type_name, got_kind, got_type
                     ));
                 }
             }
             (Err(fragment), Err(err)) => {
                 if !err.to_string().contains(fragment) {
-                    failures.push(format!(
-                        "{title} || error: expected fragment {:?}, got {:?}",
+                    report.fail_case(format!(
+                        "error: expected fragment {:?}, got {:?}",
                         fragment, err
                     ));
                 }
             }
-            _ => failures.push(format!(
-                "{title} || expected {:?}, got {:?}",
-                case.expected, got
-            )),
+            _ => report.fail_case(format!("expected {:?}, got {:?}", case.expected, got)),
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 }

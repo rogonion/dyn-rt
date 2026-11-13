@@ -3,7 +3,7 @@
 use crate::common::{error_kind, obj, value_of};
 use dyn_rt_reflect::{Reflect, ReflectError, ReflectRefMut, as_map};
 use dyn_rt_shared::Value;
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 enum MapOp {
     Get {
@@ -30,7 +30,7 @@ enum MapOp {
 }
 
 struct MapCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     value: Value,
     op: MapOp,
 }
@@ -38,11 +38,7 @@ struct MapCase {
 macro_rules! map_case {
     ($value:expr, $op:expr $(, test_title = $title:expr)?) => {
         MapCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             value: $value,
             op: $op,
         }
@@ -152,9 +148,10 @@ fn value_map_ops() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let mut value = case.value.clone();
         let reflected: &dyn Reflect = &value;
 
@@ -164,17 +161,15 @@ fn value_map_ops() {
                 let result = as_map(reflected).and_then(|m| m.reflect_get(&key));
                 let got = result.map(value_of);
                 if got != expected.as_ref() {
-                    failures.push(format!(
-                        "{title} || get {key:?}: expected {expected:?}, got {got:?}"
-                    ));
+                    report.fail_case(format!("get {key:?}: expected {expected:?}, got {got:?}"));
                 }
             }
             MapOp::Contains { key, expected } => {
                 let key = key.to_string();
                 let map = as_map(reflected).expect("map expected");
                 if map.reflect_contains_key(&key) != *expected {
-                    failures.push(format!(
-                        "{title} || contains {key:?}: expected {expected}, got {}",
+                    report.fail_case(format!(
+                        "contains {key:?}: expected {expected}, got {}",
                         map.reflect_contains_key(&key)
                     ));
                 }
@@ -197,23 +192,23 @@ fn value_map_ops() {
                 match expect_error {
                     Some(expected_error) => match &result {
                         Err(err) if error_kind(err) == *expected_error => {}
-                        other => failures.push(format!(
-                            "{title} || set {key:?}: expected error {expected_error}, got {other:?}"
+                        other => report.fail_case(format!(
+                            "set {key:?}: expected error {expected_error}, got {other:?}"
                         )),
                     },
-                    None => {
-                        match result {
-                            Ok(()) => {
-                                if Some(&value) != expected.as_ref() {
-                                    failures.push(format!("{title} || set {key:?}: expected {expected:?}, got {value:?}"));
-                                }
+                    None => match result {
+                        Ok(()) => {
+                            if Some(&value) != expected.as_ref() {
+                                report.fail_case(format!(
+                                    "set {key:?}: expected {expected:?}, got {value:?}"
+                                ));
                             }
-                            Err(err) => failures.push(format!(
-                                "{title} || set {key:?}: unexpected error {}",
-                                error_kind(&err)
-                            )),
                         }
-                    }
+                        Err(err) => report.fail_case(format!(
+                            "set {key:?}: unexpected error {}",
+                            error_kind(&err)
+                        )),
+                    },
                 }
             }
             MapOp::Delete {
@@ -233,15 +228,22 @@ fn value_map_ops() {
                 match expect_error {
                     Some(expected_error) => match &result {
                         Err(err) if error_kind(err) == *expected_error => {}
-                        other => failures.push(format!("{title} || delete {key:?}: expected error {expected_error}, got {other:?}")),
+                        other => report.fail_case(format!(
+                            "delete {key:?}: expected error {expected_error}, got {other:?}"
+                        )),
                     },
                     None => match result {
                         Ok(()) => {
                             if Some(&value) != expected.as_ref() {
-                                failures.push(format!("{title} || delete {key:?}: expected {expected:?}, got {value:?}"));
+                                report.fail_case(format!(
+                                    "delete {key:?}: expected {expected:?}, got {value:?}"
+                                ));
                             }
                         }
-                        Err(err) => failures.push(format!("{title} || delete {key:?}: unexpected error {}", error_kind(&err))),
+                        Err(err) => report.fail_case(format!(
+                            "delete {key:?}: unexpected error {}",
+                            error_kind(&err)
+                        )),
                     },
                 }
             }
@@ -258,21 +260,19 @@ fn value_map_ops() {
                     .collect();
                 let expected: Vec<String> = expected.iter().map(|k| k.to_string()).collect();
                 if keys != expected {
-                    failures.push(format!(
-                        "{title} || keys: expected {expected:?}, got {keys:?}"
-                    ));
+                    report.fail_case(format!("keys: expected {expected:?}, got {keys:?}"));
                 }
             }
             MapOp::Len(expected) => {
                 let map = as_map(reflected).expect("map expected");
                 if map.reflect_length() != *expected {
-                    failures.push(format!(
-                        "{title} || len: expected {expected}, got {}",
+                    report.fail_case(format!(
+                        "len: expected {expected}, got {}",
                         map.reflect_length()
                     ));
                 }
             }
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 }

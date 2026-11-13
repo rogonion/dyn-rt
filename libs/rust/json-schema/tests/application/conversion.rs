@@ -13,7 +13,7 @@ use dyn_rt_json_schema::{
 };
 use dyn_rt_reflect::Reflect;
 use dyn_rt_shared::Value;
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 /// Renders a reflected value by downcasting to the concrete test type.
 type RenderFn = Box<dyn Fn(&dyn Reflect) -> String>;
@@ -44,7 +44,7 @@ impl SchemaConverter for DoubleI64 {
 }
 
 struct ConversionCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     source: Box<dyn Reflect>,
     schema: Schema,
     make_target: fn() -> Box<dyn Reflect>,
@@ -58,11 +58,7 @@ struct ConversionCase {
 macro_rules! conversion_case {
     ($source:expr, $schema:expr, $target:expr, $render:expr, $expected:expr $(, test_title = $title:expr)?) => {
         ConversionCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             source: Box::new($source),
             schema: $schema,
             make_target: $target,
@@ -274,33 +270,31 @@ fn conversion_cases() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let mut target = (case.make_target)();
         let got = convert_with(&*case.source, &case.schema, &mut *target, &case.options);
         match (&case.expected, &got) {
             (Ok((expected_render, expected_keys)), Ok(outcome)) => {
                 let got_render = (case.render)(&*target);
                 if &got_render != expected_render || &outcome.valid_set_keys != expected_keys {
-                    failures.push(format!(
-                        "{title} || expected ({:?}, {:?}), got ({:?}, {:?})",
+                    report.fail_case(format!(
+                        "expected ({:?}, {:?}), got ({:?}, {:?})",
                         expected_render, expected_keys, got_render, outcome.valid_set_keys
                     ));
                 }
             }
             (Err(fragment), Err(err)) => {
                 if !err.to_string().contains(fragment) {
-                    failures.push(format!(
-                        "{title} || error: expected fragment {:?}, got {:?}",
+                    report.fail_case(format!(
+                        "error: expected fragment {:?}, got {:?}",
                         fragment, err
                     ));
                 }
             }
-            _ => failures.push(format!(
-                "{title} || expected {:?}, got {:?}",
-                case.expected, got
-            )),
+            _ => report.fail_case(format!("expected {:?}, got {:?}", case.expected, got)),
         }
     }
 
@@ -316,11 +310,14 @@ fn conversion_cases() {
     );
     match got {
         Ok(_) if debug_downcast::<i64>(&*target) == "10" => {}
-        other => failures.push(format!(
-            "Test case custom: custom converter doubles i64 || expected \"10\", got {:?}",
-            other.map(|o| (debug_downcast::<i64>(&*target), o.valid_set_keys))
-        )),
+        other => report.fail(
+            "Test case custom: custom converter doubles i64",
+            format!(
+                "expected \"10\", got {:?}",
+                other.map(|o| (debug_downcast::<i64>(&*target), o.valid_set_keys))
+            ),
+        ),
     }
 
-    report_failures(failures, test_data.len() + 1);
+    report.finish();
 }

@@ -4,7 +4,7 @@
 use crate::common::{arr, error_kind, obj, value_of};
 use dyn_rt_reflect::{Reflect, ReflectError, ReflectRefMut, as_sequence};
 use dyn_rt_shared::Value;
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 enum SeqOp {
     Get {
@@ -31,7 +31,7 @@ enum SeqOp {
 }
 
 struct SeqCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     value: Value,
     op: SeqOp,
 }
@@ -39,11 +39,7 @@ struct SeqCase {
 macro_rules! seq_case {
     ($value:expr, $op:expr $(, test_title = $title:expr)?) => {
         SeqCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             value: $value,
             op: $op,
         }
@@ -149,9 +145,10 @@ fn value_sequence_ops() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let mut value = case.value.clone();
         let reflected: &dyn Reflect = &value;
 
@@ -160,16 +157,14 @@ fn value_sequence_ops() {
                 let result = as_sequence(reflected).and_then(|s| s.reflect_get(*index));
                 let got = result.map(value_of);
                 if got != expected.as_ref() {
-                    failures.push(format!(
-                        "{title} || get [{index}]: expected {expected:?}, got {got:?}"
-                    ));
+                    report.fail_case(format!("get [{index}]: expected {expected:?}, got {got:?}"));
                 }
             }
             SeqOp::Len(expected) => {
                 let seq = as_sequence(reflected).expect("sequence expected");
                 if seq.reflect_length() != *expected {
-                    failures.push(format!(
-                        "{title} || len: expected {expected}, got {}",
+                    report.fail_case(format!(
+                        "len: expected {expected}, got {}",
                         seq.reflect_length()
                     ));
                 }
@@ -182,15 +177,15 @@ fn value_sequence_ops() {
             } => match run_mutating(&mut value, &case.op) {
                 Ok(()) => {
                     if Some(&value) != expected.as_ref() {
-                        failures.push(format!(
-                            "{title} || set [{index}]: expected {expected:?}, got {value:?}"
+                        report.fail_case(format!(
+                            "set [{index}]: expected {expected:?}, got {value:?}"
                         ));
                     }
                 }
                 Err(got) => match expect_error {
                     Some(expected_error) if got == *expected_error => {}
-                    _ => failures.push(format!(
-                        "{title} || set [{index}]: expected error {expect_error:?}, got {got:?}"
+                    _ => report.fail_case(format!(
+                        "set [{index}]: expected error {expect_error:?}, got {got:?}"
                     )),
                 },
             },
@@ -201,15 +196,13 @@ fn value_sequence_ops() {
             } => match run_mutating(&mut value, &case.op) {
                 Ok(()) => {
                     if Some(&value) != expected.as_ref() {
-                        failures.push(format!(
-                            "{title} || push: expected {expected:?}, got {value:?}"
-                        ));
+                        report.fail_case(format!("push: expected {expected:?}, got {value:?}"));
                     }
                 }
                 Err(got) => match expect_error {
                     Some(expected_error) if got == *expected_error => {}
-                    _ => failures.push(format!(
-                        "{title} || push: expected error {expect_error:?}, got {got:?}"
+                    _ => report.fail_case(format!(
+                        "push: expected error {expect_error:?}, got {got:?}"
                     )),
                 },
             },
@@ -220,19 +213,19 @@ fn value_sequence_ops() {
             } => match run_mutating(&mut value, &case.op) {
                 Ok(()) => {
                     if Some(&value) != expected.as_ref() {
-                        failures.push(format!(
-                            "{title} || delete [{index}]: expected {expected:?}, got {value:?}"
+                        report.fail_case(format!(
+                            "delete [{index}]: expected {expected:?}, got {value:?}"
                         ));
                     }
                 }
                 Err(got) => match expect_error {
                     Some(expected_error) if got == *expected_error => {}
-                    _ => failures.push(format!(
-                        "{title} || delete [{index}]: expected error {expect_error:?}, got {got:?}"
+                    _ => report.fail_case(format!(
+                        "delete [{index}]: expected error {expect_error:?}, got {got:?}"
                     )),
                 },
             },
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 }

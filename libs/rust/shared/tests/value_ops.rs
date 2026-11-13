@@ -1,9 +1,9 @@
 //! Data-driven suite for the Value model (ADR 0004): one custom loop over a
-//! plain Rust case table; every case carries a TestMetadata title. The table
+//! plain Rust case table; every case carries a test_title. The table
 //! doubles as usage documentation for building and inspecting Values.
 
 use dyn_rt_shared::Value;
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 /// One assertion against the case's value.
 enum Check {
@@ -20,7 +20,7 @@ enum Check {
 }
 
 struct ValueCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     value: Value,
     checks: Vec<Check>,
 }
@@ -28,11 +28,7 @@ struct ValueCase {
 macro_rules! value_case {
     ($value:expr, [$($check:expr),* $(,)?] $(, test_title = $title:expr)?) => {
         ValueCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             value: $value,
             checks: vec![$($check),*],
         }
@@ -123,10 +119,11 @@ fn value_ops() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
 
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         for check in &case.checks {
             let mismatch: Option<String> = match check {
                 Check::Type(expected) => (case.value.type_name() != *expected).then(|| {
@@ -188,10 +185,10 @@ fn value_ops() {
                 }),
             };
             if let Some(detail) = mismatch {
-                failures.push(format!("{title} || {detail}"));
+                report.fail_case(detail);
             }
         }
     }
 
-    report_failures(failures, test_data.len());
+    report.finish();
 }

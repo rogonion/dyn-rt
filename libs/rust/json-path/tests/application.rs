@@ -11,28 +11,27 @@ use dyn_rt_json_path::{
     json_path_union_selector_segment, json_path_wildcard_segment, new_recursive_descent_segment,
     new_recursive_descent_segments, parse_path,
 };
-use dyn_rt_test_support::{new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 #[test]
 fn parse_path_cases() {
     let test_data = yield_parse_data();
     let tokenizer = RegexPathTokenizer;
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
 
     for (test_index, case) in test_data.iter().enumerate() {
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let result = parse_path(&tokenizer, case.source);
         if result != case.expected {
-            failures.push(format!(
-                "{} || parse mismatch for path {} || expected {:?} ; got {:?}",
-                new_test_title!(test_index + 1, case.meta.test_title),
-                case.source,
-                case.expected,
-                result,
+            report.fail_case(format!(
+                "parse mismatch for path {} || expected {:?} ; got {:?}",
+                case.source, case.expected, result,
             ));
         }
     }
 
-    report_failures(failures, test_data.len());
+    report.finish();
 }
 
 fn yield_parse_data() -> Vec<ParseCase> {
@@ -330,21 +329,18 @@ fn yield_parse_data() -> Vec<ParseCase> {
 fn extract_segment_cases() {
     let test_data = yield_extract_data();
     let tokenizer = RegexPathTokenizer;
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
 
     for (test_index, case) in test_data.iter().enumerate() {
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let result = extract_segment(&tokenizer, case.source);
         if result != case.expected {
-            failures.push(format!(
-                "{} || expected {:?} ; got {:?}",
-                new_test_title!(test_index + 1, case.meta.test_title),
-                case.expected,
-                result,
-            ));
+            report.fail_case(format!("expected {:?} ; got {:?}", case.expected, result,));
         }
     }
 
-    report_failures(failures, test_data.len());
+    report.finish();
 }
 
 fn yield_extract_data() -> Vec<ExtractCase> {

@@ -5,7 +5,7 @@
 use dyn_rt_reflect::{
     Reflect, ReflectEnum, ReflectNew, ReflectStruct, as_enum, as_struct, kind_of,
 };
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 // ---------------------------------------------------------------------------
 // derived test types
@@ -159,7 +159,7 @@ enum Op {
 }
 
 struct DeriveCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     subject: Subject,
     op: Op,
     expected: Result<String, &'static str>,
@@ -168,11 +168,7 @@ struct DeriveCase {
 macro_rules! derive_case {
     ($subject:expr, $op:expr, $expected:expr $(, test_title = $title:expr)?) => {
         DeriveCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             subject: $subject,
             op: $op,
             expected: $expected,
@@ -851,20 +847,18 @@ fn derive_ops() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let got = observe(&case.subject, &case.op);
         match (&case.expected, &got) {
             (Ok(expected), Ok(got)) if expected == got => {}
             (Err(expected), Err(got)) if expected == got => {}
-            _ => failures.push(format!(
-                "{title} || expected {:?}, got {:?}",
-                case.expected, got
-            )),
+            _ => report.fail_case(format!("expected {:?}, got {:?}", case.expected, got)),
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 }
 
 // Cloneable exists only to prove the base derive's Clone bound is what gates

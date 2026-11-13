@@ -3,7 +3,7 @@
 use crate::common::{error_kind, obj, value_of};
 use dyn_rt_reflect::{Reflect, ReflectKind, ReflectRefMut, kind_of, reflect_with_inner};
 use dyn_rt_shared::Value;
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 enum IndOp {
     Kind(&'static str),
@@ -13,7 +13,7 @@ enum IndOp {
 }
 
 struct IndCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     inner: Value,
     op: IndOp,
 }
@@ -21,11 +21,7 @@ struct IndCase {
 macro_rules! ind_case {
     ($inner:expr, $op:expr $(, test_title = $title:expr)?) => {
         IndCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             inner: $inner,
             op: $op,
         }
@@ -62,33 +58,33 @@ fn box_indirection_ops() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let mut subject: Box<dyn Reflect> = Box::new(Box::new(case.inner.clone()));
 
         match &case.op {
             IndOp::Kind(expected) => {
                 if kind_of(subject.as_ref()).to_string() != *expected {
-                    failures.push(format!(
-                        "{title} || kind: expected {expected:?}, got {:?}",
+                    report.fail_case(format!(
+                        "kind: expected {expected:?}, got {:?}",
                         kind_of(subject.as_ref())
                     ));
                 }
                 if kind_of(subject.as_ref()) != ReflectKind::Indirection {
-                    failures.push(format!("{title} || kind enum: expected Indirection"));
+                    report.fail_case("kind enum: expected Indirection");
                 }
             }
             IndOp::Inner(expected) => {
                 match reflect_with_inner(subject.as_ref(), |v| value_of(v).clone()) {
                     Ok(inner) if &inner == expected => {}
-                    Ok(inner) => failures.push(format!(
-                        "{title} || inner: expected {expected:?}, got {inner:?}"
-                    )),
-                    Err(err) => failures.push(format!(
-                        "{title} || inner: unexpected error {}",
-                        error_kind(&err)
-                    )),
+                    Ok(inner) => {
+                        report.fail_case(format!("inner: expected {expected:?}, got {inner:?}"))
+                    }
+                    Err(err) => {
+                        report.fail_case(format!("inner: unexpected error {}", error_kind(&err)))
+                    }
                 }
             }
             IndOp::SetInner { set, expected } => match subject.reflect_ref_mut() {
@@ -97,37 +93,33 @@ fn box_indirection_ops() {
                 {
                     Ok(()) => match reflect_with_inner(subject.as_ref(), |v| value_of(v).clone()) {
                         Ok(inner) if &inner == expected => {}
-                        Ok(inner) => failures.push(format!(
-                            "{title} || set_inner: expected {expected:?}, got {inner:?}"
-                        )),
-                        Err(err) => failures.push(format!(
-                            "{title} || set_inner read-back: {}",
-                            error_kind(&err)
-                        )),
+                        Ok(inner) => report
+                            .fail_case(format!("set_inner: expected {expected:?}, got {inner:?}")),
+                        Err(err) => {
+                            report.fail_case(format!("set_inner read-back: {}", error_kind(&err)))
+                        }
                     },
-                    Err(err) => failures.push(format!(
-                        "{title} || set_inner: unexpected error {}",
-                        error_kind(&err)
-                    )),
+                    Err(err) => report
+                        .fail_case(format!("set_inner: unexpected error {}", error_kind(&err))),
                 },
-                _ => failures.push(format!("{title} || set_inner: expected indirection")),
+                _ => report.fail_case("set_inner: expected indirection"),
             },
             IndOp::DeleteInner { expect_error } => {
                 let result = match subject.reflect_ref_mut() {
                     ReflectRefMut::Indirection(ind) => ind.reflect_delete_inner(),
                     _ => {
-                        failures.push(format!("{title} || delete_inner: expected indirection"));
+                        report.fail_case("delete_inner: expected indirection");
                         continue;
                     }
                 };
                 match &result {
                     Err(err) if error_kind(err) == *expect_error => {}
-                    other => failures.push(format!(
-                        "{title} || delete_inner: expected error {expect_error}, got {other:?}"
+                    other => report.fail_case(format!(
+                        "delete_inner: expected error {expect_error}, got {other:?}"
                     )),
                 }
             }
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 }

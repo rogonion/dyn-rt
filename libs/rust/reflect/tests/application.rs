@@ -10,14 +10,14 @@ use dyn_rt_reflect::{
     as_struct, as_unknown, children, kind_of, reflect_with_inner,
 };
 use dyn_rt_shared::Value;
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 // ---------------------------------------------------------------------------
 // kind_of
 // ---------------------------------------------------------------------------
 
 struct KindOfCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     value: Value,
     expect_kind: ReflectKind,
     expect_type: &'static str,
@@ -26,11 +26,7 @@ struct KindOfCase {
 macro_rules! kind_of_case {
     ($value:expr, $expect_kind:expr, $expect_type:literal $(, test_title = $title:expr)?) => {
         KindOfCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             value: $value,
             expect_kind: $expect_kind,
             expect_type: $expect_type,
@@ -85,26 +81,27 @@ fn kind_of_cases() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let reflected: &dyn Reflect = &case.value;
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
         if kind_of(reflected) != case.expect_kind {
-            failures.push(format!(
-                "{title} || kind: expected {:?}, got {:?}",
+            report.fail_case(format!(
+                "kind: expected {:?}, got {:?}",
                 case.expect_kind,
                 kind_of(reflected)
             ));
         }
         if reflected.reflect_type_name() != case.expect_type {
-            failures.push(format!(
-                "{title} || type name: expected {:?}, got {:?}",
+            report.fail_case(format!(
+                "type name: expected {:?}, got {:?}",
                 case.expect_type,
                 reflected.reflect_type_name()
             ));
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 }
 
 // ---------------------------------------------------------------------------
@@ -112,7 +109,7 @@ fn kind_of_cases() {
 // ---------------------------------------------------------------------------
 
 struct ChildrenCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     value: Value,
     expected: Vec<Value>,
 }
@@ -120,11 +117,7 @@ struct ChildrenCase {
 macro_rules! children_case {
     ($value:expr, $expected:expr $(, test_title = $title:expr)?) => {
         ChildrenCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             value: $value,
             expected: $expected,
         }
@@ -151,23 +144,20 @@ fn children_of_containers() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let reflected: &dyn Reflect = &case.value;
         let got: Vec<Value> = children(reflected)
             .iter()
             .map(|v| value_of(*v).clone())
             .collect();
         if got != case.expected {
-            failures.push(format!(
-                "{} || expected {:?}, got {:?}",
-                new_test_title!(test_index + 1, case.meta.test_title),
-                case.expected,
-                got,
-            ));
+            report.fail_case(format!("expected {:?}, got {:?}", case.expected, got,));
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 }
 
 // ---------------------------------------------------------------------------
@@ -175,7 +165,7 @@ fn children_of_containers() {
 // ---------------------------------------------------------------------------
 
 struct DowncastCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     value: Value,
     /// which as_* returns Some: "scalar" | "sequence" | "map" | "struct" |
     /// "enum" | "indirection" | "unknown"
@@ -185,11 +175,7 @@ struct DowncastCase {
 macro_rules! downcast_case {
     ($value:expr, $expected:literal $(, test_title = $title:expr)?) => {
         DowncastCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             value: $value,
             expected: $expected,
         }
@@ -221,10 +207,11 @@ fn as_downcasts() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let reflected: &dyn Reflect = &case.value;
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
         let got = if as_scalar(reflected).is_some() {
             "scalar"
         } else if as_sequence(reflected).is_some() {
@@ -243,13 +230,13 @@ fn as_downcasts() {
             "none"
         };
         if got != case.expected {
-            failures.push(format!(
-                "{title} || expected downcast {got:?} to be {:?}",
+            report.fail_case(format!(
+                "expected downcast {got:?} to be {:?}",
                 case.expected
             ));
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 }
 
 // ---------------------------------------------------------------------------
@@ -262,7 +249,7 @@ enum Subject {
 }
 
 struct WithInnerCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     subject: Subject,
     expected: Result<Value, &'static str>,
 }
@@ -270,11 +257,7 @@ struct WithInnerCase {
 macro_rules! with_inner_case {
     ($subject:expr, $expected:expr $(, test_title = $title:expr)?) => {
         WithInnerCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             subject: $subject,
             expected: $expected,
         }
@@ -296,9 +279,10 @@ fn reflect_with_inner_cases() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let subject: Box<dyn Reflect> = match &case.subject {
             Subject::Boxed(v) => Box::new(Box::new(v.clone())),
             Subject::Plain(v) => Box::new(v.clone()),
@@ -307,36 +291,34 @@ fn reflect_with_inner_cases() {
         match (&case.expected, result) {
             (Ok(expected), Ok(got)) => {
                 if &got != expected {
-                    failures.push(format!("{title} || expected {expected:?}, got {got:?}"));
+                    report.fail_case(format!("expected {expected:?}, got {got:?}"));
                 }
             }
             (Err(expected_error), Err(err)) => {
                 if error_kind(&err) != *expected_error {
-                    failures.push(format!(
-                        "{title} || expected error {expected_error}, got {}",
+                    report.fail_case(format!(
+                        "expected error {expected_error}, got {}",
                         error_kind(&err)
                     ));
                 }
             }
             (expected, got) => {
-                failures.push(format!("{title} || expected {expected:?}, got {got:?}"));
+                report.fail_case(format!("expected {expected:?}, got {got:?}"));
             }
         }
         // ReflectRef routing sanity for the same subjects (domain enum used here)
         match subject.reflect_ref() {
             ReflectRef::Indirection(_) => {
                 if !matches!(case.subject, Subject::Boxed(_)) {
-                    failures.push(format!("{title} || plain value routed to Indirection"));
+                    report.fail_case("plain value routed to Indirection");
                 }
             }
             _ => {
                 if matches!(case.subject, Subject::Boxed(_)) {
-                    failures.push(format!(
-                        "{title} || boxed value did not route to Indirection"
-                    ));
+                    report.fail_case("boxed value did not route to Indirection");
                 }
             }
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 }

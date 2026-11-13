@@ -2,10 +2,10 @@
 //! on the `serde-json` feature: serde_json::Value participating in reflection.
 
 use dyn_rt_reflect::{Reflect, ReflectEnum, ReflectKind, as_map, as_sequence, kind_of};
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 struct SerdeJsonCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     value: serde_json::Value,
     expected_kind: ReflectKind,
     expected_variant: &'static str,
@@ -15,11 +15,7 @@ struct SerdeJsonCase {
 macro_rules! serde_json_case {
     ($value:expr, $kind:expr, $variant:expr, $type_name:expr $(, test_title = $title:expr)?) => {
         SerdeJsonCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             value: $value,
             expected_kind: $kind,
             expected_variant: $variant,
@@ -75,28 +71,29 @@ fn serde_json_value_cases() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let r: &dyn Reflect = &case.value;
         if kind_of(r) != case.expected_kind {
-            failures.push(format!(
-                "{title} || kind: expected {:?}, got {:?}",
+            report.fail_case(format!(
+                "kind: expected {:?}, got {:?}",
                 case.expected_kind,
                 kind_of(r)
             ));
         }
         if r.reflect_type_name() != case.expected_type_name {
-            failures.push(format!(
-                "{title} || type name: expected {:?}, got {:?}",
+            report.fail_case(format!(
+                "type name: expected {:?}, got {:?}",
                 case.expected_type_name,
                 r.reflect_type_name()
             ));
         }
         let enumeration: &dyn ReflectEnum = &case.value;
         if enumeration.reflect_active_variant() != case.expected_variant {
-            failures.push(format!(
-                "{title} || variant: expected {:?}, got {:?}",
+            report.fail_case(format!(
+                "variant: expected {:?}, got {:?}",
                 case.expected_variant,
                 enumeration.reflect_active_variant()
             ));
@@ -111,9 +108,10 @@ fn serde_json_value_cases() {
         .reflect_get(&"a".to_string())
         .map(|v| v.reflect_type_name().to_string());
     if got.as_deref() != Some("number") {
-        failures.push(format!(
-            "Test case shape access || map get 'a': expected Some(\"number\"), got {got:?}"
-        ));
+        report.fail(
+            "Test case shape access",
+            format!("map get 'a': expected Some(\"number\"), got {got:?}"),
+        );
     }
     let array = serde_json::json!([10, 20]);
     let r: &dyn Reflect = &array;
@@ -121,20 +119,23 @@ fn serde_json_value_cases() {
     if seq.reflect_length() != 2
         || seq.reflect_get(1).map(|v| v.reflect_type_name()) != Some("number")
     {
-        failures.push(format!(
-            "Test case shape access || sequence len/get: got len={}, [1]={:?}",
-            seq.reflect_length(),
-            seq.reflect_get(1).map(|v| v.reflect_type_name())
-        ));
+        report.fail(
+            "Test case shape access",
+            format!(
+                "sequence len/get: got len={}, [1]={:?}",
+                seq.reflect_length(),
+                seq.reflect_get(1).map(|v| v.reflect_type_name())
+            ),
+        );
     }
     let boolean = serde_json::json!(true);
     let payload = ReflectEnum::reflect_active_variant_payload(&boolean).expect("payload");
     if payload.reflect_as_any().downcast_ref::<bool>() != Some(&true) {
-        failures.push(format!(
-            "Test case shape access || Bool payload: got {:?}",
-            payload.reflect_type_name()
-        ));
+        report.fail(
+            "Test case shape access",
+            format!("Bool payload: got {:?}", payload.reflect_type_name()),
+        );
     }
 
-    report_failures(failures, test_data.len() + 3);
+    report.finish();
 }

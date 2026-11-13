@@ -12,7 +12,7 @@ use dyn_rt_json_schema::{
 };
 use dyn_rt_reflect::Reflect;
 use dyn_rt_shared::Value;
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 /// A custom validator accepting only even i64 values (mirrors go's custom
 /// Validators registry keyed by type).
@@ -41,7 +41,7 @@ impl SchemaValidator for EvenValidator {
 }
 
 struct ValidationCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     data: Box<dyn Reflect>,
     schema: Schema,
     options: ValidationOptions,
@@ -52,11 +52,7 @@ struct ValidationCase {
 macro_rules! validation_case {
     ($data:expr, $schema:expr, $expected:expr $(, test_title = $title:expr)?) => {
         ValidationCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             data: Box::new($data),
             schema: $schema,
             options: ValidationOptions::new(),
@@ -236,31 +232,29 @@ fn validation_cases() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let got = validate_with(&*case.data, &case.schema, &case.options);
         match (&case.expected, &got) {
             (Ok(expected_keys), Ok(outcome)) => {
                 if &outcome.valid_set_keys != expected_keys {
-                    failures.push(format!(
-                        "{title} || valid set keys: expected {:?}, got {:?}",
+                    report.fail_case(format!(
+                        "valid set keys: expected {:?}, got {:?}",
                         expected_keys, outcome.valid_set_keys
                     ));
                 }
             }
             (Err(fragment), Err(err)) => {
                 if !err.to_string().contains(fragment) {
-                    failures.push(format!(
-                        "{title} || error: expected fragment {:?}, got {:?}",
+                    report.fail_case(format!(
+                        "error: expected fragment {:?}, got {:?}",
                         fragment, err
                     ));
                 }
             }
-            _ => failures.push(format!(
-                "{title} || expected {:?}, got {:?}",
-                case.expected, got
-            )),
+            _ => report.fail_case(format!("expected {:?}, got {:?}", case.expected, got)),
         }
     }
 
@@ -272,14 +266,15 @@ fn validation_cases() {
         (4i64, true, "custom validator accepts even i64"),
         (3i64, false, "custom validator rejects odd i64"),
     ] {
+        report.begin_case(format!("Test case custom: {title}"));
         let got = validate_with(&value, &schema, &custom);
         if got.is_ok() != expected_ok {
-            failures.push(format!(
-                "Test case custom: {title} || expected ok={expected_ok}, got {:?}",
+            report.fail_case(format!(
+                "expected ok={expected_ok}, got {:?}",
                 got.map(|o| o.valid_set_keys)
             ));
         }
     }
 
-    report_failures(failures, test_data.len() + 2);
+    report.finish();
 }

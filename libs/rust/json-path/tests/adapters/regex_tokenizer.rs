@@ -4,27 +4,24 @@
 use crate::common::{SplitCase, split_case};
 use dyn_rt_json_path::RegexPathTokenizer;
 use dyn_rt_json_path::domain::PathTokenizer;
-use dyn_rt_test_support::{new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 #[test]
 fn split_recursive_descent() {
     let test_data = yield_split_recursive_descent();
     let tokenizer = RegexPathTokenizer;
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
 
     for (test_index, case) in test_data.iter().enumerate() {
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let result: Vec<&str> = tokenizer.split_recursive_descent(case.source);
         if result != case.expected {
-            failures.push(format!(
-                "{} || expected {:?} ; got {:?}",
-                new_test_title!(test_index + 1, case.meta.test_title),
-                case.expected,
-                result,
-            ));
+            report.fail_case(format!("expected {:?} ; got {:?}", case.expected, result,));
         }
     }
 
-    report_failures(failures, test_data.len());
+    report.finish();
 }
 
 fn yield_split_recursive_descent() -> Vec<SplitCase> {
@@ -141,21 +138,18 @@ fn yield_split_recursive_descent() -> Vec<SplitCase> {
 fn split_dot_notation() {
     let test_data = yield_split_dot_notation();
     let tokenizer = RegexPathTokenizer;
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
 
     for (test_index, case) in test_data.iter().enumerate() {
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let result: Vec<&str> = tokenizer.split_dot_notation(case.source);
         if result != case.expected {
-            failures.push(format!(
-                "{} || expected {:?} ; got {:?}",
-                new_test_title!(test_index + 1, case.meta.test_title),
-                case.expected,
-                result,
-            ));
+            report.fail_case(format!("expected {:?} ; got {:?}", case.expected, result,));
         }
     }
 
-    report_failures(failures, test_data.len());
+    report.finish();
 }
 
 fn yield_split_dot_notation() -> Vec<SplitCase> {
@@ -268,21 +262,18 @@ fn yield_split_dot_notation() -> Vec<SplitCase> {
 fn split_brackets() {
     let test_data = yield_split_brackets();
     let tokenizer = RegexPathTokenizer;
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
 
     for (test_index, case) in test_data.iter().enumerate() {
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let result: Vec<&str> = tokenizer.split_brackets(case.source);
         if result != case.expected {
-            failures.push(format!(
-                "{} || expected {:?} ; got {:?}",
-                new_test_title!(test_index + 1, case.meta.test_title),
-                case.expected,
-                result,
-            ));
+            report.fail_case(format!("expected {:?} ; got {:?}", case.expected, result,));
         }
     }
 
-    report_failures(failures, test_data.len());
+    report.finish();
 }
 
 fn yield_split_brackets() -> Vec<SplitCase> {

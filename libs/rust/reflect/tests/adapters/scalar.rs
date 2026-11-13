@@ -4,7 +4,7 @@
 use crate::common::{arr, error_kind, obj, value_of};
 use dyn_rt_reflect::Reflect;
 use dyn_rt_shared::Value;
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 enum CloneApplyOp {
     Clone {
@@ -21,7 +21,7 @@ enum CloneApplyOp {
 }
 
 struct ScalarCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     value: Value,
     op: CloneApplyOp,
 }
@@ -29,11 +29,7 @@ struct ScalarCase {
 macro_rules! scalar_case {
     ($value:expr, $op:expr $(, test_title = $title:expr)?) => {
         ScalarCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             value: $value,
             op: $op,
         }
@@ -82,9 +78,10 @@ fn scalar_clone_apply() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let mut value = case.value.clone();
 
         match &case.op {
@@ -93,9 +90,7 @@ fn scalar_clone_apply() {
                 let cloned = reflected.reflect_clone();
                 let got = value_of(cloned.as_ref());
                 if got != expected {
-                    failures.push(format!(
-                        "{title} || clone: expected {expected:?}, got {got:?}"
-                    ));
+                    report.fail_case(format!("clone: expected {expected:?}, got {got:?}"));
                 }
             }
             CloneApplyOp::Apply { source, expected } => {
@@ -103,15 +98,13 @@ fn scalar_clone_apply() {
                 match value.reflect_apply(source_ref) {
                     Ok(()) => {
                         if value != *expected {
-                            failures.push(format!(
-                                "{title} || apply: expected {expected:?}, got {value:?}"
-                            ));
+                            report
+                                .fail_case(format!("apply: expected {expected:?}, got {value:?}"));
                         }
                     }
-                    Err(err) => failures.push(format!(
-                        "{title} || apply: unexpected error {}",
-                        error_kind(&err)
-                    )),
+                    Err(err) => {
+                        report.fail_case(format!("apply: unexpected error {}", error_kind(&err)))
+                    }
                 }
             }
             CloneApplyOp::ApplyMismatch {
@@ -122,12 +115,12 @@ fn scalar_clone_apply() {
                 let source_ref: &dyn Reflect = &source_string;
                 match value.reflect_apply(source_ref) {
                     Err(err) if error_kind(&err) == *expect_error => {}
-                    other => failures.push(format!(
-                        "{title} || apply mismatch: expected error {expect_error}, got {other:?}"
+                    other => report.fail_case(format!(
+                        "apply mismatch: expected error {expect_error}, got {other:?}"
                     )),
                 }
             }
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 }

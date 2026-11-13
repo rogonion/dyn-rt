@@ -10,7 +10,7 @@ the implementation language: go-json ranges over test-data iterators yielding
 `{input, expected}` structs, js-json uses `it.each(testData)` arrays.
 dyn-rt-rs-old-3 showed the Rust shape we adopt: per-suite custom loops over
 `yield_test_data()` tables whose entries are built by constructor macros and
-carry a shared `TestMetadata` title. An earlier revision of this ADR routed
+carry a `test_title` field. An earlier revision of this ADR routed
 cases through `tests/shared/**/*.json` for cross-language parity, but JSON
 fixtures make tests unreadable as usage examples and force every case through
 a JSON encoding; in-language tables show accepted inputs directly.
@@ -25,18 +25,20 @@ a JSON encoding; in-language tables show accepted inputs directly.
 - Every suite is a custom loop over a case table — no framework-enforced
   shape. Typically one `#[test]` per suite iterating a `yield_test_data()`-style
   table; adding a new case means adding one entry to the table in code.
-- Every test datum carries the shared `TestMetadata` (at minimum a
-  `test_title`). On failure the loop reports the case title with expected vs
-  got, collects all failures, and panics once with a summary
-  (`Test case -> N : [[[ title ]]] || expected ... ; got ...`).
+- Every test datum is a plain case struct carrying its own `test_title`
+  (`Option<String>`) field. The suite loop registers each case in a
+  `TestReport` (`begin_case(title)`) and marks mismatches with
+  `fail_case(detail)`; `report.finish()` panics once with a summary on any
+  failure (`Test case -> N : [[[ title ]]] || expected ... ; got ...`) and
+  otherwise logs the passed coverage (which cases ran and passed).
 - Constructor macros for building case data are the sanctioned way to keep
   tables readable (ADR 0005 allows declarative macros): e.g. the
   `json_path_root_segment!` / `json_path_key_selector_segment!` /
   `new_recursive_descent_segment(s)!` macros in `dyn-rt-json-path` and the
-  `new_test_datum_*` shapes in each suite. The harness pieces
-  (`TestMetadata`, `new_test_metadata!`, `new_test_title!`, `report_failures`)
-  live once in `libs/rust/test-support` (dev-only); each other language gets
-  its own equivalent.
+  per-suite case macros (`split_case!`, `value_case!`, ...). The harness
+  pieces (`TestReport`, `new_test_title!`, plus the legacy `report_failures`
+  delegate) live once in `libs/rust/test-support` (dev-only); each other
+  language gets its own equivalent.
 - Tiers:
   1. In-code case table in the module's own `tests/` dir — the DEFAULT.
   2. Crate-local `testdata/` files — only for cases not representable in

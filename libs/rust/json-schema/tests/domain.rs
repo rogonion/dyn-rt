@@ -7,7 +7,7 @@ mod common;
 use common::*;
 use dyn_rt_json_schema::{Schema, SchemaNode};
 use dyn_rt_reflect::ReflectKind;
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 /// Projects a schema into a compact string for comparison.
 fn project(schema: &Schema) -> String {
@@ -72,7 +72,7 @@ fn project_node(node: &SchemaNode) -> String {
 }
 
 struct DomainCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     schema: Schema,
     expected_projection: String,
     expected_kind: Option<ReflectKind>,
@@ -81,11 +81,7 @@ struct DomainCase {
 macro_rules! domain_case {
     ($schema:expr, $projection:expr, $kind:expr $(, test_title = $title:expr)?) => {
         DomainCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             schema: $schema,
             expected_projection: $projection.to_string(),
             expected_kind: $kind,
@@ -177,29 +173,30 @@ fn schema_model_cases() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let got_projection = project(&case.schema);
         if got_projection != case.expected_projection {
-            failures.push(format!(
-                "{title} || projection: expected {:?}, got {:?}",
+            report.fail_case(format!(
+                "projection: expected {:?}, got {:?}",
                 case.expected_projection, got_projection
             ));
         }
         if let Some(expected_kind) = case.expected_kind {
             let Schema::Node(node) = &case.schema else {
-                failures.push(format!("{title} || kind: expected node, got set"));
+                report.fail_case("kind: expected node, got set");
                 continue;
             };
             if node.kind() != expected_kind {
-                failures.push(format!(
-                    "{title} || kind: expected {:?}, got {:?}",
+                report.fail_case(format!(
+                    "kind: expected {:?}, got {:?}",
                     expected_kind,
                     node.kind()
                 ));
             }
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 }

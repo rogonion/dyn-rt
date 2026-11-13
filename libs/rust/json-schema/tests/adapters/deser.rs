@@ -7,7 +7,7 @@ use dyn_rt_json_schema::Schema;
 use dyn_rt_json_schema::adapters::deser::{from_json_str, from_toml_str, from_yaml_str};
 use dyn_rt_json_schema::application::convert;
 use dyn_rt_reflect::Reflect;
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 enum Format {
     Json,
@@ -16,7 +16,7 @@ enum Format {
 }
 
 struct DeserCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     format: Format,
     text: &'static str,
     /// Ok(expected debug render of the parsed serde value) or Err(fragment)
@@ -26,11 +26,7 @@ struct DeserCase {
 macro_rules! deser_case {
     ($format:expr, $text:expr, $expected:expr $(, test_title = $title:expr)?) => {
         DeserCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             format: $format,
             text: $text,
             expected: $expected,
@@ -94,9 +90,10 @@ fn deser_cases() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let got = parse(case);
         match (&case.expected, &got) {
             (Ok(expected), Ok(value)) => {
@@ -108,22 +105,19 @@ fn deser_cases() {
                         .expect("deser returns serde_json::Value")
                 );
                 if &rendered != expected {
-                    failures.push(format!(
-                        "{title} || expected {:?}, got {:?}",
-                        expected, rendered
-                    ));
+                    report.fail_case(format!("expected {:?}, got {:?}", expected, rendered));
                 }
             }
             (Err(fragment), Err(err)) => {
                 if !err.to_string().contains(fragment) {
-                    failures.push(format!(
-                        "{title} || error: expected fragment {:?}, got {:?}",
+                    report.fail_case(format!(
+                        "error: expected fragment {:?}, got {:?}",
                         fragment, err
                     ));
                 }
             }
-            _ => failures.push(format!(
-                "{title} || expected {:?}, got {}",
+            _ => report.fail_case(format!(
+                "expected {:?}, got {}",
                 case.expected,
                 got.as_ref().map(|_| "Ok(..)").unwrap_or("Err(..)")
             )),
@@ -146,17 +140,21 @@ fn deser_cases() {
                     .expect("target is User")
             );
             if rendered != format!("{:?}", sample_user()) {
-                failures.push(format!(
-                    "Test case integration: yaml -> convert into User || expected {:?}, got {:?}",
-                    format!("{:?}", sample_user()),
-                    rendered
-                ));
+                report.fail(
+                    "Test case integration: yaml -> convert into User",
+                    format!(
+                        "expected {:?}, got {:?}",
+                        format!("{:?}", sample_user()),
+                        rendered
+                    ),
+                );
             }
         }
-        Err(err) => failures.push(format!(
-            "Test case integration: yaml -> convert into User || unexpected error {err:?}"
-        )),
+        Err(err) => report.fail(
+            "Test case integration: yaml -> convert into User",
+            format!("unexpected error {err:?}"),
+        ),
     }
 
-    report_failures(failures, test_data.len() + 1);
+    report.finish();
 }

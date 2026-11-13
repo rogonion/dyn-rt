@@ -5,10 +5,10 @@ mod common;
 
 use dyn_rt_reflect::{ReflectKind, TypeInfo, type_info};
 use dyn_rt_shared::Value;
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 struct KindNameCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     kind: ReflectKind,
     expected: &'static str,
 }
@@ -16,11 +16,7 @@ struct KindNameCase {
 macro_rules! kind_name_case {
     ($kind:expr, $expected:literal $(, test_title = $title:expr)?) => {
         KindNameCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             kind: $kind,
             expected: $expected,
         }
@@ -51,23 +47,20 @@ fn reflect_kind_display() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let got = case.kind.to_string();
         if got != case.expected {
-            failures.push(format!(
-                "{} || expected {:?}, got {:?}",
-                new_test_title!(test_index + 1, case.meta.test_title),
-                case.expected,
-                got,
-            ));
+            report.fail_case(format!("expected {:?}, got {:?}", case.expected, got,));
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 }
 
 struct TypeInfoCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     info: TypeInfo,
     expected_kind: ReflectKind,
     expected_type_name: Option<&'static str>,
@@ -77,11 +70,7 @@ struct TypeInfoCase {
 macro_rules! type_info_case {
     ($info:expr, $expected_kind:expr, $expected_type_name:expr, $constructible:expr $(, test_title = $title:expr)?) => {
         TypeInfoCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             info: $info,
             expected_kind: $expected_kind,
             expected_type_name: $expected_type_name,
@@ -175,32 +164,33 @@ fn type_info_table() {
         ),
     ];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         if case.info.kind != case.expected_kind {
-            failures.push(format!(
-                "{title} || kind: expected {:?}, got {:?}",
+            report.fail_case(format!(
+                "kind: expected {:?}, got {:?}",
                 case.expected_kind, case.info.kind,
             ));
         }
         if let Some(expected_name) = case.expected_type_name
             && case.info.type_name != expected_name
         {
-            failures.push(format!(
-                "{title} || type_name: expected {expected_name:?}, got {:?}",
+            report.fail_case(format!(
+                "type_name: expected {expected_name:?}, got {:?}",
                 case.info.type_name,
             ));
         }
         if case.info.construct().is_some() != case.constructible {
-            failures.push(format!(
-                "{title} || constructible: expected {}, got {}",
+            report.fail_case(format!(
+                "constructible: expected {}, got {}",
                 case.constructible,
                 case.info.construct().is_some(),
             ));
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 
     // type_info is cached per monomorphization: same pointer on repeat calls.
     // Not data — a direct identity assertion (ADR 0004 tier 3, inline reason).

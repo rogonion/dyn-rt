@@ -6,7 +6,7 @@
 ## Context
 
 ADR 0004 fixed the *shape* of tests (in-language data tables, custom loops,
-`TestMetadata` titles) but not *where* they live. As modules grow, a flat
+`test_title` fields) but not *where* they live. As modules grow, a flat
 `tests/` dir mixes suites for domain, application and adapters, so it is not
 obvious which file tests which layer.
 
@@ -29,8 +29,8 @@ obvious which file tests which layer.
 - Each suite file documents at the top which `src/` file(s) it tests.
 - Within a layer the ADR 0004 rules apply unchanged: one custom loop per
   suite over a `yield_*_data()` table, constructor macros for readable data,
-  every datum titled via `TestMetadata`, failures collected and reported once
-  with expected vs got.
+  every datum carrying a `test_title`, outcomes recorded in a `TestReport`
+  and reported once with the case title and expected vs got.
 
 Applied to: `libs/rust/reflect/tests/` (domain.rs, application.rs,
 adapters/{scalar,map,sequence,enum_shape,indirection,unknown}.rs),

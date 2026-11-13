@@ -9,21 +9,17 @@ use dyn_rt_reflect::{
     Reflect, ReflectError, ReflectKind, ReflectRef, ReflectRefMut, as_enum, as_indirection, as_map,
     as_scalar, as_sequence, as_struct, as_unknown, as_unknown_mut, children, kind_of,
 };
-use dyn_rt_test_support::{TestMetadata, new_test_metadata, new_test_title, report_failures};
+use dyn_rt_test_support::{TestReport, new_test_title};
 
 struct UnknownCase {
-    meta: TestMetadata,
+    test_title: Option<String>,
     value: Duration,
 }
 
 macro_rules! unknown_case {
     ($value:expr $(, test_title = $title:expr)?) => {
         UnknownCase {
-            meta: new_test_metadata!(
-                $(
-                    test_title = Some($title.to_string())
-                )?
-            ),
+test_title: None $(.or(Some($title.to_string())))?,
             value: $value,
         }
     };
@@ -36,24 +32,25 @@ fn duration_is_unknown() {
         test_title = "Duration routes to Unknown"
     )];
 
-    let mut failures: Vec<String> = Vec::new();
+    let mut report = TestReport::new();
     for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.meta.test_title);
+        let title = new_test_title!(test_index + 1, case.test_title);
+        report.begin_case(title.clone());
         let reflected: &dyn Reflect = &case.value;
         if kind_of(reflected) != ReflectKind::Unknown {
-            failures.push(format!(
-                "{title} || kind: expected Unknown, got {:?}",
+            report.fail_case(format!(
+                "kind: expected Unknown, got {:?}",
                 kind_of(reflected)
             ));
         }
         if as_unknown(reflected).is_none() {
-            failures.push(format!("{title} || as_unknown returned None"));
+            report.fail_case("as_unknown returned None");
         }
         if !children(reflected).is_empty() {
-            failures.push(format!("{title} || unknown has children"));
+            report.fail_case("unknown has children");
         }
     }
-    report_failures(failures, test_data.len());
+    report.finish();
 }
 
 // ---------------------------------------------------------------------------
