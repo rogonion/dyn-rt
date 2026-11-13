@@ -18,6 +18,7 @@ dependencies = [
  "dyn-rt-json-manipulation",
  "dyn-rt-json-path",
  "dyn-rt-json-schema",
+ "dyn-rt-metadatamodel",
  "dyn-rt-reflect",
  "dyn-rt-shared",
 ]
@@ -60,6 +61,19 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "toml",
+]
+
+[[package]]
+name = "dyn-rt-metadatamodel"
+version = "0.1.0"
+dependencies = [
+ "dyn-rt-json-manipulation",
+ "dyn-rt-json-path",
+ "dyn-rt-json-schema",
+ "dyn-rt-reflect",
+ "dyn-rt-shared",
+ "dyn-rt-test-support",
+ "serde_json",
 ]
 
 [[package]]

@@ -14,7 +14,7 @@ json-manipulation = ["dep:dyn-rt-json-manipulation", "json-schema", "reflect"]
 # text deserialization (serde json/yaml/toml) into reflect-able values
 deser = ["dep:dyn-rt-json-schema", "dyn-rt-json-schema/deser"]
 reflect = ["dep:dyn-rt-reflect", "dep:dyn-rt-shared"]
-# metadatamodel     = ["dep:dyn-rt-metadatamodel", "json"]
+metadatamodel = ["dep:dyn-rt-metadatamodel", "json"]
 
 [[example]]
 name = "schema_deser"
@@ -24,6 +24,7 @@ required-features = ["deser"]
 dyn-rt-json-manipulation = { path = "../../../libs/rust/json-manipulation", optional = true }
 dyn-rt-json-path = { path = "../../../libs/rust/json-path", optional = true }
 dyn-rt-json-schema = { path = "../../../libs/rust/json-schema", optional = true }
+dyn-rt-metadatamodel = { path = "../../../libs/rust/metadatamodel", optional = true }
 dyn-rt-reflect = { path = "../../../libs/rust/reflect", optional = true }
 dyn-rt-shared = { path = "../../../libs/rust/shared", optional = true }
 

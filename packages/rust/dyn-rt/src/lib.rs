@@ -65,3 +65,12 @@ pub mod json {
         pub use dyn_rt_json_manipulation::error::ManipulationError;
     }
 }
+
+#[cfg(feature = "metadatamodel")]
+pub mod metadatamodel {
+    //! Metadata model on top of the json modules: one submodule per
+    //! subdomain (core, fieldcolumns, database, filter, iter, flattener,
+    //! unflattener), each with domain/application/adapters.
+    pub use dyn_rt_metadatamodel::core;
+    pub use dyn_rt_metadatamodel::error::MetadatamodelError;
+}
