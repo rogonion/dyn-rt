@@ -80,6 +80,11 @@ pub mod props {
     pub const DB_TABLE_NAME: &str = "db:table_name";
     pub const DB_COLUMN_NAME: &str = "db:column_name";
     pub const DB_FIELD_VALUE_TYPE: &str = "db:field_value_type";
+    pub const DB_JOIN_DEPTH: &str = "db:join_depth";
+    pub const DB_DISTINCT: &str = "db:distinct";
+    pub const DB_SORT_BY_ASC: &str = "db:sort_by_asc";
+    pub const DB_LIMIT: &str = "db:limit";
+    pub const DB_OFFSET: &str = "db:offset";
 }
 
 /// Whether a field/group's VALUES are a single value or a list.

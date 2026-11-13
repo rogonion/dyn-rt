@@ -16,6 +16,14 @@ pub enum MetadatamodelError {
     CardinalityViolation { message: String },
     /// A `group:path_key` template is not a valid/usable JSONPath template.
     PathTemplateInvalid { message: String },
+    /// database `get_column_fields` failed (missing table criterion,
+    /// duplicate `db:column_name`, field without `db:column_name`, ...).
+    GetColumnFields { message: String },
+    /// database field-value get/set/delete failed (unknown column name,
+    /// unusable path, ...).
+    FieldValue { message: String },
+    /// An underlying json-manipulation operation failed.
+    Manipulation { message: String },
 }
 
 impl fmt::Display for MetadatamodelError {
@@ -32,6 +40,15 @@ impl fmt::Display for MetadatamodelError {
             }
             MetadatamodelError::PathTemplateInvalid { message } => {
                 write!(f, "path template invalid: {message}")
+            }
+            MetadatamodelError::GetColumnFields { message } => {
+                write!(f, "get column fields: {message}")
+            }
+            MetadatamodelError::FieldValue { message } => {
+                write!(f, "field value: {message}")
+            }
+            MetadatamodelError::Manipulation { message } => {
+                write!(f, "manipulation failed: {message}")
             }
         }
     }

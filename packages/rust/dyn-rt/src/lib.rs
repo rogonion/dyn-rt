@@ -72,6 +72,7 @@ pub mod metadatamodel {
     //! subdomain (core, fieldcolumns, database, filter, iter, flattener,
     //! unflattener), each with domain/application/adapters.
     pub use dyn_rt_metadatamodel::core;
+    pub use dyn_rt_metadatamodel::database;
     pub use dyn_rt_metadatamodel::error::MetadatamodelError;
     pub use dyn_rt_metadatamodel::fieldcolumns;
 }
