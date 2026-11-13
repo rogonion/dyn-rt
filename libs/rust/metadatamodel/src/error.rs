@@ -24,6 +24,9 @@ pub enum MetadatamodelError {
     FieldValue { message: String },
     /// An underlying json-manipulation operation failed.
     Manipulation { message: String },
+    /// filter subdomain: query-condition evaluation failed (invalid query
+    /// shape, unknown condition type, unsupported filter condition, ...).
+    Filter { message: String },
 }
 
 impl fmt::Display for MetadatamodelError {
@@ -49,6 +52,9 @@ impl fmt::Display for MetadatamodelError {
             }
             MetadatamodelError::Manipulation { message } => {
                 write!(f, "manipulation failed: {message}")
+            }
+            MetadatamodelError::Filter { message } => {
+                write!(f, "filter failed: {message}")
             }
         }
     }

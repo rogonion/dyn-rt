@@ -381,6 +381,48 @@ pub fn data_path(
     Ok(RecursiveDescentSegments(out_groups).to_string())
 }
 
+/// Data path with wildcards KEPT as `[*]` (no index substitution): strips
+/// the structural `group:fields[*]` pairs like [`data_path`] but leaves
+/// every remaining wildcard in place. Used by the filter subdomain to
+/// iterate all values of a field (go's JsonPathToValue with
+/// `replaceArrayPathPlaceholderWithActualIndexes=false`).
+pub fn data_path_keep_wildcards(template: &str) -> Result<String, MetadatamodelError> {
+    let segments = parse_template(template)?;
+
+    let mut out_groups: Vec<RecursiveDescentSegment> = Vec::new();
+    for group in &segments.0 {
+        let mut new_group = RecursiveDescentSegment(Vec::new());
+        let mut skip_next_wildcard = false;
+        for segment in &group.0 {
+            if skip_next_wildcard {
+                // the [*] belonging to a group:fields key: drop it too
+                skip_next_wildcard = false;
+                if matches!(segment.selector, PathSelector::Wildcard) {
+                    continue;
+                }
+            }
+            match &segment.selector {
+                PathSelector::Key(key) if key == FIELDS_KEY => {
+                    skip_next_wildcard = true;
+                }
+                other => {
+                    new_group.0.push(PathSegment {
+                        access_strategy: other_strategy(other),
+                        selector: other.clone(),
+                    });
+                }
+            }
+        }
+        out_groups.push(new_group);
+    }
+
+    out_groups.retain(|g| !g.0.is_empty());
+    if out_groups.is_empty() {
+        return Ok("$".to_string());
+    }
+    Ok(RecursiveDescentSegments(out_groups).to_string())
+}
+
 fn other_strategy(selector: &PathSelector) -> AccessStrategy {
     match selector {
         PathSelector::Key(_) => AccessStrategy::Named,
