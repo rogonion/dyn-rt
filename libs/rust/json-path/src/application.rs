@@ -45,6 +45,9 @@ pub fn parse_path(tokenizer: &dyn PathTokenizer, path: &str) -> RecursiveDescent
 /// The checks run in a fixed, explicit order: root, wildcard, union, quoted
 /// key, positional index, slice, plain key, unrecognized.
 pub fn extract_segment(tokenizer: &dyn PathTokenizer, token: &str) -> PathSegment {
+    // union members arrive with surrounding whitespace after the comma
+    let token = token.trim();
+
     // JSONPath root
     if token == "$" {
         return PathSegment {
@@ -67,9 +70,8 @@ pub fn extract_segment(tokenizer: &dyn PathTokenizer, token: &str) -> PathSegmen
         return extract_union_segment(tokenizer, &union_parts);
     }
 
-    // Quoted text key (leading/trailing whitespace, e.g. after a union comma,
-    // does not prevent quote extraction)
-    if let Some(key) = tokenizer.extract_quoted(token.trim()) {
+    // Quoted text key
+    if let Some(key) = tokenizer.extract_quoted(token) {
         return PathSegment {
             access_strategy: AccessStrategy::Named,
             selector: PathSelector::Key(key),
@@ -93,11 +95,10 @@ pub fn extract_segment(tokenizer: &dyn PathTokenizer, token: &str) -> PathSegmen
     }
 
     // Plain text key
-    let trimmed = token.trim();
-    if !trimmed.is_empty() {
+    if !token.is_empty() {
         return PathSegment {
             access_strategy: AccessStrategy::Named,
-            selector: PathSelector::Key(trimmed.to_string()),
+            selector: PathSelector::Key(token.to_string()),
         };
     }
 

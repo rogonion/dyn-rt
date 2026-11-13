@@ -235,6 +235,40 @@ fn set_cases() {
             expect_error = "convert",
             test_title = "setting an object into an i64 map entry errors (go type mismatch)"
         ),
+        // union with a negative index member sets first and last
+        set_case!(
+            Value::from(vec![
+                Value::from(1i64),
+                Value::from(2i64),
+                Value::from(3i64)
+            ]),
+            "$[0,-1]",
+            Value::from(99i64),
+            None,
+            2,
+            rv(Value::from(vec![
+                Value::from(99i64),
+                Value::from(2i64),
+                Value::from(99i64)
+            ])),
+            test_title = "union set with negative index member sets first and last"
+        ),
+        // union with a slice member sets every index the slice expands to
+        set_case!(
+            Value::from((0..5).map(|i| Value::from(i as i64)).collect::<Vec<_>>()),
+            "$[1, 2:4]",
+            Value::from(9i64),
+            None,
+            3,
+            rv(Value::from(vec![
+                Value::from(0i64),
+                Value::from(9i64),
+                Value::from(9i64),
+                Value::from(9i64),
+                Value::from(4i64)
+            ])),
+            test_title = "union set with slice member sets the expanded indices"
+        ),
     ];
 
     let mut report = TestReport::new(

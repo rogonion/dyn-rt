@@ -6,7 +6,7 @@ use dyn_rt_json_path::{RecursiveDescentSegments, RegexPathTokenizer, parse_path}
 use dyn_rt_json_schema::Schema;
 use dyn_rt_reflect::Reflect;
 
-use crate::application::{delete, get, set};
+use crate::application::{delete, for_each, get, set};
 use crate::error::ManipulationError;
 
 /// Parses `path` and gets the value(s) at it from `source`.
@@ -33,4 +33,15 @@ pub fn set_str(
 pub fn delete_str(source: &mut dyn Reflect, path: &str) -> Result<usize, ManipulationError> {
     let segments: RecursiveDescentSegments = parse_path(&RegexPathTokenizer, path);
     delete(source, &segments)
+}
+
+/// Parses `path` and calls `callback` for each value found at it in `source`
+/// (see [`for_each`]).
+pub fn for_each_str(
+    source: &dyn Reflect,
+    path: &str,
+    callback: &mut dyn FnMut(&dyn Reflect) -> bool,
+) -> Result<(), ManipulationError> {
+    let segments: RecursiveDescentSegments = parse_path(&RegexPathTokenizer, path);
+    for_each(source, &segments, callback)
 }

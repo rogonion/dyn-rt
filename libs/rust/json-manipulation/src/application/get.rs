@@ -171,31 +171,49 @@ fn union_select<'a>(
     match value.reflect_ref() {
         ReflectRef::Map(map) => {
             for member in members {
-                if let PathSelector::Key(key) = &member.selector {
-                    let key_ref = convert_path_key(key, map.reflect_key_type_info())?;
-                    if let Some(entry) = map.reflect_get(&*key_ref) {
-                        selected.push(entry);
+                match &member.selector {
+                    PathSelector::Key(key) => {
+                        let key_ref = convert_path_key(key, map.reflect_key_type_info())?;
+                        if let Some(entry) = map.reflect_get(&*key_ref) {
+                            selected.push(entry);
+                        }
                     }
+                    PathSelector::Wildcard => {
+                        for (_, entry) in map.reflect_iter() {
+                            selected.push(entry);
+                        }
+                    }
+                    _ => {}
                 }
             }
         }
         ReflectRef::Sequence(sequence) => {
-            for member in members {
-                if let PathSelector::Index(index) = &member.selector {
-                    if let Ok(idx) = resolve_index(*index, sequence.reflect_length()) {
-                        if let Some(element) = sequence.reflect_get(idx) {
-                            selected.push(element);
-                        }
-                    }
+            // index (incl. negative), slice and wildcard members all resolve
+            // to concrete indices
+            let indices = super::union_member_indices(members, sequence.reflect_length())?;
+            for idx in indices {
+                if let Some(element) = sequence.reflect_get(idx) {
+                    selected.push(element);
                 }
             }
         }
         ReflectRef::Struct(structure) => {
             for member in members {
-                if let PathSelector::Key(key) = &member.selector {
-                    if let Some(field) = structure.reflect_field(key) {
-                        selected.push(field);
+                match &member.selector {
+                    PathSelector::Key(key) => {
+                        if let Some(field) = structure.reflect_field(key) {
+                            selected.push(field);
+                        }
                     }
+                    PathSelector::Wildcard => {
+                        let count = structure.reflect_field_count();
+                        for index in 0..count {
+                            if let Some(field) = structure.reflect_field_at(index) {
+                                selected.push(field);
+                            }
+                        }
+                    }
+                    _ => {}
                 }
             }
         }

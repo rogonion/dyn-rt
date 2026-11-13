@@ -327,6 +327,18 @@ fn yield_parse_data() -> Vec<ParseCase> {
             test_title = "union members after a comma+space are still unquoted"
         ),
         parse_case!(
+            "$['a', *]",
+            new_recursive_descent_segments!(new_recursive_descent_segment!(
+                json_path_root_segment!(),
+                json_path_union_selector_segment!(
+                    AccessStrategy::Mixed,
+                    json_path_key_selector_segment!("a"),
+                    json_path_wildcard_segment!()
+                )
+            )),
+            test_title = "wildcard member after a comma+space in a union"
+        ),
+        parse_case!(
             "$.products['item-details'].dimensions[0].width",
             new_recursive_descent_segments!(new_recursive_descent_segment!(
                 json_path_root_segment!(),

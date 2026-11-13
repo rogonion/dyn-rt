@@ -4,6 +4,8 @@
 #[path = "../common/mod.rs"]
 mod common;
 
+mod are_equal;
 mod delete;
+mod for_each;
 mod get;
 mod set;

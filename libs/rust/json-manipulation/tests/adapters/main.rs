@@ -152,3 +152,74 @@ fn string_path_adapter_cases() {
     }
     report.finish();
 }
+
+#[test]
+fn for_each_str_cases() {
+    use dyn_rt_json_manipulation::adapters::for_each_str;
+    use std::cell::RefCell;
+
+    struct ForEachAdapterCase {
+        test_title: Option<String>,
+        root: Box<dyn Reflect>,
+        path: &'static str,
+        expected_visited: Vec<String>,
+    }
+
+    macro_rules! for_each_adapter_case {
+        ($root:expr, $path:expr, [$($expected:expr),*] $(, test_title = $title:expr)?) => {
+            ForEachAdapterCase {
+                test_title: None $(.or(Some($title.to_string())))?,
+                root: Box::new($root),
+                path: $path,
+                expected_visited: vec![$($expected.to_string()),*],
+            }
+        };
+    }
+
+    let test_data: Vec<ForEachAdapterCase> = vec![
+        for_each_adapter_case!(
+            Value::object([("a", Value::from(1i64)), ("b", Value::from(2i64)),]),
+            "$.*",
+            [
+                format!("{:?}", Value::from(1i64)),
+                format!("{:?}", Value::from(2i64))
+            ],
+            test_title = "for_each_str parses and visits wildcard matches"
+        ),
+        for_each_adapter_case!(
+            Value::from(vec![Value::from(5i64), Value::from(6i64)]),
+            "$[0,-1]",
+            [
+                format!("{:?}", Value::from(5i64)),
+                format!("{:?}", Value::from(6i64))
+            ],
+            test_title = "for_each_str over union with negative index member"
+        ),
+    ];
+
+    let mut report = TestReport::new(
+        "for_each_str_cases",
+        "string-path for_each entry point (src/adapters/mod.rs)",
+    );
+    for case in &test_data {
+        report.begin_case(new_test_title!(case.test_title));
+        let visited: RefCell<Vec<String>> = RefCell::new(Vec::new());
+        let result = for_each_str(&*case.root, case.path, &mut |value| {
+            visited.borrow_mut().push(render(value));
+            true
+        });
+        match result {
+            Ok(()) => {
+                let visited = visited.borrow();
+                if *visited != case.expected_visited {
+                    report.fail_case(format!(
+                        "path {} || expected {:?}, got {:?}",
+                        case.path, case.expected_visited, *visited
+                    ));
+                }
+            }
+            Err(err) => report.fail_case(format!("unexpected error: {err}")),
+        }
+    }
+    report.finish();
+}

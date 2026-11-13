@@ -4,17 +4,21 @@
 //! Shared traversal helpers live here; the three use cases are in
 //! `get.rs` / `set.rs` / `delete.rs`.
 
+mod are_equal;
 mod delete;
+mod for_each;
 mod get;
 mod set;
 
+pub use are_equal::{CustomEqualFn, are_equal, are_equal_with};
 pub use delete::delete;
+pub use for_each::for_each;
 pub use get::get;
 pub use set::set;
 
 use std::any::TypeId;
 
-use dyn_rt_json_path::{PathSelector, RecursiveDescentSegments, SliceSelector};
+use dyn_rt_json_path::{PathSegment, PathSelector, RecursiveDescentSegments, SliceSelector};
 use dyn_rt_json_schema::{SchemaNode, convert_node};
 use dyn_rt_reflect::{Reflect, ReflectRef, ReflectRefMut, TypeInfo};
 use dyn_rt_shared::Value;
@@ -96,6 +100,33 @@ pub(crate) fn resolve_set_index(index: isize, len: usize) -> Result<usize, Manip
 /// Expands a slice selector `[start:end:step]` into element indices, mirroring
 /// go's bounds behavior (an explicit out-of-range bound is an error; a
 /// non-positive step behaves as step 1).
+/// Resolves the sequence-targeting members of a union selector into concrete
+/// indices: index members (negatives resolved against `len`), slice members
+/// expanded via [`slice_indices`], wildcard members expand to all indices.
+/// Key members are not sequence-targeting and are ignored here (the map and
+/// struct union arms handle those).
+pub(crate) fn union_member_indices(
+    members: &[PathSegment],
+    len: usize,
+) -> Result<Vec<usize>, ManipulationError> {
+    let mut indices = Vec::new();
+    for member in members {
+        match &member.selector {
+            PathSelector::Index(index) => {
+                if let Ok(idx) = resolve_index(*index, len) {
+                    indices.push(idx);
+                }
+            }
+            PathSelector::Slice(slice) => {
+                indices.extend(slice_indices(slice, len)?);
+            }
+            PathSelector::Wildcard => indices.extend(0..len),
+            _ => {}
+        }
+    }
+    Ok(indices)
+}
+
 pub(crate) fn slice_indices(
     slice: &SliceSelector,
     len: usize,

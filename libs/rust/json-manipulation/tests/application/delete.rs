@@ -184,6 +184,26 @@ fn delete_cases() {
             expect_error = "unsupported",
             test_title = "delete property from primitive errors (go)"
         ),
+        // union with a negative index member deletes first and last
+        delete_case!(
+            Value::from(vec![
+                Value::from(1i64),
+                Value::from(2i64),
+                Value::from(3i64)
+            ]),
+            "$[0,-1]",
+            2,
+            rv(Value::from(vec![Value::from(2i64)])),
+            test_title = "union delete with negative index member removes first and last"
+        ),
+        // union with a slice member deletes the expanded indices
+        delete_case!(
+            Value::from((0..5).map(|i| Value::from(i as i64)).collect::<Vec<_>>()),
+            "$[1, 2:4]",
+            3,
+            rv(Value::from(vec![Value::from(0i64), Value::from(4i64)])),
+            test_title = "union delete with slice member removes the expanded indices"
+        ),
     ];
 
     let mut report = TestReport::new(

@@ -15,8 +15,7 @@ use dyn_rt_json_schema::{Schema, SchemaNode, convert_node, schema_at_path};
 use dyn_rt_reflect::{Reflect, ReflectRef, ReflectRefMut};
 
 use super::{
-    convert_path_key, is_root_only, key_matches, resolve_index, resolve_set_index, selector_label,
-    slice_indices,
+    convert_path_key, is_root_only, key_matches, resolve_set_index, selector_label, slice_indices,
 };
 use crate::domain::PathCursor;
 use crate::error::ManipulationError;
@@ -371,15 +370,8 @@ fn linear_set(
                 set_sequence_indices(sequence, indices, &mut walk)
             }
             PathSelector::Union(members) => {
-                let len = sequence.reflect_length();
-                let mut indices = Vec::new();
-                for member in members {
-                    if let PathSelector::Index(index) = &member.selector {
-                        if let Ok(idx) = resolve_index(*index, len) {
-                            indices.push(idx);
-                        }
-                    }
-                }
+                // index (incl. negative), slice and wildcard members
+                let indices = super::union_member_indices(members, sequence.reflect_length())?;
                 let mut walk = SetWalk {
                     segments,
                     cursor,

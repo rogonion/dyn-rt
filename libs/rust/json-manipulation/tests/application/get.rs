@@ -320,6 +320,39 @@ fn get_cases() {
             [rv(Value::from(42i64))],
             test_title = "Some payload is the root value"
         ),
+        // union with a negative index member
+        get_case!(
+            Value::from(vec![
+                Value::from(10i64),
+                Value::from(20i64),
+                Value::from(30i64)
+            ]),
+            "$[0,-1]",
+            [rv(Value::from(10i64)), rv(Value::from(30i64))],
+            test_title = "union with negative index member"
+        ),
+        // union with a slice member
+        get_case!(
+            Value::from((0..6).map(|i| Value::from(i as i64)).collect::<Vec<_>>()),
+            "$[1, 2:4]",
+            [
+                rv(Value::from(1i64)),
+                rv(Value::from(2i64)),
+                rv(Value::from(3i64))
+            ],
+            test_title = "union with a slice member expands the slice"
+        ),
+        // union with a wildcard member on a map selects all values too
+        get_case!(
+            Value::object([("a", Value::from(1i64)), ("b", Value::from(2i64)),]),
+            "$['a', *]",
+            [
+                rv(Value::from(1i64)),
+                rv(Value::from(1i64)),
+                rv(Value::from(2i64))
+            ],
+            test_title = "union of key and wildcard over a map"
+        ),
     ];
 
     let mut report = TestReport::new(

@@ -175,15 +175,9 @@ fn linear_delete(
                 selector_delete_indices(sequence, indices, segments, cursor, terminal, count)
             }
             PathSelector::Union(members) => {
-                let len = sequence.reflect_length();
-                let mut indices = Vec::new();
-                for member in members {
-                    if let PathSelector::Index(index) = &member.selector {
-                        if let Ok(idx) = resolve_index(*index, len) {
-                            indices.push(idx);
-                        }
-                    }
-                }
+                // index (incl. negative), slice and wildcard members; delete
+                // highest index first so earlier indices stay valid
+                let mut indices = super::union_member_indices(members, sequence.reflect_length())?;
                 indices.sort_unstable_by(|a, b| b.cmp(a));
                 indices.dedup();
                 selector_delete_indices(sequence, indices, segments, cursor, terminal, count)
