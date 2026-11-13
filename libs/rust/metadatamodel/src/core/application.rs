@@ -100,6 +100,40 @@ pub fn props_of(field: &Value) -> Result<&Value, MetadatamodelError> {
         })
 }
 
+/// Mutable variant of [`fields_of`].
+pub fn fields_of_mut(field_group: &mut MetadataModel) -> Result<&mut Value, MetadatamodelError> {
+    let fields =
+        field_group
+            .get_mut(FIELDS_KEY)
+            .ok_or_else(|| MetadatamodelError::InvalidModel {
+                message: format!("group has no {FIELDS_KEY:?} array"),
+            })?;
+    let array = fields
+        .as_array_mut()
+        .ok_or_else(|| MetadatamodelError::InvalidModel {
+            message: format!("{FIELDS_KEY:?} is not an array"),
+        })?;
+    array
+        .first_mut()
+        .ok_or_else(|| MetadatamodelError::InvalidModel {
+            message: format!("{FIELDS_KEY:?} array is empty"),
+        })
+}
+
+/// Mutable variant of [`props_of`].
+pub fn props_of_mut(field: &mut Value) -> Result<&mut Value, MetadatamodelError> {
+    let array = field
+        .as_array_mut()
+        .ok_or_else(|| MetadatamodelError::InvalidModel {
+            message: "field entry is not an array of props".to_string(),
+        })?;
+    array
+        .first_mut()
+        .ok_or_else(|| MetadatamodelError::InvalidModel {
+            message: "field props array is empty".to_string(),
+        })
+}
+
 /// Declared cardinality of a field/group: `field:cardinality` or
 /// `group:cardinality`, defaulting to [`Cardinality::Array`].
 pub fn cardinality_of(field_group: &MetadataModel) -> Cardinality {
