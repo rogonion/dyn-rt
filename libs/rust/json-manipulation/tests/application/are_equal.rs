@@ -183,6 +183,38 @@ fn are_equal_cases() {
             false,
             test_title = "unit vs Value::Null are different concrete types"
         ),
+        are_equal_case!(
+            ShapeEnum::Circle(Circle { radius: 2.5 }),
+            ShapeEnum::Circle(Circle { radius: 2.5 }),
+            true,
+            test_title = "enum variants with equal payloads"
+        ),
+        are_equal_case!(
+            ShapeEnum::Circle(Circle { radius: 2.5 }),
+            ShapeEnum::Square(Square { side: 2.5 }),
+            false,
+            test_title = "different enum variants are unequal even with equal-ish payloads"
+        ),
+        are_equal_case!(
+            std::rc::Rc::new(User {
+                id: 1,
+                name: "Ann".to_string(),
+                email: "a@x".to_string()
+            }),
+            User {
+                id: 1,
+                name: "Ann".to_string(),
+                email: "a@x".to_string()
+            },
+            true,
+            test_title = "Rc<T> unwraps and compares against the bare T"
+        ),
+        are_equal_case!(
+            [1i64, 2, 3],
+            [1i64, 2, 3],
+            true,
+            test_title = "fixed-size arrays compare element-wise"
+        ),
     ];
 
     let mut report = TestReport::new(

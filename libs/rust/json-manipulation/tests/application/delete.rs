@@ -2,7 +2,7 @@
 //! ported from go-json's object/delete_test.go.
 
 use crate::common::*;
-use dyn_rt_json_manipulation::application::delete;
+use dyn_rt_json_manipulation::application::{are_equal, delete};
 use dyn_rt_json_path::{RegexPathTokenizer, parse_path};
 use dyn_rt_reflect::Reflect;
 use dyn_rt_shared::Value;
@@ -13,9 +13,10 @@ struct DeleteCase {
     root: Box<dyn Reflect>,
     path: &'static str,
     expected_count: usize,
-    /// rendered root after the delete
-    expected_root: String,
-    /// how to render the root for comparison (Value/scalar default)
+    /// expected root after the delete, compared with `are_equal` (deep
+    /// comparison, like go's tests)
+    expected_root: Box<dyn Reflect>,
+    /// how to render the root for failure messages (Value/scalar default)
     render_root: fn(&dyn Reflect) -> String,
     expect_error: Option<&'static str>,
 }
@@ -27,7 +28,7 @@ macro_rules! delete_case {
             root: Box::new($root),
             path: $path,
             expected_count: $count,
-            expected_root: $expected_root,
+            expected_root: Box::new($expected_root) as Box<dyn Reflect>,
             render_root: {
                 let r: Option<fn(&dyn Reflect) -> String> = None $(.or(Some($render)))?;
                 r.unwrap_or(render)
@@ -37,8 +38,10 @@ macro_rules! delete_case {
     };
 }
 
-fn rv(value: Value) -> String {
-    format!("{value:?}")
+/// Identity helper kept so case entries read uniformly (`rv(...)` = "result
+/// value"); the macro boxes the expression.
+fn rv<T>(value: T) -> T {
+    value
 }
 
 #[test]
@@ -98,17 +101,14 @@ fn delete_cases() {
             },
             "$.User.Name",
             1,
-            format!(
-                "{:?}",
-                ComplexData {
-                    user: User {
-                        id: 10,
-                        name: String::new(),
-                        email: "a@b.c".to_string()
-                    },
-                    ..Default::default()
-                }
-            ),
+            ComplexData {
+                user: User {
+                    id: 10,
+                    name: String::new(),
+                    email: "a@b.c".to_string()
+                },
+                ..Default::default()
+            },
             render = render_debug::<ComplexData>,
             test_title = "delete struct field resets it to zero (go)"
         ),
@@ -124,16 +124,13 @@ fn delete_cases() {
             },
             "$.User['Name','Email']",
             2,
-            format!(
-                "{:?}",
-                ComplexData {
-                    user: User {
-                        id: 10,
-                        ..Default::default()
-                    },
+            ComplexData {
+                user: User {
+                    id: 10,
                     ..Default::default()
-                }
-            ),
+                },
+                ..Default::default()
+            },
             render = render_debug::<ComplexData>,
             test_title = "union delete on struct fields (go)"
         ),
@@ -204,6 +201,64 @@ fn delete_cases() {
             rv(Value::from(vec![Value::from(0i64), Value::from(4i64)])),
             test_title = "union delete with slice member removes the expanded indices"
         ),
+        // --- native built-in types (not Value) -----------------------------
+        delete_case!(
+            {
+                let mut m = std::collections::BTreeMap::new();
+                m.insert("a".to_string(), 1i64);
+                m.insert("b".to_string(), 2i64);
+                m
+            },
+            "$.a",
+            1,
+            {
+                let mut m = std::collections::BTreeMap::new();
+                m.insert("b".to_string(), 2i64);
+                m
+            },
+            render = render_debug::<std::collections::BTreeMap<String, i64>>,
+            test_title = "native BTreeMap<String, i64> entry delete"
+        ),
+        delete_case!(
+            vec![
+                User {
+                    id: 1,
+                    name: "Ann".to_string(),
+                    email: "a@x".to_string()
+                },
+                User {
+                    id: 2,
+                    name: "Bob".to_string(),
+                    email: "b@x".to_string()
+                },
+            ],
+            "$[0]",
+            1,
+            vec![User {
+                id: 2,
+                name: "Bob".to_string(),
+                email: "b@x".to_string()
+            },],
+            render = render_debug::<Vec<User>>,
+            test_title = "native Vec<User> element delete shifts left"
+        ),
+        delete_case!(
+            (1i64, "x".to_string(), true),
+            "$.0",
+            1,
+            (0i64, "x".to_string(), true),
+            render = render_debug::<(i64, String, bool)>,
+            test_title = "tuple field delete resets it to zero"
+        ),
+        delete_case!(
+            [10i64, 20, 30],
+            "$[0]",
+            0,
+            [10i64, 20, 30],
+            expect_error = "unsupported",
+            render = render_debug::<[i64; 3]>,
+            test_title = "delete on a fixed-size array errors (size cannot change)"
+        ),
     ];
 
     let mut report = TestReport::new(
@@ -236,11 +291,12 @@ fn delete_cases() {
                         case.path, case.expected_count, count
                     ));
                 }
-                let rendered = (case.render_root)(&*root);
-                if rendered != case.expected_root {
+                if !are_equal(&*case.expected_root, &*root) {
                     report.fail_case(format!(
                         "path {} || expected root {}, got {}",
-                        case.path, case.expected_root, rendered
+                        case.path,
+                        (case.render_root)(&*case.expected_root),
+                        (case.render_root)(&*root)
                     ));
                 }
             }

@@ -3,7 +3,7 @@
 //! shared struct fixtures.
 
 use crate::common::*;
-use dyn_rt_json_manipulation::application::get;
+use dyn_rt_json_manipulation::application::{are_equal, get};
 use dyn_rt_json_path::{RegexPathTokenizer, parse_path};
 use dyn_rt_reflect::Reflect;
 use dyn_rt_shared::Value;
@@ -13,8 +13,9 @@ struct GetCase {
     test_title: Option<String>,
     root: Box<dyn Reflect>,
     path: &'static str,
-    /// expected rendered results (empty = path matches nothing)
-    expected_values: Vec<String>,
+    /// expected results as reflected values, compared with `are_equal`
+    /// (deep comparison, like go's tests) — empty = path matches nothing
+    expected_values: Vec<Box<dyn Reflect>>,
     /// when set, get must fail with a message containing this fragment
     expect_error: Option<&'static str>,
 }
@@ -25,15 +26,16 @@ macro_rules! get_case {
             test_title: None $(.or(Some($title.to_string())))?,
             root: Box::new($root),
             path: $path,
-            expected_values: vec![$($expected.to_string()),*],
+            expected_values: vec![$(Box::new($expected) as Box<dyn Reflect>),*],
             expect_error: None $(.or(Some($err)))?,
         }
     };
 }
 
-/// Shorthand for a Value in rendered form.
-fn rv(value: Value) -> String {
-    format!("{value:?}")
+/// Identity helper kept so case entries read uniformly (`rv(...)` = "result
+/// value"); the macro boxes the expression.
+fn rv<T>(value: T) -> T {
+    value
 }
 
 #[test]
@@ -61,7 +63,7 @@ fn get_cases() {
                 },
             },
             "$.Address.City",
-            [render(&"Anytown".to_string())],
+            ["Anytown".to_string()],
             test_title = "struct field path (go case 1 equivalent)"
         ),
         // go case 2: recursive descent with wildcard-ish key over mixed slice
@@ -97,7 +99,7 @@ fn get_cases() {
                 ..Default::default()
             },
             "$.User['ID', 'Name']",
-            [render(&10i64), render(&"Charlie".to_string())],
+            [10i64, "Charlie".to_string()],
             test_title = "union operator over struct fields (go case 3)"
         ),
         // go case 4: deep path with index and field
@@ -120,7 +122,7 @@ fn get_cases() {
                 ..Default::default()
             },
             "$.Items[1].Value",
-            [render(&20i64)],
+            [20i64],
             test_title = "slice index then struct field (go case 4)"
         ),
         // go case 5: path that matches nothing
@@ -353,6 +355,118 @@ fn get_cases() {
             ],
             test_title = "union of key and wildcard over a map"
         ),
+        // --- native built-in types (not Value) -----------------------------
+        get_case!(
+            {
+                let mut m = std::collections::HashMap::new();
+                m.insert("a".to_string(), 1i64);
+                m.insert("b".to_string(), 2i64);
+                m
+            },
+            "$.a",
+            [1i64],
+            test_title = "native HashMap<String, i64> key get"
+        ),
+        get_case!(
+            {
+                let mut m = std::collections::BTreeMap::new();
+                m.insert("b".to_string(), "two".to_string());
+                m
+            },
+            "$.b",
+            ["two".to_string()],
+            test_title = "native BTreeMap<String, String> key get"
+        ),
+        get_case!(
+            vec![
+                User {
+                    id: 1,
+                    name: "Ann".to_string(),
+                    email: "a@x".to_string()
+                },
+                User {
+                    id: 2,
+                    name: "Bob".to_string(),
+                    email: "b@x".to_string()
+                },
+            ],
+            "$[1].Name",
+            ["Bob".to_string()],
+            test_title = "native Vec<User> index then struct field"
+        ),
+        get_case!(
+            {
+                let mut m = std::collections::HashMap::new();
+                m.insert(
+                    "users".to_string(),
+                    vec![User {
+                        id: 1,
+                        name: "Ann".to_string(),
+                        email: "a@x".to_string(),
+                    }],
+                );
+                m
+            },
+            "$.users[0].Name",
+            ["Ann".to_string()],
+            test_title = "native HashMap<String, Vec<User>> deep path"
+        ),
+        get_case!(
+            UserWithAddress {
+                name: "Ann".to_string(),
+                address: Box::new(Address {
+                    street: "1 Main".to_string(),
+                    city: "Nairobi".to_string(),
+                    zip_code: Some("00100".to_string()),
+                }),
+            },
+            "$.Address.City",
+            ["Nairobi".to_string()],
+            test_title = "struct field through a Box<Address> smart pointer"
+        ),
+        get_case!(
+            std::rc::Rc::new(User {
+                id: 7,
+                name: "RcAnn".to_string(),
+                email: "r@x".to_string()
+            }),
+            "$.Name",
+            ["RcAnn".to_string()],
+            test_title = "Rc<User> unwraps through indirection"
+        ),
+        get_case!(
+            (1i64, "x".to_string(), true),
+            "$.1",
+            ["x".to_string()],
+            test_title = "tuple positional field get"
+        ),
+        get_case!(
+            [10i64, 20, 30],
+            "$[2]",
+            [30i64],
+            test_title = "fixed-size array [i64; 3] index get"
+        ),
+        get_case!(
+            [10i64, 20, 30],
+            "$[-1]",
+            [30i64],
+            test_title = "fixed-size array negative index get"
+        ),
+        get_case!(
+            vec![
+                ComplexDataItem {
+                    name: "First".to_string(),
+                    value: 1
+                },
+                ComplexDataItem {
+                    name: "Second".to_string(),
+                    value: 2
+                },
+            ],
+            "$..Name",
+            ["First".to_string(), "Second".to_string()],
+            test_title = "recursive descent over native Vec<ComplexDataItem>"
+        ),
     ];
 
     let mut report = TestReport::new(
@@ -379,11 +493,34 @@ fn get_cases() {
                 report.fail_case(format!("unexpected error: {err}"));
             }
             (None, Ok(values)) => {
-                let rendered: Vec<String> = values.iter().map(|v| render(*v)).collect();
-                if rendered != case.expected_values {
+                // deep comparison like go's tests (object.AreEqual), with
+                // rendered forms only for the failure message
+                let mut mismatch = None;
+                if values.len() != case.expected_values.len() {
+                    mismatch = Some(format!(
+                        "result count: expected {}, got {}",
+                        case.expected_values.len(),
+                        values.len()
+                    ));
+                } else {
+                    for (index, (expected, got)) in
+                        case.expected_values.iter().zip(values.iter()).enumerate()
+                    {
+                        if !are_equal(&**expected, *got) {
+                            mismatch = Some(format!(
+                                "result {index}: expected {}, got {}",
+                                render(&**expected),
+                                render(*got)
+                            ));
+                            break;
+                        }
+                    }
+                }
+                if let Some(detail) = mismatch {
+                    let rendered: Vec<String> = values.iter().map(|v| render(*v)).collect();
                     report.fail_case(format!(
-                        "path {} || expected {:?}, got {:?}",
-                        case.path, case.expected_values, rendered
+                        "path {} || {} || all results {:?}",
+                        case.path, detail, rendered
                     ));
                 }
             }

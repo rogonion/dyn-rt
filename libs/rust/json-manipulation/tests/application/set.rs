@@ -3,7 +3,7 @@
 //! intermediate structures.
 
 use crate::common::*;
-use dyn_rt_json_manipulation::application::set;
+use dyn_rt_json_manipulation::application::{are_equal, set};
 use dyn_rt_json_path::{RegexPathTokenizer, parse_path};
 use dyn_rt_json_schema::Schema;
 use dyn_rt_reflect::Reflect;
@@ -17,9 +17,10 @@ struct SetCase {
     value: Box<dyn Reflect>,
     schema: Option<Schema>,
     expected_count: usize,
-    /// rendered root after the set
-    expected_root: String,
-    /// how to render the root for comparison (Value/scalar default)
+    /// expected root after the set, compared with `are_equal` (deep
+    /// comparison, like go's tests)
+    expected_root: Box<dyn Reflect>,
+    /// how to render the root for failure messages (Value/scalar default)
     render_root: fn(&dyn Reflect) -> String,
     expect_error: Option<&'static str>,
 }
@@ -33,7 +34,7 @@ macro_rules! set_case {
             value: Box::new($value),
             schema: $schema,
             expected_count: $count,
-            expected_root: $expected_root,
+            expected_root: Box::new($expected_root) as Box<dyn Reflect>,
             render_root: {
                 let r: Option<fn(&dyn Reflect) -> String> = None $(.or(Some($render)))?;
                 r.unwrap_or(render)
@@ -43,8 +44,10 @@ macro_rules! set_case {
     };
 }
 
-fn rv(value: Value) -> String {
-    format!("{value:?}")
+/// Identity helper kept so case entries read uniformly (`rv(...)` = "result
+/// value"); the macro boxes the expression.
+fn rv<T>(value: T) -> T {
+    value
 }
 
 #[test]
@@ -116,13 +119,10 @@ fn set_cases() {
             Value::from("amy"),
             Some(Schema::Node(user_profile_schema())),
             1,
-            format!(
-                "{:?}",
-                UserProfile {
-                    name: "amy".to_string(),
-                    ..Default::default()
-                }
-            ),
+            UserProfile {
+                name: "amy".to_string(),
+                ..Default::default()
+            },
             render = render_debug::<UserProfile>,
             test_title = "set struct field via schema (go auto-init struct)"
         ),
@@ -133,16 +133,13 @@ fn set_cases() {
             Value::from("1234"),
             Some(Schema::Node(user_profile_schema())),
             1,
-            format!(
-                "{:?}",
-                UserProfile {
-                    address: Address {
-                        zip_code: Some("1234".to_string()),
-                        ..Default::default()
-                    },
+            UserProfile {
+                address: Address {
+                    zip_code: Some("1234".to_string()),
                     ..Default::default()
-                }
-            ),
+                },
+                ..Default::default()
+            },
             render = render_debug::<UserProfile>,
             test_title =
                 "set creates nested struct + Some payload via schema (go implicit creation)"
@@ -154,17 +151,14 @@ fn set_cases() {
             Value::from("x@y.z"),
             None,
             2,
-            format!(
-                "{:?}",
-                ComplexData {
-                    user: User {
-                        name: "x@y.z".to_string(),
-                        email: "x@y.z".to_string(),
-                        ..Default::default()
-                    },
+            ComplexData {
+                user: User {
+                    name: "x@y.z".to_string(),
+                    email: "x@y.z".to_string(),
                     ..Default::default()
-                }
-            ),
+                },
+                ..Default::default()
+            },
             render = render_debug::<ComplexData>,
             test_title = "union set on struct fields (go $.User['Name','Email'])"
         ),
@@ -269,6 +263,108 @@ fn set_cases() {
             ])),
             test_title = "union set with slice member sets the expanded indices"
         ),
+        // --- native built-in types (not Value) -----------------------------
+        set_case!(
+            {
+                let mut m = std::collections::HashMap::new();
+                m.insert("a".to_string(), 1i64);
+                m
+            },
+            "$.a",
+            5i64,
+            None,
+            1,
+            {
+                let mut m = std::collections::HashMap::new();
+                m.insert("a".to_string(), 5i64);
+                m
+            },
+            render = render_debug::<std::collections::HashMap<String, i64>>,
+            test_title = "native HashMap<String, i64> set existing entry"
+        ),
+        set_case!(
+            std::collections::HashMap::<String, i64>::new(),
+            "$.new_key",
+            7i64,
+            None,
+            1,
+            {
+                let mut m = std::collections::HashMap::new();
+                m.insert("new_key".to_string(), 7i64);
+                m
+            },
+            render = render_debug::<std::collections::HashMap<String, i64>>,
+            test_title = "native HashMap set creates a missing entry"
+        ),
+        set_case!(
+            vec![
+                User {
+                    id: 1,
+                    name: "Ann".to_string(),
+                    email: "a@x".to_string()
+                },
+                User {
+                    id: 2,
+                    name: "Bob".to_string(),
+                    email: "b@x".to_string()
+                },
+            ],
+            "$[0].Name",
+            "X".to_string(),
+            None,
+            1,
+            vec![
+                User {
+                    id: 1,
+                    name: "X".to_string(),
+                    email: "a@x".to_string()
+                },
+                User {
+                    id: 2,
+                    name: "Bob".to_string(),
+                    email: "b@x".to_string()
+                },
+            ],
+            render = render_debug::<Vec<User>>,
+            test_title = "native Vec<User> set struct field through index"
+        ),
+        set_case!(
+            [10i64, 20, 30],
+            "$[1]",
+            99i64,
+            None,
+            1,
+            [10i64, 99, 30],
+            render = render_debug::<[i64; 3]>,
+            test_title = "fixed-size array [i64; 3] in-place index set"
+        ),
+        set_case!(
+            (1i64, "x".to_string(), true),
+            "$.1",
+            "y".to_string(),
+            None,
+            1,
+            (1i64, "y".to_string(), true),
+            render = render_debug::<(i64, String, bool)>,
+            test_title = "tuple positional field set"
+        ),
+        set_case!(
+            UserWithAddress::default(),
+            "$.Address.City",
+            "Mombasa".to_string(),
+            None,
+            1,
+            UserWithAddress {
+                name: String::new(),
+                address: Box::new(Address {
+                    street: String::new(),
+                    city: "Mombasa".to_string(),
+                    zip_code: None,
+                }),
+            },
+            render = render_debug::<UserWithAddress>,
+            test_title = "set through Box<Address> into a defaulted struct (smart pointer)"
+        ),
     ];
 
     let mut report = TestReport::new(
@@ -301,11 +397,12 @@ fn set_cases() {
                         case.path, case.expected_count, count
                     ));
                 }
-                let rendered = (case.render_root)(&*root);
-                if rendered != case.expected_root {
+                if !are_equal(&*case.expected_root, &*root) {
                     report.fail_case(format!(
                         "path {} || expected root {}, got {}",
-                        case.path, case.expected_root, rendered
+                        case.path,
+                        (case.render_root)(&*case.expected_root),
+                        (case.render_root)(&*root)
                     ));
                 }
             }

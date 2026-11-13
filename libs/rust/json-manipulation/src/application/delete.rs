@@ -193,9 +193,13 @@ fn linear_delete(
         },
         ReflectRefMut::Struct(structure) => match &segment.selector {
             PathSelector::Root => advance_delete(value, segments, cursor, count),
-            PathSelector::Key(key) => {
-                let field_type = structure.reflect_field_type_info(key);
-                let Some(field) = structure.reflect_field_mut(key) else {
+            // keys by name; non-negative indices by positional field name
+            // (tuples are struct-shaped, so `$[0]` zeroes tuple element "0")
+            PathSelector::Key(_) | PathSelector::Index(_) => {
+                let field_type =
+                    super::struct_field_type_info_by_selector(&*structure, &segment.selector);
+                let Some(field) = super::struct_field_by_selector_mut(structure, &segment.selector)
+                else {
                     return Ok(());
                 };
                 if terminal {
@@ -224,9 +228,18 @@ fn linear_delete(
             }
             PathSelector::Union(members) => {
                 for member in members {
-                    if let PathSelector::Key(key) = &member.selector {
-                        let field_type = structure.reflect_field_type_info(key);
-                        let Some(field) = structure.reflect_field_mut(key) else {
+                    // keys by name, indices by positional field name (tuples)
+                    if matches!(
+                        &member.selector,
+                        PathSelector::Key(_) | PathSelector::Index(_)
+                    ) {
+                        let field_type = super::struct_field_type_info_by_selector(
+                            &*structure,
+                            &member.selector,
+                        );
+                        let Some(field) =
+                            super::struct_field_by_selector_mut(structure, &member.selector)
+                        else {
                             continue;
                         };
                         if terminal {

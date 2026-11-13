@@ -20,7 +20,7 @@ use std::any::TypeId;
 
 use dyn_rt_json_path::{PathSegment, PathSelector, RecursiveDescentSegments, SliceSelector};
 use dyn_rt_json_schema::{SchemaNode, convert_node};
-use dyn_rt_reflect::{Reflect, ReflectRef, ReflectRefMut, TypeInfo};
+use dyn_rt_reflect::{Reflect, ReflectRef, ReflectRefMut, ReflectStruct, TypeInfo};
 use dyn_rt_shared::Value;
 
 use crate::error::ManipulationError;
@@ -100,6 +100,50 @@ pub(crate) fn resolve_set_index(index: isize, len: usize) -> Result<usize, Manip
 /// Expands a slice selector `[start:end:step]` into element indices, mirroring
 /// go's bounds behavior (an explicit out-of-range bound is an error; a
 /// non-positive step behaves as step 1).
+/// Field of a struct addressed by a selector: keys by name; non-negative
+/// indices by positional field name ("0", "1", ...) — tuples are
+/// struct-shaped with positional names, so `$.1` addresses the second tuple
+/// element.
+pub(crate) fn struct_field_by_selector<'a>(
+    structure: &'a dyn ReflectStruct,
+    selector: &PathSelector,
+) -> Option<&'a dyn Reflect> {
+    match selector {
+        PathSelector::Key(key) => structure.reflect_field(key),
+        PathSelector::Index(index) if *index >= 0 => structure.reflect_field(&index.to_string()),
+        _ => None,
+    }
+}
+
+/// Mutable variant of [`struct_field_by_selector`].
+pub(crate) fn struct_field_by_selector_mut<'a>(
+    structure: &'a mut dyn ReflectStruct,
+    selector: &PathSelector,
+) -> Option<&'a mut dyn Reflect> {
+    match selector {
+        PathSelector::Key(key) => structure.reflect_field_mut(key),
+        PathSelector::Index(index) if *index >= 0 => {
+            structure.reflect_field_mut(&index.to_string())
+        }
+        _ => None,
+    }
+}
+
+/// Type info of the struct field addressed by a selector (see
+/// [`struct_field_by_selector`]).
+pub(crate) fn struct_field_type_info_by_selector(
+    structure: &dyn ReflectStruct,
+    selector: &PathSelector,
+) -> Option<&'static TypeInfo> {
+    match selector {
+        PathSelector::Key(key) => structure.reflect_field_type_info(key),
+        PathSelector::Index(index) if *index >= 0 => {
+            structure.reflect_field_type_info(&index.to_string())
+        }
+        _ => None,
+    }
+}
+
 /// Resolves the sequence-targeting members of a union selector into concrete
 /// indices: index members (negatives resolved against `len`), slice members
 /// expanded via [`slice_indices`], wildcard members expand to all indices.

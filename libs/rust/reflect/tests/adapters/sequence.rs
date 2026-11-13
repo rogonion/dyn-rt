@@ -232,3 +232,76 @@ fn value_sequence_ops() {
     }
     report.finish();
 }
+
+// ---------------------------------------------------------------------------
+// fixed-size arrays [T; N] (src/adapters/sequence.rs): sequence shape,
+// in-place set, push/delete unsupported
+// ---------------------------------------------------------------------------
+
+#[test]
+fn array_cases() {
+    use dyn_rt_reflect::{ReflectKind, ReflectNew};
+
+    let mut report = TestReport::new(
+        "array_cases",
+        "Adapter suite for `src/adapters/sequence.rs`: fixed-size arrays [T; N]",
+    );
+
+    let case_title = "array [i64; 3]: sequence shape, get/set/len, push+delete unsupported";
+    report.begin_case(case_title.to_string());
+    let mut array = [10i64, 20, 30];
+
+    if Reflect::reflect_ref(&array).kind() != ReflectKind::Sequence {
+        report.fail_case(format!(
+            "kind: expected Sequence, got {:?}",
+            Reflect::reflect_ref(&array).kind()
+        ));
+    }
+    {
+        let seq = dyn_rt_reflect::as_sequence(&array).expect("sequence");
+        if seq.reflect_length() != 3 {
+            report.fail_case(format!("len: expected 3, got {}", seq.reflect_length()));
+        }
+        match seq.reflect_get(1).and_then(|v| v.reflect_scalar_i64()) {
+            Some(20) => {}
+            other => report.fail_case(format!("get(1): expected 20, got {other:?}")),
+        }
+        if seq.reflect_get(3).is_some() {
+            report.fail_case("get(3): expected None".to_string());
+        }
+    }
+    {
+        let seq = dyn_rt_reflect::as_sequence_mut(&mut array).expect("sequence");
+        if seq.reflect_set_index(2, Box::new(99i64)).is_err() {
+            report.fail_case("set_index(2): unexpected error".to_string());
+        }
+        if seq.reflect_set_index(3, Box::new(0i64)).is_ok() {
+            report.fail_case("set_index(3): expected IndexOutOfBounds".to_string());
+        }
+        if seq.reflect_push(Box::new(0i64)).is_ok() {
+            report.fail_case("push: expected unsupported error".to_string());
+        }
+        if seq.reflect_delete_index(0).is_ok() {
+            report.fail_case("delete_index: expected unsupported error".to_string());
+        }
+    }
+    if array != [10, 20, 99] {
+        report.fail_case(format!(
+            "after set_index(2)=99: expected [10, 20, 99], got {array:?}"
+        ));
+    }
+    let zero = array.reflect_zero().expect("array reflect_zero is Some");
+    if zero.reflect_as_any().downcast_ref::<[i64; 3]>() != Some(&[0, 0, 0]) {
+        report.fail_case("zero: expected [0, 0, 0]".to_string());
+    }
+    let new = <[i64; 3] as ReflectNew>::reflect_new();
+    if new.reflect_as_any().downcast_ref::<[i64; 3]>() != Some(&[0, 0, 0]) {
+        report.fail_case("new: expected [0, 0, 0]".to_string());
+    }
+    let cloned = array.reflect_clone();
+    if cloned.reflect_as_any().downcast_ref::<[i64; 3]>() != Some(&[10, 20, 99]) {
+        report.fail_case("clone: expected [10, 20, 99]".to_string());
+    }
+
+    report.finish();
+}

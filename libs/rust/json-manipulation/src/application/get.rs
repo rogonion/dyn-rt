@@ -97,6 +97,13 @@ fn linear_get<'a>(
                     None => Ok(Vec::new()),
                 }
             }
+            // tuples are struct-shaped with positional names: $[1] == field "1"
+            ReflectRef::Struct(structure) => {
+                match super::struct_field_by_selector(structure, &segment.selector) {
+                    Some(field) => advance_get(field, segments, cursor),
+                    None => Ok(Vec::new()),
+                }
+            }
             other => Err(ManipulationError::PathSegmentInvalid {
                 message: format!(
                     "index segment {label} unsupported for kind {}",
@@ -200,8 +207,10 @@ fn union_select<'a>(
         ReflectRef::Struct(structure) => {
             for member in members {
                 match &member.selector {
-                    PathSelector::Key(key) => {
-                        if let Some(field) = structure.reflect_field(key) {
+                    PathSelector::Key(_) | PathSelector::Index(_) => {
+                        if let Some(field) =
+                            super::struct_field_by_selector(structure, &member.selector)
+                        {
                             selected.push(field);
                         }
                     }

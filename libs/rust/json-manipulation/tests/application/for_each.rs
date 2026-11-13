@@ -4,7 +4,7 @@
 use std::cell::RefCell;
 
 use crate::common::*;
-use dyn_rt_json_manipulation::for_each;
+use dyn_rt_json_manipulation::{are_equal, for_each};
 use dyn_rt_json_path::{RegexPathTokenizer, parse_path};
 use dyn_rt_reflect::Reflect;
 use dyn_rt_shared::Value;
@@ -14,7 +14,8 @@ struct ForEachCase {
     test_title: Option<String>,
     root: Box<dyn Reflect>,
     path: &'static str,
-    expected_visited: Vec<String>,
+    /// expected visited values, compared with `are_equal` (deep comparison)
+    expected_visited: Vec<Box<dyn Reflect>>,
     /// when set, the callback returns false after this many visits (early stop)
     stop_after: Option<usize>,
 }
@@ -25,14 +26,16 @@ macro_rules! for_each_case {
             test_title: None $(.or(Some($title.to_string())))?,
             root: Box::new($root),
             path: $path,
-            expected_visited: vec![$($expected.to_string()),*],
+            expected_visited: vec![$(Box::new($expected) as Box<dyn Reflect>),*],
             stop_after: None $(.or(Some($stop)))?,
         }
     };
 }
 
-fn rv(value: Value) -> String {
-    format!("{value:?}")
+/// Identity helper kept so case entries read uniformly (`rv(...)` = "result
+/// value"); the macro boxes the expression.
+fn rv<T>(value: T) -> T {
+    value
 }
 
 #[test]
@@ -93,6 +96,33 @@ fn for_each_cases() {
             [],
             test_title = "for_each over a non-matching path visits nothing"
         ),
+        // native built-ins: recursive descent over a Vec of structs
+        for_each_case!(
+            vec![
+                ComplexDataItem {
+                    name: "First".to_string(),
+                    value: 1
+                },
+                ComplexDataItem {
+                    name: "Second".to_string(),
+                    value: 2
+                },
+            ],
+            "$..Name",
+            ["First".to_string(), "Second".to_string()],
+            test_title = "for_each recursive descent over native Vec<ComplexDataItem>"
+        ),
+        // native built-ins: wildcard over a HashMap's values
+        for_each_case!(
+            {
+                let mut m = std::collections::HashMap::new();
+                m.insert("a".to_string(), 1i64);
+                m
+            },
+            "$.*",
+            [1i64],
+            test_title = "for_each wildcard over a native HashMap"
+        ),
     ];
 
     let mut report = TestReport::new(
@@ -102,10 +132,10 @@ fn for_each_cases() {
     for case in &test_data {
         report.begin_case(new_test_title!(case.test_title));
         let segments = parse_path(&RegexPathTokenizer, case.path);
-        let visited: RefCell<Vec<String>> = RefCell::new(Vec::new());
+        let visited: RefCell<Vec<Box<dyn Reflect>>> = RefCell::new(Vec::new());
         let stop_after = case.stop_after;
         let result = for_each(&*case.root, &segments, &mut |value| {
-            visited.borrow_mut().push(render(value));
+            visited.borrow_mut().push(value.reflect_clone());
             match stop_after {
                 Some(limit) => visited.borrow().len() < limit,
                 None => true,
@@ -114,11 +144,29 @@ fn for_each_cases() {
         match result {
             Ok(()) => {
                 let visited = visited.borrow();
-                if *visited != case.expected_visited {
-                    report.fail_case(format!(
-                        "path {} || expected visited {:?}, got {:?}",
-                        case.path, case.expected_visited, *visited
+                let mut mismatch = None;
+                if visited.len() != case.expected_visited.len() {
+                    mismatch = Some(format!(
+                        "visited count: expected {}, got {}",
+                        case.expected_visited.len(),
+                        visited.len()
                     ));
+                } else {
+                    for (index, (expected, got)) in
+                        case.expected_visited.iter().zip(visited.iter()).enumerate()
+                    {
+                        if !are_equal(&**expected, &**got) {
+                            mismatch = Some(format!(
+                                "visited {index}: expected {}, got {}",
+                                render(&**expected),
+                                render(&**got)
+                            ));
+                            break;
+                        }
+                    }
+                }
+                if let Some(detail) = mismatch {
+                    report.fail_case(format!("path {} || {}", case.path, detail));
                 }
             }
             Err(err) => report.fail_case(format!("unexpected error: {err}")),
