@@ -259,7 +259,7 @@ fn set_reposition(position: &mut FieldColumnPosition, out: &mut ColumnFields) {
 /// `view:max_values_in_separate_columns` value when
 /// `view:values_in_separate_columns` is true (groups containing nested
 /// groups force -1), else -1. A `single` cardinality caps it at 1.
-fn max_flat_columns(fg_props: &Value) -> Result<i64, MetadatamodelError> {
+pub fn max_flat_columns(fg_props: &Value) -> Result<i64, MetadatamodelError> {
     let mut max_columns = -1i64;
     let in_separate = prop(fg_props, props::VIEW_VALUES_IN_SEPARATE_COLUMNS)
         .and_then(Value::as_bool)
@@ -382,4 +382,175 @@ impl ColumnFields {
             }
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// group column indexes (group_column_indexes.go) — used by flattener and
+// unflattener to know which columns belong to each group
+// ---------------------------------------------------------------------------
+
+/// Fast lookup index identifying which columns to read at a group (go's
+/// `GroupColumnIndexes`).
+#[derive(Debug, Clone, Default)]
+pub struct GroupColumnIndexes {
+    /// Primary key columns (indexes into the unskipped current read order).
+    pub primary: Vec<usize>,
+    /// All columns of the group (same indexing).
+    pub all: Vec<usize>,
+}
+
+/// Retrieves the column indexes (primary and all) of `group` within
+/// `column_fields` (go's `GroupsColumnsIndexesRetrieval.Get`).
+pub fn group_column_indexes(
+    column_fields: &ColumnFields,
+    group: &MetadataModel,
+) -> Result<GroupColumnIndexes, MetadatamodelError> {
+    let mut indexes = GroupColumnIndexes::default();
+    collect_group_column_indexes(column_fields, group, true, false, &mut indexes)?;
+    Ok(indexes)
+}
+
+/// The leaf positions a field (or group-as-separate-columns) contributes:
+/// one per separate column when `max_flat_columns > 0`, else a single one.
+fn leaf_positions(path_key: &str, max_columns: i64) -> Vec<FieldColumnPosition> {
+    let mut positions = Vec::new();
+    if max_columns > 0 {
+        for column_index in 0..max_columns as usize {
+            positions.push(FieldColumnPosition {
+                path_key: path_key.to_string(),
+                field_in_separate_columns: true,
+                field_header_index: column_index,
+                ..Default::default()
+            });
+        }
+    } else {
+        positions.push(FieldColumnPosition {
+            path_key: path_key.to_string(),
+            ..Default::default()
+        });
+    }
+    positions
+}
+
+fn append_column_index(
+    column_fields: &ColumnFields,
+    position: &FieldColumnPosition,
+    is_primary: bool,
+    is_all: bool,
+    indexes: &mut GroupColumnIndexes,
+) -> Result<(), MetadatamodelError> {
+    let field = column_fields
+        .get_by_key(&position.column_key())
+        .ok_or_else(|| MetadatamodelError::InvalidModel {
+            message: format!(
+                "column '{}' not found in column fields",
+                position.column_key()
+            ),
+        })?;
+    if is_all {
+        if let Some(index) = column_fields.index_in_unskipped(field.index_in_read_order) {
+            indexes.all.push(index);
+        }
+    }
+    if is_primary {
+        if let Some(index) = column_fields.index_in_unskipped(field.index_in_read_order) {
+            indexes.primary.push(index);
+        }
+    }
+    Ok(())
+}
+
+fn collect_group_column_indexes(
+    column_fields: &ColumnFields,
+    group: &MetadataModel,
+    is_all: bool,
+    force_primary: bool,
+    indexes: &mut GroupColumnIndexes,
+) -> Result<(), MetadatamodelError> {
+    let order = read_order_of(group)?;
+    let fields = fields_of(group)?;
+    let fields_obj = fields
+        .as_object()
+        .ok_or_else(|| MetadatamodelError::InvalidModel {
+            message: format!("{FIELDS_KEY}[0] is not an object"),
+        })?;
+
+    for key in &order {
+        let entry = fields_obj
+            .iter()
+            .find(|(k, _)| k == key)
+            .map(|(_, entry)| entry)
+            .ok_or_else(|| MetadatamodelError::InvalidModel {
+                message: format!("field {key:?} not found in {FIELDS_KEY}[0]"),
+            })?;
+        let props = props_of(entry)?;
+        let field_is_primary = force_primary
+            || prop(props, props::GROUP_IS_PRIMARY_KEY)
+                .and_then(Value::as_bool)
+                .unwrap_or(false);
+        let path_key = path_key_of(props)?.to_string();
+
+        if is_group(props) {
+            let as_single = prop(props, props::EXTRACT_AS_SINGLE_FIELD)
+                .and_then(Value::as_bool)
+                .unwrap_or(false);
+            let max_columns = max_flat_columns(props)?;
+            if !as_single && max_columns > 0 && !contains_nested_groups(props)? {
+                // group-as-separate-columns: leaves per nested field per column
+                let nested_order = read_order_of(props)?;
+                let nested_fields = fields_of(props)?;
+                let nested_obj =
+                    nested_fields
+                        .as_object()
+                        .ok_or_else(|| MetadatamodelError::InvalidModel {
+                            message: format!("{FIELDS_KEY}[0] is not an object"),
+                        })?;
+                for column_index in 0..max_columns as usize {
+                    for nested_suffix in &nested_order {
+                        let nested_entry = nested_obj
+                            .iter()
+                            .find(|(k, _)| k == nested_suffix)
+                            .map(|(_, e)| e)
+                            .ok_or_else(|| MetadatamodelError::InvalidModel {
+                                message: format!("nested field {nested_suffix:?} not found"),
+                            })?;
+                        let nested_key = path_key_of(props_of(nested_entry)?)?.to_string();
+                        let position = FieldColumnPosition {
+                            path_key: nested_key,
+                            group_in_separate_columns: true,
+                            group_header_index: column_index,
+                            group_parent_path_key: path_key.clone(),
+                            field_key_suffix: nested_suffix.clone(),
+                            ..Default::default()
+                        };
+                        append_column_index(
+                            column_fields,
+                            &position,
+                            field_is_primary,
+                            true,
+                            indexes,
+                        )?;
+                    }
+                }
+                continue;
+            }
+            if as_single {
+                // processed as a plain field below
+            } else {
+                // nested group: contributes no columns itself; its primary
+                // keys bubble up when the group is primary
+                if field_is_primary {
+                    collect_group_column_indexes(column_fields, props, false, true, indexes)?;
+                }
+                continue;
+            }
+        }
+
+        // plain field (or group as single field)
+        let max_columns = max_flat_columns(props)?;
+        for position in leaf_positions(&path_key, max_columns) {
+            append_column_index(column_fields, &position, field_is_primary, is_all, indexes)?;
+        }
+    }
+    Ok(())
 }

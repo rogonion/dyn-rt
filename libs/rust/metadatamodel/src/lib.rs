@@ -14,6 +14,8 @@ pub mod database;
 pub mod error;
 pub mod fieldcolumns;
 pub mod filter;
+pub mod flattener;
 pub mod iter;
+pub mod unflattener;
 
 pub use error::MetadatamodelError;

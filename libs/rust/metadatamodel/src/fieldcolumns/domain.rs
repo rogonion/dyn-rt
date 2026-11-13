@@ -146,6 +146,14 @@ impl ColumnFields {
         }
     }
 
+    /// Position of `original_index` within the unskipped current read order
+    /// (go's `IndexInUnskippedColumnFields`).
+    pub fn index_in_unskipped(&self, original_index: usize) -> Option<usize> {
+        self.current_read_order()
+            .iter()
+            .position(|original| *original == original_index)
+    }
+
     /// Updates each column's `index_in_repositioned` from `current`.
     pub fn update_index_in_repositioned(&mut self) {
         for (read_index, original) in self.current.iter().enumerate() {

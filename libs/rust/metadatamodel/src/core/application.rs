@@ -381,6 +381,116 @@ pub fn data_path(
     Ok(RecursiveDescentSegments(out_groups).to_string())
 }
 
+/// Model-aware data path: walks the template together with the model, so
+/// each field/group's DECLARED cardinality decides whether its `[*]` is
+/// replaced by the next index (`array`, the default) or dropped (`single`).
+/// `index_last_wildcard` controls the trailing wildcard (the leaf field's
+/// own value index): `false` reads the whole value (used by the flattener
+/// and unflattener for cell/group reads).
+pub fn data_path_model_aware(
+    template: &str,
+    model: &MetadataModel,
+    indices: &[usize],
+    index_last_wildcard: bool,
+) -> Result<String, MetadatamodelError> {
+    let segments = parse_template(template)?;
+    let flat: Vec<&PathSelector> = segments
+        .0
+        .iter()
+        .flat_map(|g| g.0.iter().map(|s| &s.selector))
+        .collect();
+    let total = flat.len();
+
+    let mut out_group = RecursiveDescentSegment(Vec::new());
+    let mut indices = indices.iter();
+    let mut current_group = model;
+    let mut i = 0usize;
+    while i < total {
+        match flat[i] {
+            PathSelector::Root => {
+                out_group.0.push(PathSegment {
+                    access_strategy: AccessStrategy::Mixed,
+                    selector: PathSelector::Root,
+                });
+                i += 1;
+            }
+            PathSelector::Key(key) if key == FIELDS_KEY => {
+                // structural schema segment: drop it and its wildcard
+                if i + 1 < total && matches!(flat[i + 1], PathSelector::Wildcard) {
+                    i += 2;
+                } else {
+                    i += 1;
+                }
+            }
+            PathSelector::Key(key) => {
+                // find the field/group in the current group to learn its cardinality
+                let entry = fields_of(current_group)?
+                    .as_object()
+                    .ok_or_else(|| MetadatamodelError::InvalidModel {
+                        message: format!("{FIELDS_KEY}[0] is not an object"),
+                    })?
+                    .iter()
+                    .find(|(k, _)| k == key)
+                    .map(|(_, entry)| entry);
+                let props = match entry {
+                    Some(entry) => props_of(entry)?,
+                    None => {
+                        // not in the model (e.g. a suffix key): render as-is
+                        out_group.0.push(PathSegment {
+                            access_strategy: AccessStrategy::Named,
+                            selector: PathSelector::Key(key.clone()),
+                        });
+                        i += 1;
+                        continue;
+                    }
+                };
+                out_group.0.push(PathSegment {
+                    access_strategy: AccessStrategy::Named,
+                    selector: PathSelector::Key(key.clone()),
+                });
+                if i + 1 < total && matches!(flat[i + 1], PathSelector::Wildcard) {
+                    let last_wildcard = i + 2 >= total;
+                    let index_it = !last_wildcard || index_last_wildcard;
+                    if index_it && cardinality_of(props) == Cardinality::Array {
+                        let index = indices.next().copied().unwrap_or(0);
+                        out_group.0.push(PathSegment {
+                            access_strategy: AccessStrategy::Positional,
+                            selector: PathSelector::Index(index as isize),
+                        });
+                    }
+                    // single cardinality (or dropped last wildcard): no segment
+                    i += 2;
+                } else {
+                    i += 1;
+                }
+                current_group = props;
+            }
+            PathSelector::Wildcard => {
+                // stray wildcard not owned by a model field: index it
+                let last_wildcard = i + 1 >= total;
+                if !last_wildcard || index_last_wildcard {
+                    let index = indices.next().copied().unwrap_or(0);
+                    out_group.0.push(PathSegment {
+                        access_strategy: AccessStrategy::Positional,
+                        selector: PathSelector::Index(index as isize),
+                    });
+                }
+                i += 1;
+            }
+            other => {
+                out_group.0.push(PathSegment {
+                    access_strategy: other_strategy(other),
+                    selector: other.clone(),
+                });
+                i += 1;
+            }
+        }
+    }
+
+    let out = RecursiveDescentSegments(vec![out_group]);
+    Ok(out.to_string())
+}
+
 /// Data path with wildcards KEPT as `[*]` (no index substitution): strips
 /// the structural `group:fields[*]` pairs like [`data_path`] but leaves
 /// every remaining wildcard in place. Used by the filter subdomain to

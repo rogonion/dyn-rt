@@ -76,5 +76,7 @@ pub mod metadatamodel {
     pub use dyn_rt_metadatamodel::error::MetadatamodelError;
     pub use dyn_rt_metadatamodel::fieldcolumns;
     pub use dyn_rt_metadatamodel::filter;
+    pub use dyn_rt_metadatamodel::flattener;
     pub use dyn_rt_metadatamodel::iter;
+    pub use dyn_rt_metadatamodel::unflattener;
 }

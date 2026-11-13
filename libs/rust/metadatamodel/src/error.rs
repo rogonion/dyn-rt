@@ -27,6 +27,10 @@ pub enum MetadatamodelError {
     /// filter subdomain: query-condition evaluation failed (invalid query
     /// shape, unknown condition type, unsupported filter condition, ...).
     Filter { message: String },
+    /// flattener subdomain failed.
+    Flatten { message: String },
+    /// unflattener subdomain failed.
+    Unflatten { message: String },
 }
 
 impl fmt::Display for MetadatamodelError {
@@ -55,6 +59,12 @@ impl fmt::Display for MetadatamodelError {
             }
             MetadatamodelError::Filter { message } => {
                 write!(f, "filter failed: {message}")
+            }
+            MetadatamodelError::Flatten { message } => {
+                write!(f, "flatten failed: {message}")
+            }
+            MetadatamodelError::Unflatten { message } => {
+                write!(f, "unflatten failed: {message}")
             }
         }
     }
