@@ -100,6 +100,8 @@ impl_reflect_scalar!(
     f32 => "f32", i64: |_| None, f64: |v| Some(*v as f64), bool: |_| None, string: |v| Some(v.to_string()),
     f64 => "f64", i64: |_| None, f64: |v| Some(*v), bool: |_| None, string: |v| Some(v.to_string()),
     String => "string", i64: |_| None, f64: |_| None, bool: |_| None, string: |s| Some(s.clone()),
+    // unit: the scalar with no payload; renders like Value::Null ("null")
+    () => "unit", i64: |_| None, f64: |_| None, bool: |_| None, string: |_| Some("null".to_string()),
 );
 
 /// Scalars are constructible via their `Default` (zero value).
@@ -116,5 +118,22 @@ macro_rules! impl_reflect_new_scalar {
 }
 
 impl_reflect_new_scalar!(
-    bool, char, i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, f32, f64, String,
+    bool,
+    char,
+    i8,
+    i16,
+    i32,
+    i64,
+    i128,
+    isize,
+    u8,
+    u16,
+    u32,
+    u64,
+    u128,
+    usize,
+    f32,
+    f64,
+    String,
+    (),
 );

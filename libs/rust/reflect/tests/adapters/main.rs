@@ -11,4 +11,5 @@ mod scalar;
 mod sequence;
 #[cfg(feature = "serde-json")]
 mod serde_json;
+mod tuple;
 mod unknown;

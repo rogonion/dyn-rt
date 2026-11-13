@@ -127,3 +127,112 @@ fn scalar_clone_apply() {
     }
     report.finish();
 }
+
+// ---------------------------------------------------------------------------
+// unit `()` (src/adapters/scalar.rs): scalar shape, renders as "null"
+// ---------------------------------------------------------------------------
+
+enum UnitOp {
+    KindIsScalar,
+    ScalarStringIsNull,
+    CloneAndZero,
+    ApplyMismatch,
+}
+
+struct UnitCase {
+    test_title: Option<String>,
+    op: UnitOp,
+}
+
+macro_rules! unit_case {
+    ($op:expr $(, test_title = $title:expr)?) => {
+        UnitCase {
+            test_title: None $(.or(Some($title.to_string())))?,
+            op: $op,
+        }
+    };
+}
+
+#[test]
+fn unit_cases() {
+    use dyn_rt_reflect::{ReflectKind, ReflectNew};
+
+    let test_data: Vec<_> = vec![
+        unit_case!(
+            UnitOp::KindIsScalar,
+            test_title = "unit routes to the scalar shape"
+        ),
+        unit_case!(
+            UnitOp::ScalarStringIsNull,
+            test_title = "unit renders as \"null\" like Value::Null"
+        ),
+        unit_case!(
+            UnitOp::CloneAndZero,
+            test_title = "unit clone/zero/new all produce unit"
+        ),
+        unit_case!(
+            UnitOp::ApplyMismatch,
+            test_title = "apply of a non-unit onto unit fails with ShapeMismatch"
+        ),
+    ];
+
+    let mut report = TestReport::new(
+        "unit_cases",
+        "Adapter suite for `src/adapters/scalar.rs`: the unit type `()`",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
+        report.begin_case(title.clone());
+        let unit = ();
+        let value: &dyn Reflect = &unit;
+
+        match &case.op {
+            UnitOp::KindIsScalar => {
+                if value.reflect_ref().kind() != ReflectKind::Scalar {
+                    report.fail_case(format!(
+                        "kind: expected Scalar, got {:?}",
+                        value.reflect_ref().kind()
+                    ));
+                }
+            }
+            UnitOp::ScalarStringIsNull => {
+                if value.reflect_scalar_string().as_deref() != Some("null") {
+                    report.fail_case(format!(
+                        "scalar string: expected \"null\", got {:?}",
+                        value.reflect_scalar_string()
+                    ));
+                }
+            }
+            UnitOp::CloneAndZero => {
+                let cloned = value.reflect_clone();
+                if cloned.reflect_as_any().downcast_ref::<()>().is_none() {
+                    report.fail_case("clone: not a unit".to_string());
+                }
+                if value.reflect_zero().is_none() {
+                    report.fail_case("zero: expected Some".to_string());
+                }
+                let new = <() as ReflectNew>::reflect_new();
+                if new.reflect_as_any().downcast_ref::<()>().is_none() {
+                    report.fail_case("new: not a unit".to_string());
+                }
+            }
+            UnitOp::ApplyMismatch => {
+                let source: &dyn Reflect = &"not unit".to_string();
+                let mut target = ();
+                match target.reflect_apply(source) {
+                    Ok(()) => {
+                        report.fail_case("apply mismatch: expected error, got Ok".to_string())
+                    }
+                    Err(err) => {
+                        if !format!("{err:?}").contains("ShapeMismatch") {
+                            report.fail_case(format!(
+                                "apply mismatch: expected ShapeMismatch, got {err:?}"
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    report.finish();
+}

@@ -10,6 +10,7 @@ pub mod scalar;
 pub mod sequence;
 #[cfg(feature = "serde-json")]
 pub mod serde_json;
+pub mod tuple;
 pub mod unknown;
 pub mod value;
 
