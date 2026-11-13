@@ -1,0 +1,26 @@
+{
+  "name": "@dyn-rt/test-support",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dev-only data-driven test harness for dyn-rt TypeScript modules (ADR 0004): case tables in code, one test loop per suite, per-case PASS/FAIL logging via TestReport.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "lint": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  }
+}
