@@ -119,10 +119,13 @@ fn value_ops() {
         ),
     ];
 
-    let mut report = TestReport::new();
+    let mut report = TestReport::new(
+        "value_ops",
+        "Data-driven suite for the Value model (ADR 0004): one custom loop over a",
+    );
 
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         for check in &case.checks {
             let mismatch: Option<String> = match check {

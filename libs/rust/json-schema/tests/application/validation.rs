@@ -232,9 +232,12 @@ fn validation_cases() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "validation_cases",
+        "Data-driven suite for the json-schema APPLICATION layer (ADR 0004/0009):",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let got = validate_with(&*case.data, &case.schema, &case.options);
         match (&case.expected, &got) {

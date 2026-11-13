@@ -270,9 +270,12 @@ fn conversion_cases() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "conversion_cases",
+        "Data-driven suite for src/application/conversion.rs (ADR 0004/0009):",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let mut target = (case.make_target)();
         let got = convert_with(&*case.source, &case.schema, &mut *target, &case.options);

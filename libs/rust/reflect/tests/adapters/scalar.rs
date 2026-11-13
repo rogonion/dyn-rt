@@ -78,9 +78,12 @@ fn scalar_clone_apply() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "scalar_clone_apply",
+        "Adapter suite for `src/adapters/scalar.rs`: scalar clone/apply, and",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let mut value = case.value.clone();
 

@@ -121,9 +121,12 @@ fn schema_path_cases() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "schema_path_cases",
+        "Data-driven suite for src/application/path.rs: schema-path resolution",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let parsed = parse_path(&RegexPathTokenizer, case.path);
         let got = schema_at_path(&parsed.0[0], &case.schema);

@@ -71,9 +71,12 @@ fn serde_json_value_cases() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "serde_json_value_cases",
+        "Data-driven suite for src/adapters/serde_json.rs (ADR 0004/0009), gated",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let r: &dyn Reflect = &case.value;
         if kind_of(r) != case.expected_kind {

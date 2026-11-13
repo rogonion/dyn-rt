@@ -17,10 +17,13 @@ use dyn_rt_test_support::{TestReport, new_test_title};
 fn parse_path_cases() {
     let test_data = yield_parse_data();
     let tokenizer = RegexPathTokenizer;
-    let mut report = TestReport::new();
+    let mut report = TestReport::new(
+        "parse_path_cases",
+        "Application-layer suites for json-path (ADR 0009): the parse_path and",
+    );
 
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let result = parse_path(&tokenizer, case.source);
         if result != case.expected {
@@ -329,10 +332,13 @@ fn yield_parse_data() -> Vec<ParseCase> {
 fn extract_segment_cases() {
     let test_data = yield_extract_data();
     let tokenizer = RegexPathTokenizer;
-    let mut report = TestReport::new();
+    let mut report = TestReport::new(
+        "extract_segment_cases",
+        "Application-layer suites for json-path (ADR 0009): the parse_path and",
+    );
 
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let result = extract_segment(&tokenizer, case.source);
         if result != case.expected {

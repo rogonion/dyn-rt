@@ -32,9 +32,12 @@ fn duration_is_unknown() {
         test_title = "Duration routes to Unknown"
     )];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "duration_is_unknown",
+        "Adapter suite for `src/adapters/unknown.rs`: base-Reflect-only types route",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let reflected: &dyn Reflect = &case.value;
         if kind_of(reflected) != ReflectKind::Unknown {

@@ -847,9 +847,12 @@ fn derive_ops() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "derive_ops",
+        "Suites for the `dyn-rt-reflect-derive` macros (ADR 0009): the derive crate",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let got = observe(&case.subject, &case.op);
         match (&case.expected, &got) {

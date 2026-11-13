@@ -16,10 +16,13 @@ use dyn_rt_test_support::{TestReport, new_test_title};
 #[test]
 fn ast_render_roundtrip() {
     let test_data = yield_render_data();
-    let mut report = TestReport::new();
+    let mut report = TestReport::new(
+        "ast_render_roundtrip",
+        "Domain-layer suite for json-path (ADR 0009): Display rendering of the AST,",
+    );
 
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let rendered = case.segments.to_string();
         if rendered != case.roundtrip {

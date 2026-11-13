@@ -173,9 +173,12 @@ fn schema_model_cases() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "schema_model_cases",
+        "Data-driven suite for the json-schema DOMAIN layer (ADR 0004/0009):",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let got_projection = project(&case.schema);
         if got_projection != case.expected_projection {

@@ -90,9 +90,12 @@ fn deser_cases() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "deser_cases",
+        "Data-driven suite for src/adapters/deser.rs (ADR 0004/0009): text ->",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let got = parse(case);
         match (&case.expected, &got) {

@@ -81,9 +81,12 @@ fn kind_of_cases() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "kind_of_cases",
+        "Data-driven suites for the reflect APPLICATION layer (ADR 0004): kind_of,",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let reflected: &dyn Reflect = &case.value;
         if kind_of(reflected) != case.expect_kind {
@@ -144,9 +147,12 @@ fn children_of_containers() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "children_of_containers",
+        "Data-driven suites for the reflect APPLICATION layer (ADR 0004): kind_of,",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let reflected: &dyn Reflect = &case.value;
         let got: Vec<Value> = children(reflected)
@@ -207,9 +213,12 @@ fn as_downcasts() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "as_downcasts",
+        "Data-driven suites for the reflect APPLICATION layer (ADR 0004): kind_of,",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let reflected: &dyn Reflect = &case.value;
         let got = if as_scalar(reflected).is_some() {
@@ -279,9 +288,12 @@ fn reflect_with_inner_cases() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "reflect_with_inner_cases",
+        "Data-driven suites for the reflect APPLICATION layer (ADR 0004): kind_of,",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let subject: Box<dyn Reflect> = match &case.subject {
             Subject::Boxed(v) => Box::new(Box::new(v.clone())),

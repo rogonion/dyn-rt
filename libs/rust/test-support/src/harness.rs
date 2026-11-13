@@ -8,14 +8,15 @@
 
 use std::fmt;
 
-/// A basic test title from a case's `test_title` field, based on whether it
-/// was set. Expects `test_title` to be an `Option<String>`.
+/// A basic case title from a case's `test_title` field, based on whether it
+/// was set. Expects `test_title` to be an `Option<String>`. The case number
+/// is added by [`TestReport`] when it logs the case.
 #[macro_export]
 macro_rules! new_test_title {
-    ($test_number:expr, $test_title:expr) => {
+    ($test_title:expr) => {
         match &$test_title {
-            Some(title) => format!("Test case -> {} : [[[ {} ]]]", $test_number, title),
-            None => format!("Test case -> {}", $test_number),
+            Some(title) => format!("[[[ {} ]]]", title),
+            None => "(untitled case)".to_string(),
         }
     };
 }
@@ -26,28 +27,62 @@ struct CaseOutcome {
     failure: Option<String>,
 }
 
-/// General-purpose suite report (ADR 0004): records every case as passed or
-/// failed so a run can log both — failures panic once with a summary, passes
-/// are listed as coverage.
+impl CaseOutcome {
+    /// The per-case log line: `<number>/<total> | <title> | <outcome>`.
+    /// Failures additionally carry their contextual detail.
+    fn line(&self, number: usize, total: usize) -> String {
+        match &self.failure {
+            Some(detail) => format!(
+                "Test case -> {}/{} : {} || FAIL || {}",
+                number, total, self.title, detail
+            ),
+            None => format!("Test case -> {}/{} : {} || PASS", number, total, self.title),
+        }
+    }
+}
+
+/// General-purpose suite report (ADR 0004): a root suite title + description,
+/// and one log line per case — pass or fail — so every run shows full
+/// coverage. By default all cases are evaluated and a single panic at
+/// `finish()` reports the failures; with [`TestReport::abort_on_failure`] the
+/// first failing case panics immediately instead.
 ///
 /// Loop idiom inside a suite:
 ///
 /// ```ignore
-/// let mut report = TestReport::new();
-/// for (test_index, case) in test_data.iter().enumerate() {
-///     let title = new_test_title!(test_index + 1, case.meta.test_title);
-///     report.begin_case(title.clone());
+/// let test_data = yield_test_data();
+/// let mut report = TestReport::new("suite title", "what this suite covers");
+/// for case in &test_data {
+///     report.begin_case(new_test_title!(case.test_title));
 ///     // ... on mismatch: report.fail_case(format!("expected {:?}, got {:?}", ...));
 /// }
 /// report.finish();
 /// ```
 pub struct TestReport {
+    suite_title: String,
+    suite_description: String,
     cases: Vec<CaseOutcome>,
+    abort_on_failure: bool,
 }
 
 impl TestReport {
-    pub fn new() -> Self {
-        Self { cases: Vec::new() }
+    /// Start a suite report with a root `suite_title` and a
+    /// `suite_description` of what the suite is about.
+    pub fn new(suite_title: impl Into<String>, suite_description: impl Into<String>) -> Self {
+        Self {
+            suite_title: suite_title.into(),
+            suite_description: suite_description.into(),
+            cases: Vec::new(),
+            abort_on_failure: false,
+        }
+    }
+
+    /// Abort the suite on the first failing case (panic immediately from
+    /// [`TestReport::fail_case`]) instead of collecting failures for the
+    /// end-of-run panic.
+    pub fn abort_on_failure(mut self) -> Self {
+        self.abort_on_failure = true;
+        self
     }
 
     /// Register the case currently being checked. Call once per loop
@@ -60,11 +95,20 @@ impl TestReport {
         });
     }
 
-    /// Mark the most recently begun case as failed with `detail`.
+    /// Mark the most recently begun case as failed with `detail`. With
+    /// [`TestReport::abort_on_failure`] this panics immediately.
     pub fn fail_case(&mut self, detail: impl fmt::Display) {
         match self.cases.last_mut() {
             Some(case) => case.failure = Some(detail.to_string()),
             None => panic!("fail_case called before begin_case"),
+        }
+        if self.abort_on_failure {
+            let total = self.cases.len();
+            let line = self.cases.last().map(|case| case.line(total, total));
+            panic!(
+                "\n--- aborting suite on failed test case ---\n{}\n",
+                line.unwrap_or_default()
+            );
         }
     }
 
@@ -81,8 +125,9 @@ impl TestReport {
         self.fail_case(detail);
     }
 
-    /// Finish the suite: panic once with the failure summary (plus the passed
-    /// coverage) when any case failed, otherwise log the full coverage.
+    /// Finish the suite: log the suite header and one line per case
+    /// (`<number>/<total> | <title> | PASS|FAIL`), then panic once with the
+    /// failure summary when any case failed.
     pub fn finish(self) {
         let total = self.cases.len();
         self.finish_with_total(total);
@@ -91,49 +136,31 @@ impl TestReport {
     /// Same as [`TestReport::finish`], with an explicit case total for callers
     /// that track cases outside the report.
     pub fn finish_with_total(self, total: usize) {
-        let failed_lines: Vec<String> = self
-            .cases
-            .iter()
-            .filter_map(|case| {
-                case.failure
-                    .as_ref()
-                    .map(|detail| format!("{} || {}", case.title, detail))
-            })
-            .collect();
-        let passed_titles: Vec<&str> = self
-            .cases
-            .iter()
-            .filter(|case| case.failure.is_none())
-            .map(|case| case.title.as_str())
-            .collect();
+        if self.suite_description.is_empty() {
+            println!("\n=== {} ===", self.suite_title);
+        } else {
+            println!("\n=== {} ===\n{}", self.suite_title, self.suite_description);
+        }
+
+        let mut failed_lines: Vec<String> = Vec::new();
+        for (index, case) in self.cases.iter().enumerate() {
+            let line = case.line(index + 1, total);
+            println!("{line}");
+            if case.failure.is_some() {
+                failed_lines.push(line);
+            }
+        }
 
         if !failed_lines.is_empty() {
             panic!(
-                "\n--- {} / {} tests failed ---\n{}\n--- {} passed ---\n{}\n",
+                "\n--- {} / {} tests failed ---\n{}\n",
                 failed_lines.len(),
                 total,
-                failed_lines.join("\n"),
-                passed_titles.len(),
-                passed_titles.join("\n")
+                failed_lines.join("\n")
             );
         }
 
-        if passed_titles.is_empty() {
-            println!("\n--- {} / {} tests passed ---\n", total, total);
-        } else {
-            println!(
-                "\n--- {} / {} tests passed ---\n{}\n",
-                passed_titles.len(),
-                total,
-                passed_titles.join("\n")
-            );
-        }
-    }
-}
-
-impl Default for TestReport {
-    fn default() -> Self {
-        Self::new()
+        println!("--- {} / {} tests passed ---\n", total, total);
     }
 }
 
@@ -142,7 +169,7 @@ impl Default for TestReport {
 /// Kept as a thin delegate over [`TestReport`] for suites that collect
 /// preformatted `"title || detail"` failure lines themselves.
 pub fn report_failures(failures: Vec<String>, total: usize) {
-    let mut report = TestReport::new();
+    let mut report = TestReport::new("report_failures (legacy call shape)", "");
     for line in failures {
         match line.split_once(" || ") {
             Some((title, detail)) => report.fail(title.to_string(), detail.to_string()),

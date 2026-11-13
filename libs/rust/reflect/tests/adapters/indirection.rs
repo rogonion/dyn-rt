@@ -58,9 +58,12 @@ fn box_indirection_ops() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "box_indirection_ops",
+        "Adapter suite for `src/adapters/indirection.rs`: Box<T> inner access.",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let mut subject: Box<dyn Reflect> = Box::new(Box::new(case.inner.clone()));
 

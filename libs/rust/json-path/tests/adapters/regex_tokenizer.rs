@@ -10,10 +10,13 @@ use dyn_rt_test_support::{TestReport, new_test_title};
 fn split_recursive_descent() {
     let test_data = yield_split_recursive_descent();
     let tokenizer = RegexPathTokenizer;
-    let mut report = TestReport::new();
+    let mut report = TestReport::new(
+        "split_recursive_descent",
+        "Adapter suite for `src/adapters.rs`'s RegexPathTokenizer: the three split",
+    );
 
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let result: Vec<&str> = tokenizer.split_recursive_descent(case.source);
         if result != case.expected {
@@ -138,10 +141,13 @@ fn yield_split_recursive_descent() -> Vec<SplitCase> {
 fn split_dot_notation() {
     let test_data = yield_split_dot_notation();
     let tokenizer = RegexPathTokenizer;
-    let mut report = TestReport::new();
+    let mut report = TestReport::new(
+        "split_dot_notation",
+        "Adapter suite for `src/adapters.rs`'s RegexPathTokenizer: the three split",
+    );
 
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let result: Vec<&str> = tokenizer.split_dot_notation(case.source);
         if result != case.expected {
@@ -262,10 +268,13 @@ fn yield_split_dot_notation() -> Vec<SplitCase> {
 fn split_brackets() {
     let test_data = yield_split_brackets();
     let tokenizer = RegexPathTokenizer;
-    let mut report = TestReport::new();
+    let mut report = TestReport::new(
+        "split_brackets",
+        "Adapter suite for `src/adapters.rs`'s RegexPathTokenizer: the three split",
+    );
 
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let result: Vec<&str> = tokenizer.split_brackets(case.source);
         if result != case.expected {

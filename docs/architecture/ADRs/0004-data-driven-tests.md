@@ -28,9 +28,12 @@ a JSON encoding; in-language tables show accepted inputs directly.
 - Every test datum is a plain case struct carrying its own `test_title`
   (`Option<String>`) field. The suite loop registers each case in a
   `TestReport` (`begin_case(title)`) and marks mismatches with
-  `fail_case(detail)`; `report.finish()` panics once with a summary on any
-  failure (`Test case -> N : [[[ title ]]] || expected ... ; got ...`) and
-  otherwise logs the passed coverage (which cases ran and passed).
+  `fail_case(detail)`. The report has a root suite title + description and
+  logs one line per case, pass or fail:
+  `Test case -> N/M : [[[ title ]]] || PASS` (failures add `|| FAIL ||
+  expected ... ; got ...`). All cases are evaluated, then `finish()` panics
+  once with the failure summary if any case failed; opting into
+  `abort_on_failure()` panics on the first failing case instead.
 - Constructor macros for building case data are the sanctioned way to keep
   tables readable (ADR 0005 allows declarative macros): e.g. the
   `json_path_root_segment!` / `json_path_key_selector_segment!` /

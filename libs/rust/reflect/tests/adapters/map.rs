@@ -148,9 +148,12 @@ fn value_map_ops() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "value_map_ops",
+        "Adapter suite for `src/adapters/map.rs`: ReflectMap on Value objects.",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let mut value = case.value.clone();
         let reflected: &dyn Reflect = &value;

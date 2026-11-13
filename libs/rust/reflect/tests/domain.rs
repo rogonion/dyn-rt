@@ -47,9 +47,12 @@ fn reflect_kind_display() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "reflect_kind_display",
+        "Data-driven suites for the reflect DOMAIN layer (ADR 0004): ReflectKind,",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         let got = case.kind.to_string();
         if got != case.expected {
@@ -164,9 +167,12 @@ fn type_info_table() {
         ),
     ];
 
-    let mut report = TestReport::new();
-    for (test_index, case) in test_data.iter().enumerate() {
-        let title = new_test_title!(test_index + 1, case.test_title);
+    let mut report = TestReport::new(
+        "type_info_table",
+        "Data-driven suites for the reflect DOMAIN layer (ADR 0004): ReflectKind,",
+    );
+    for case in &test_data {
+        let title = new_test_title!(case.test_title);
         report.begin_case(title.clone());
         if case.info.kind != case.expected_kind {
             report.fail_case(format!(
