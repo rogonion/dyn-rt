@@ -3,7 +3,7 @@
 
 import { test } from "vitest";
 import { TestReport, newTestTitle } from "@dyn-rt/test-support";
-import { manipulation, path, schema, shared } from "../src/index.js";
+import { manipulation, metadatamodel, path, schema, shared } from "../src/index.js";
 
 interface SmokeCase {
   testTitle?: string;
@@ -47,6 +47,52 @@ const smokeCases: SmokeCase[] = [
     run: () => manipulation.DynObject.new({ a: [9] }).get("$.a[0]")[0],
     expected: 9,
   },
+  {
+    testTitle: "facade re-exports metadatamodel.core.dataPath",
+    run: () =>
+      metadatamodel.core.dataPath("$['group:fields'][*].ID[*]", [], "array"),
+    expected: "$.ID[0]",
+  },
+  {
+    testTitle: "facade re-exports metadatamodel.fieldcolumns.extract",
+    run: () =>
+      metadatamodel.fieldcolumns.extract({
+        [metadatamodel.core.props.GROUP_PATH_KEY]: "$",
+        [metadatamodel.core.FIELDS_KEY]: [
+          {
+            ID: [
+              {
+                [metadatamodel.core.props.GROUP_PATH_KEY]: "$['group:fields'][*].ID[*]",
+                [metadatamodel.core.props.GROUP_NAME]: "ID",
+              },
+            ],
+          },
+        ],
+      }).readOrder.length,
+    expected: 1,
+  },
+  {
+    testTitle: "facade re-exports metadatamodel.flattener.Flattener",
+    run: () => {
+      const model = {
+        [metadatamodel.core.props.GROUP_PATH_KEY]: "$",
+        [metadatamodel.core.FIELDS_KEY]: [
+          {
+            ID: [
+              {
+                [metadatamodel.core.props.GROUP_PATH_KEY]: "$['group:fields'][*].ID[*]",
+                [metadatamodel.core.props.GROUP_NAME]: "ID",
+              },
+            ],
+          },
+        ],
+      };
+      const flattener = new metadatamodel.flattener.Flattener(model);
+      flattener.flatten(manipulation.DynObject.new({ ID: [7] }));
+      return flattener.result();
+    },
+    expected: [[[7]]],
+  },
 ];
 
 test("facade smoke cases (src/index.ts)", () => {
@@ -54,7 +100,7 @@ test("facade smoke cases (src/index.ts)", () => {
   for (const testCase of smokeCases) {
     report.beginCase(newTestTitle(testCase.testTitle));
     const got = testCase.run();
-    if (got !== testCase.expected) {
+    if (!manipulation.areEqual(got, testCase.expected)) {
       report.failCase(`expected ${JSON.stringify(testCase.expected)}, got ${JSON.stringify(got)}`);
     }
   }

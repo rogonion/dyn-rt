@@ -183,6 +183,9 @@ importers:
       '@dyn-rt/manipulation':
         specifier: workspace:*
         version: link:../../../libs/typescript/manipulation
+      '@dyn-rt/metadatamodel':
+        specifier: workspace:*
+        version: link:../../../libs/typescript/metadatamodel
       '@dyn-rt/path':
         specifier: workspace:*
         version: link:../../../libs/typescript/path
