@@ -1,0 +1,34 @@
+{
+  "name": "@dyn-rt/metadatamodel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "dyn-rt metadatamodel (TS): the metadata model as an extensible JSON-like Value tree — field/group props, templated group:path_key paths, strict cardinality, plus the fieldcolumns / database / iter / filter / flattener / unflattener / groupindex subdomains. Port of libs/rust/metadatamodel.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "lint": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@dyn-rt/manipulation": "workspace:*",
+    "@dyn-rt/path": "workspace:*",
+    "@dyn-rt/reflect": "workspace:*",
+    "@dyn-rt/schema": "workspace:*",
+    "@dyn-rt/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@dyn-rt/test-support": "workspace:*",
+    "@types/node": "^25.3.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  }
+}
