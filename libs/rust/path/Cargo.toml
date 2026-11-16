@@ -1,0 +1,13 @@
+[package]
+name = "dyn-rt-path"
+description = "dyn-rt path module: JSONPath AST (domain), parse use cases (application), regex tokenizer (adapters). Usable independently."
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+
+[dependencies]
+# `regex` is imported ONLY in src/adapters.rs (ADR 0002/0007)
+regex = "1"
+
+[dev-dependencies]
+dyn-rt-test-support = { path = "../test-support" }

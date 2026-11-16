@@ -5,10 +5,10 @@
 //! write (a `single` field's cell array is unwrapped; more than one value
 //! errors unless [`SingleCellMode::TakeFirst`]).
 
-use dyn_rt_json_manipulation::application::DynObject;
-use dyn_rt_json_path::{AccessStrategy, PathSegment, PathSelector, RecursiveDescentSegments};
-use dyn_rt_json_schema::Schema;
+use dyn_rt_manipulation::application::DynObject;
+use dyn_rt_path::{AccessStrategy, PathSegment, PathSelector, RecursiveDescentSegments};
 use dyn_rt_reflect::Reflect;
+use dyn_rt_schema::Schema;
 use dyn_rt_shared::Value;
 
 use super::domain::{GroupCollection, GroupIndexNode, GroupIndexTree, Signature, SingleCellMode};

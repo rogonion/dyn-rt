@@ -7,7 +7,7 @@
 //!     "Value": [<query condition>, ...]}`
 //! - `{"Type": "FieldGroup", "Negate": bool, "Value": {"<schema path key>": {"<condition>": {...}}}}`
 
-use dyn_rt_json_manipulation::application::DynObject;
+use dyn_rt_manipulation::application::DynObject;
 use dyn_rt_reflect::{Reflect, ReflectKind};
 use dyn_rt_shared::Value;
 

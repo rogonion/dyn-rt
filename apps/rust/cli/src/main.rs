@@ -1,4 +1,5 @@
-use dyn_rt::json::{Value, path};
+use dyn_rt::json::Value;
+use dyn_rt::path;
 
 fn main() {
     let doc = Value::object([

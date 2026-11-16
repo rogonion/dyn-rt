@@ -6,9 +6,13 @@ nearest one wins for the paths it covers.
 
 ## Project purpose
 
-`dyn-rt` is the dynamic-runtime library: a JSONPath-capable JSON toolkit
-(`json`) plus a metadata-model layer on top (`metadatamodel`). It is a guided
-port of the reference implementations in `../go-json`, `../go-metadatamodel`,
+`dyn-rt` is the dynamic-runtime library: a dynamic layer over a language's
+own data types (built-ins and user structs/classes) — JSONPath-style paths
+(`path`), runtime reflection (`reflect`), schemas (`schema`), and
+get/set/delete manipulation (`manipulation`) — plus a metadata-model layer on
+top (`metadatamodel`). `json` names only the JSON data model (`json::Value`)
+and JSON text (de)serialization (ADR 0010). It is a guided port of the
+reference implementations in `../go-json`, `../go-metadatamodel`,
 `../js-json`, `../js-metadatamodel`. Rust first (`libs/rust`, `packages/rust`),
 then a TypeScript mirror (`libs/typescript`, `packages/typescript`). Each
 ecosystem ships ONE package (`dyn-rt` crate, `@dyn-rt/*` npm) with
@@ -19,7 +23,7 @@ feature/subpath gating so consumers only bundle what they use (ADR 0003).
 ```
 apps/<lang>/<name>/       executables / composition roots — wire adapters into the core here
 libs/<lang>/<module>/     ONE crate per module (ADR 0007): shared, test-support (dev-only),
-                          json-path, json-manipulation, json-schema, reflect, metadatamodel.
+                          path, manipulation, schema, reflect, metadatamodel.
                           Inside each module crate: src/domain, src/application, src/adapters
                           (hexagon; adapters is the only place regex/serde may be imported).
                           metadatamodel has one submodule per subdomain under src/, each with
@@ -47,8 +51,8 @@ misc/                     scratch notes, drawio MCP notes
 
 - Tests are data-driven by default, in EVERY language, with the data written
   in that language as an in-code case table close to the module under test
-  (the module crate's own `tests/` dir — e.g. the json-path parse suite lives
-  in `libs/rust/json-path/tests/`). Tiers (ADR 0004):
+  (the module crate's own `tests/` dir — e.g. the path parse suite lives
+  in `libs/rust/path/tests/`). Tiers (ADR 0004):
   1. In-code case table in the module's own `tests/` dir — the DEFAULT. Each
      suite is one custom loop over a `yield_test_data()`-style table; every
      datum carries the shared `TestMetadata` (at least a `test_title`), and on
@@ -95,7 +99,7 @@ misc/                     scratch notes, drawio MCP notes
 ## Architecture rules (ADR 0002 + ADR 0007)
 
 - Dependencies point inward. Between modules this is compiler-enforced (crate
-  = module, ADR 0007): e.g. `json-manipulation` may depend on `json-path` and
+  = module, ADR 0007): e.g. `manipulation` may depend on `path` and
   `shared`, never the reverse. Inside a module crate, layers are dirs:
   `domain` (std only) <- `application` <- `adapters`/apps. Never invert.
 - `serde` / `serde_json` and `regex` are allowed ONLY in a module's

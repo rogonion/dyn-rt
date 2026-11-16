@@ -10,10 +10,10 @@
 //! - each field's `group:path_key` template is post-processed (core's
 //!   `data_path`) into the actual JSONPath to the field's data.
 
-use dyn_rt_json_manipulation::application::DynObject;
-use dyn_rt_json_path::{AccessStrategy, PathSegment, PathSelector, RecursiveDescentSegments};
-use dyn_rt_json_schema::Schema;
+use dyn_rt_manipulation::application::DynObject;
+use dyn_rt_path::{AccessStrategy, PathSegment, PathSelector, RecursiveDescentSegments};
 use dyn_rt_reflect::{Reflect, ReflectKind};
+use dyn_rt_schema::Schema;
 use dyn_rt_shared::Value;
 
 use super::domain::ColumnFields;

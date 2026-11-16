@@ -3,7 +3,7 @@
 //! / `IsDefaultEqualTrue`): decide whether a value found in the source data
 //! satisfies one filter condition.
 
-use dyn_rt_json_manipulation::application::are_equal;
+use dyn_rt_manipulation::application::are_equal;
 use dyn_rt_reflect::{Reflect, ReflectRef};
 use dyn_rt_shared::Value;
 

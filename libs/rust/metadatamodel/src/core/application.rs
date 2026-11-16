@@ -10,7 +10,7 @@
 //! and resolves the remaining wildcards against the data to get the actual
 //! path to data.
 
-use dyn_rt_json_path::{
+use dyn_rt_path::{
     AccessStrategy, PathSegment, PathSelector, RecursiveDescentSegment, RecursiveDescentSegments,
     RegexPathTokenizer, parse_path,
 };

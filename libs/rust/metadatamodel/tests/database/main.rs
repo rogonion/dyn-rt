@@ -4,17 +4,17 @@
 //! GetColumnFields) and get/set/delete of field values in source data
 //! through those columns (`FieldValue`, port of go's FieldValue).
 
-use dyn_rt_json_manipulation::application::are_equal;
-use dyn_rt_json_schema::{Schema, SchemaNode};
+use dyn_rt_manipulation::application::are_equal;
 use dyn_rt_metadatamodel::core::domain::{FIELDS_KEY, props};
 use dyn_rt_metadatamodel::database::{FieldValue, GetColumnFieldsOptions, get_column_fields};
 use dyn_rt_metadatamodel::fieldcolumns::PropMatch;
 use dyn_rt_reflect::{Reflect, ReflectStruct};
+use dyn_rt_schema::{Schema, SchemaNode};
 use dyn_rt_shared::Value;
 use dyn_rt_test_support::{TestReport, new_test_title};
 
 /// Renders a reflected value for failure messages (Value/scalars; mirrors
-/// json-manipulation's tests/common render).
+/// manipulation's tests/common render).
 fn render(r: &dyn Reflect) -> String {
     if let Some(v) = r.reflect_as_any().downcast_ref::<Value>() {
         return format!("{v:?}");

@@ -14,7 +14,7 @@ exports). See `docs/architecture/ADRs/` for the decisions.
 ```
 apps/       executables (composition roots)
 libs/       one crate per module (ADR 0007): shared, test-support (dev-only),
-            json-path, json-manipulation, json-schema, reflect, metadatamodel —
+            path, manipulation, schema, reflect, metadatamodel —
             each with src/{domain, application, adapters} inside
 packages/   publishable export entrypoints (one per ecosystem, feature/subpath gated)
 docs/       architecture ADRs + descriptions

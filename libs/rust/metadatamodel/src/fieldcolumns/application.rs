@@ -9,8 +9,8 @@
 //! `view:max_values_in_separate_columns` > 0 and no nested groups). A field
 //! with that view prop expands into one column per value index.
 
-use dyn_rt_json_path::{RegexPathTokenizer, parse_path};
-use dyn_rt_json_schema::{Schema, schema_at_path};
+use dyn_rt_path::{RegexPathTokenizer, parse_path};
+use dyn_rt_schema::{Schema, schema_at_path};
 use dyn_rt_shared::Value;
 
 use super::domain::{ColumnField, ColumnFields, FieldColumnPosition};
@@ -41,7 +41,7 @@ impl PropMatch {
     /// Whether every entry is present in `props` and deep-equal.
     pub fn first_match(&self, props: &Value) -> bool {
         self.entries.iter().all(|(key, expected)| {
-            prop(props, key).is_some_and(|got| dyn_rt_json_manipulation::are_equal(got, expected))
+            prop(props, key).is_some_and(|got| dyn_rt_manipulation::are_equal(got, expected))
         })
     }
 
@@ -49,9 +49,7 @@ impl PropMatch {
     pub fn matching_props(&self, props: &Value) -> Value {
         let mut out = Vec::new();
         for (key, expected) in &self.entries {
-            if prop(props, key)
-                .is_some_and(|got| dyn_rt_json_manipulation::are_equal(got, expected))
-            {
+            if prop(props, key).is_some_and(|got| dyn_rt_manipulation::are_equal(got, expected)) {
                 out.push((key.clone(), expected.clone()));
             }
         }

@@ -4,10 +4,10 @@
 //! for column order/skip, and optionally write the table to a destination
 //! 2D collection (`write_to_destination`).
 
-use dyn_rt_json_manipulation::application::DynObject;
-use dyn_rt_json_path::RecursiveDescentSegments;
-use dyn_rt_json_schema::Schema;
+use dyn_rt_manipulation::application::DynObject;
+use dyn_rt_path::RecursiveDescentSegments;
 use dyn_rt_reflect::{Reflect, ReflectRef};
+use dyn_rt_schema::Schema;
 use dyn_rt_shared::Value;
 
 use super::domain::{ConversionNode, FlattenedRow, FlattenedTable};

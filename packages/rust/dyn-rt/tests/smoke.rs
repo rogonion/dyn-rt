@@ -1,9 +1,9 @@
 //! Inline smoke test for the facade re-exports (ADR 0004 tier 3: this is not
 //! data — it just proves the `dyn-rt` crate wiring exposes the module APIs;
 //! the data-driven suites live in each module crate, e.g.
-//! `libs/rust/json-path/tests/`).
+//! `libs/rust/path/tests/`).
 
-use dyn_rt::json::path::{
+use dyn_rt::path::{
     self, json_path_index_selector_segment, json_path_key_selector_segment, json_path_root_segment,
     new_recursive_descent_segment, new_recursive_descent_segments,
 };

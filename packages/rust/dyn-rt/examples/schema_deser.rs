@@ -4,10 +4,8 @@
 //!
 //! Run: cargo run -p dyn-rt --example schema_deser --features deser
 
-use dyn_rt::json::schema::{
-    Schema, SchemaNode, convert, from_json_str, from_toml_str, from_yaml_str,
-};
 use dyn_rt::reflect::{Reflect, ReflectStruct};
+use dyn_rt::schema::{Schema, SchemaNode, convert, from_json_str, from_toml_str, from_yaml_str};
 
 #[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
 #[reflect(new)]

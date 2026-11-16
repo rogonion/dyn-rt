@@ -22,7 +22,7 @@ pub enum MetadatamodelError {
     /// database field-value get/set/delete failed (unknown column name,
     /// unusable path, ...).
     FieldValue { message: String },
-    /// An underlying json-manipulation operation failed.
+    /// An underlying manipulation operation failed.
     Manipulation { message: String },
     /// filter subdomain: query-condition evaluation failed (invalid query
     /// shape, unknown condition type, unsupported filter condition, ...).

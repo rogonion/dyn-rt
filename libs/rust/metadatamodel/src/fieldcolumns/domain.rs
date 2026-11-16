@@ -1,7 +1,7 @@
 //! fieldcolumns domain: the metadata model's fields as columns of a flat
 //! 2D table (port of go-metadatamodel/fieldcolumns core.go).
 
-use dyn_rt_json_schema::Schema;
+use dyn_rt_schema::Schema;
 use dyn_rt_shared::Value;
 
 /// Where a column sits: the field's `group:path_key`, optionally expanded

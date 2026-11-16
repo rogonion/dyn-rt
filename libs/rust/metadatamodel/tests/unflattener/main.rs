@@ -5,12 +5,12 @@
 //! cardinality-aware writes (single-cardinality unwrap, multi-value error /
 //! take-first) and a flatten->unflatten round-trip.
 
-use dyn_rt_json_manipulation::application::are_equal;
-use dyn_rt_json_schema::{Schema, SchemaNode};
+use dyn_rt_manipulation::application::are_equal;
 use dyn_rt_metadatamodel::core::domain::{FIELDS_KEY, props};
 use dyn_rt_metadatamodel::flattener::Flattener;
 use dyn_rt_metadatamodel::unflattener::{SingleCellMode, Unflattener};
 use dyn_rt_reflect::ReflectStruct;
+use dyn_rt_schema::{Schema, SchemaNode};
 use dyn_rt_shared::Value;
 use dyn_rt_test_support::{TestReport, new_test_title};
 

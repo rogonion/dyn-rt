@@ -4,7 +4,7 @@
 //! go-metadatamodel/iter, whose tests use a UserInformation model with a
 //! nested Details group).
 
-use dyn_rt_json_manipulation::application::are_equal;
+use dyn_rt_manipulation::application::are_equal;
 use dyn_rt_metadatamodel::core::domain::{FIELDS_KEY, props};
 use dyn_rt_metadatamodel::iter::{FilterDecision, Visit, filter, for_each, map};
 use dyn_rt_shared::Value;

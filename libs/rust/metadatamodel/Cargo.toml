@@ -10,9 +10,9 @@ license-file.workspace = true
 deser = ["dep:serde_json"]
 
 [dependencies]
-dyn-rt-json-manipulation = { path = "../json-manipulation" }
-dyn-rt-json-path = { path = "../json-path" }
-dyn-rt-json-schema = { path = "../json-schema" }
+dyn-rt-manipulation = { path = "../manipulation" }
+dyn-rt-path = { path = "../path" }
+dyn-rt-schema = { path = "../schema" }
 dyn-rt-reflect = { path = "../reflect" }
 dyn-rt-shared = { path = "../shared" }
 serde_json = { version = "1", optional = true }

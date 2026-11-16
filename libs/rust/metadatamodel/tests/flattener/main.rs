@@ -4,7 +4,7 @@
 //! go-metadatamodel/flattener's flatten_test.go), incl. single-cardinality
 //! fields/groups and WriteToDestination.
 
-use dyn_rt_json_manipulation::application::are_equal;
+use dyn_rt_manipulation::application::are_equal;
 use dyn_rt_metadatamodel::core::domain::{FIELDS_KEY, props};
 use dyn_rt_metadatamodel::flattener::Flattener;
 use dyn_rt_reflect::{Reflect, ReflectStruct};

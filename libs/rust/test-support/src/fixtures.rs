@@ -1,16 +1,16 @@
 //! Shared test fixtures for dyn-rt suites: test types and schema constructors
 //! mirroring go-json's schema/misc_test.go and object/misc_test.go shapes.
 //! Lives here (dev-only, like the harness) so 2+ modules' test suites can
-//! share them — e.g. dyn-rt-json-schema and dyn-rt-json-manipulation (the
-//! json-manipulation suites reuse the same User/Address/... shapes the go
+//! share them — e.g. dyn-rt-schema and dyn-rt-manipulation (the
+//! manipulation suites reuse the same User/Address/... shapes the go
 //! object tests use).
 
 #![allow(dead_code, unused_macros, unused_imports)]
 
 use std::collections::HashMap;
 
-use dyn_rt_json_schema::{Schema, SchemaNode, SchemaSet};
 use dyn_rt_reflect::{Reflect, ReflectEnum, ReflectStruct};
+use dyn_rt_schema::{Schema, SchemaNode, SchemaSet};
 use dyn_rt_shared::Value;
 
 // ---------------------------------------------------------------------------

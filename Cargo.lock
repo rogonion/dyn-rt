@@ -15,11 +15,11 @@ dependencies = [
 name = "dyn-rt"
 version = "0.1.0"
 dependencies = [
- "dyn-rt-json-manipulation",
- "dyn-rt-json-path",
- "dyn-rt-json-schema",
+ "dyn-rt-manipulation",
  "dyn-rt-metadatamodel",
+ "dyn-rt-path",
  "dyn-rt-reflect",
+ "dyn-rt-schema",
  "dyn-rt-shared",
 ]
 
@@ -31,49 +31,35 @@ dependencies = [
 ]
 
 [[package]]
-name = "dyn-rt-json-manipulation"
+name = "dyn-rt-manipulation"
 version = "0.1.0"
 dependencies = [
- "dyn-rt-json-path",
- "dyn-rt-json-schema",
+ "dyn-rt-path",
  "dyn-rt-reflect",
+ "dyn-rt-schema",
  "dyn-rt-shared",
  "dyn-rt-test-support",
-]
-
-[[package]]
-name = "dyn-rt-json-path"
-version = "0.1.0"
-dependencies = [
- "dyn-rt-test-support",
- "regex",
-]
-
-[[package]]
-name = "dyn-rt-json-schema"
-version = "0.1.0"
-dependencies = [
- "dyn-rt-json-path",
- "dyn-rt-json-schema",
- "dyn-rt-reflect",
- "dyn-rt-shared",
- "dyn-rt-test-support",
- "serde_json",
- "serde_yaml",
- "toml",
 ]
 
 [[package]]
 name = "dyn-rt-metadatamodel"
 version = "0.1.0"
 dependencies = [
- "dyn-rt-json-manipulation",
- "dyn-rt-json-path",
- "dyn-rt-json-schema",
+ "dyn-rt-manipulation",
+ "dyn-rt-path",
  "dyn-rt-reflect",
+ "dyn-rt-schema",
  "dyn-rt-shared",
  "dyn-rt-test-support",
  "serde_json",
+]
+
+[[package]]
+name = "dyn-rt-path"
+version = "0.1.0"
+dependencies = [
+ "dyn-rt-test-support",
+ "regex",
 ]
 
 [[package]]
@@ -97,6 +83,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "dyn-rt-schema"
+version = "0.1.0"
+dependencies = [
+ "dyn-rt-path",
+ "dyn-rt-reflect",
+ "dyn-rt-schema",
+ "dyn-rt-shared",
+ "dyn-rt-test-support",
+ "serde_json",
+ "serde_yaml",
+ "toml",
+]
+
+[[package]]
 name = "dyn-rt-shared"
 version = "0.1.0"
 dependencies = [
@@ -107,8 +107,8 @@ dependencies = [
 name = "dyn-rt-test-support"
 version = "0.1.0"
 dependencies = [
- "dyn-rt-json-schema",
  "dyn-rt-reflect",
+ "dyn-rt-schema",
  "dyn-rt-shared",
 ]
 
