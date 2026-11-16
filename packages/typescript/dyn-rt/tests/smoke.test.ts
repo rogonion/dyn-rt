@@ -3,7 +3,7 @@
 
 import { test } from "vitest";
 import { TestReport, newTestTitle } from "@dyn-rt/test-support";
-import { path, schema, shared } from "../src/index.js";
+import { manipulation, path, schema, shared } from "../src/index.js";
 
 interface SmokeCase {
   testTitle?: string;
@@ -41,6 +41,11 @@ const smokeCases: SmokeCase[] = [
     testTitle: "facade re-exports schema.convert",
     run: () => schema.convert("42", schema.scalar("i64")),
     expected: 42,
+  },
+  {
+    testTitle: "facade re-exports manipulation.DynObject",
+    run: () => manipulation.DynObject.owned({ a: [9] }).get("$.a[0]")[0],
+    expected: 9,
   },
 ];
 

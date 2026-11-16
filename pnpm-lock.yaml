@@ -12,6 +12,37 @@ importers:
         specifier: runtime:^24.22.2
         version: runtime:24.22.3
 
+  libs/typescript/manipulation:
+    dependencies:
+      '@dyn-rt/path':
+        specifier: workspace:*
+        version: link:../path
+      '@dyn-rt/reflect':
+        specifier: workspace:*
+        version: link:../reflect
+      '@dyn-rt/schema':
+        specifier: workspace:*
+        version: link:../schema
+      '@dyn-rt/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      '@dyn-rt/test-support':
+        specifier: workspace:*
+        version: link:../test-support
+      '@types/node':
+        specifier: ^25.3.0
+        version: 25.9.9
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^7.3.1
+        version: 7.3.8(@types/node@25.9.9)
+      vitest:
+        specifier: ^4.0.18
+        version: 4.1.12(@types/node@25.9.9)(vite@7.3.8(@types/node@25.9.9))
+
   libs/typescript/path:
     devDependencies:
       '@dyn-rt/test-support':
@@ -115,6 +146,9 @@ importers:
 
   packages/typescript/dyn-rt:
     dependencies:
+      '@dyn-rt/manipulation':
+        specifier: workspace:*
+        version: link:../../../libs/typescript/manipulation
       '@dyn-rt/path':
         specifier: workspace:*
         version: link:../../../libs/typescript/path

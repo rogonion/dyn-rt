@@ -18,6 +18,7 @@
     "lint": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@dyn-rt/manipulation": "workspace:*",
     "@dyn-rt/path": "workspace:*",
     "@dyn-rt/reflect": "workspace:*",
     "@dyn-rt/schema": "workspace:*",
