@@ -3,3 +3,4 @@
 // use. Mirrors packages/rust/dyn-rt.
 
 export * as shared from "@dyn-rt/shared";
+export * as path from "@dyn-rt/path";

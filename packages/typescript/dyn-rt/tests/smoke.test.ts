@@ -3,7 +3,7 @@
 
 import { test } from "vitest";
 import { TestReport, newTestTitle } from "@dyn-rt/test-support";
-import { shared } from "../src/index.js";
+import { path, shared } from "../src/index.js";
 
 interface SmokeCase {
   testTitle?: string;
@@ -26,6 +26,11 @@ const smokeCases: SmokeCase[] = [
     testTitle: "facade re-exports shared.JsonError",
     run: () => shared.JsonError.pathNotFound("$.x").message,
     expected: "path not found: $.x",
+  },
+  {
+    testTitle: "facade re-exports path.parsePath",
+    run: () => path.renderSegments(path.parsePath(new path.RegexPathTokenizer(), "$.a[0]")),
+    expected: "$.a[0]",
   },
 ];
 

@@ -1,0 +1,27 @@
+{
+  "name": "@dyn-rt/path",
+  "version": "0.1.0",
+  "private": true,
+  "description": "dyn-rt path module (ADR 0010): JSONPath AST + parse use cases over any reflected tree. Port of libs/rust/path. Hexagon inside: domain (std only), application, adapters (regex tokenizer).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "lint": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@dyn-rt/test-support": "workspace:*",
+    "@types/node": "^25.3.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  }
+}

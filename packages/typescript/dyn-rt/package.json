@@ -18,6 +18,7 @@
     "lint": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@dyn-rt/path": "workspace:*",
     "@dyn-rt/shared": "workspace:*"
   },
   "devDependencies": {
