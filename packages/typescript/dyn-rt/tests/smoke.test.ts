@@ -44,7 +44,7 @@ const smokeCases: SmokeCase[] = [
   },
   {
     testTitle: "facade re-exports manipulation.DynObject",
-    run: () => manipulation.DynObject.owned({ a: [9] }).get("$.a[0]")[0],
+    run: () => manipulation.DynObject.new({ a: [9] }).get("$.a[0]")[0],
     expected: 9,
   },
 ];

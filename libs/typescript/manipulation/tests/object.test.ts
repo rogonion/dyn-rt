@@ -187,48 +187,34 @@ test("dyn_object_path_input_reps", () => {
 test("dyn_object_source_variants", () => {
   const report = new TestReport(
     "dyn_object_source_variants",
-    "DynObject readOnly / owned / root replacement (src/application/object.ts)",
+    "DynObject source handling / root replacement (src/application/object.ts)",
   );
 
-  report.beginCase(newTestTitle("readOnly source: set throws"));
+  report.beginCase(newTestTitle("get works on the wrapped source"));
   {
-    const obj = DynObject.readOnly(valueSource());
-    let errorMessage = "";
-    try {
-      obj.set("$.name", "X");
-    } catch (err) {
-      errorMessage = err instanceof Error ? err.message : String(err);
-    }
-    if (!errorMessage.includes("read-only")) {
-      report.failCase(`expected a read-only error, got ${JSON.stringify(errorMessage)}`);
-    }
-  }
-
-  report.beginCase(newTestTitle("readOnly source: get still works"));
-  {
-    const obj = DynObject.readOnly(valueSource());
+    const obj = DynObject.new(valueSource());
     const found = obj.get("$.name");
     if (found.length !== 1 || !areEqual(found[0], "Alice")) {
       report.failCase(`expected ["Alice"], got ${found.map(render).join(",")}`);
     }
   }
 
-  report.beginCase(newTestTitle("owned source: set then intoSource returns the modified value"));
+  report.beginCase(newTestTitle("set mutates the wrapped source in place"));
   {
-    const obj = DynObject.owned(valueSource());
+    const source = valueSource();
+    const obj = DynObject.new(source);
     const count = obj.set("$.name", "Carol");
     if (count !== 1) {
       report.failCase(`expected 1 set, got ${count}`);
     }
-    const source = obj.intoSource();
-    if (!areEqual(source, sourceWithName("Carol"))) {
-      report.failCase(`owned source was not modified as expected: ${render(source)}`);
+    if (!areEqual(obj.getSource(), sourceWithName("Carol")) || !areEqual(source, sourceWithName("Carol"))) {
+      report.failCase(`source was not modified as expected: ${render(source)}`);
     }
   }
 
   report.beginCase(newTestTitle("root set replaces a primitive source (only possible via DynObject)"));
   {
-    const obj = DynObject.owned(1);
+    const obj = DynObject.new(1);
     const count = obj.set("$", "root");
     if (count !== 1 || obj.getSource() !== "root") {
       report.failCase(`expected root replaced with "root", got ${render(obj.getSource())}`);
@@ -237,7 +223,7 @@ test("dyn_object_source_variants", () => {
 
   report.beginCase(newTestTitle("root delete resets a primitive source to its zero"));
   {
-    const obj = DynObject.owned(123);
+    const obj = DynObject.new(123);
     const count = obj.delete("$");
     if (count !== 1 || obj.getSource() !== 0) {
       report.failCase(`expected root reset to 0, got ${render(obj.getSource())}`);
