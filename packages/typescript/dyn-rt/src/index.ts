@@ -5,3 +5,4 @@
 export * as shared from "@dyn-rt/shared";
 export * as path from "@dyn-rt/path";
 export * as reflect from "@dyn-rt/reflect";
+export * as schema from "@dyn-rt/schema";

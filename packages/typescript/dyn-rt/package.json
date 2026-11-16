@@ -20,6 +20,7 @@
   "dependencies": {
     "@dyn-rt/path": "workspace:*",
     "@dyn-rt/reflect": "workspace:*",
+    "@dyn-rt/schema": "workspace:*",
     "@dyn-rt/shared": "workspace:*"
   },
   "devDependencies": {

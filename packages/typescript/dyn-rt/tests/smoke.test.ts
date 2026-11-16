@@ -3,7 +3,7 @@
 
 import { test } from "vitest";
 import { TestReport, newTestTitle } from "@dyn-rt/test-support";
-import { path, shared } from "../src/index.js";
+import { path, schema, shared } from "../src/index.js";
 
 interface SmokeCase {
   testTitle?: string;
@@ -31,6 +31,16 @@ const smokeCases: SmokeCase[] = [
     testTitle: "facade re-exports path.parsePath",
     run: () => path.renderSegments(path.parsePath(new path.RegexPathTokenizer(), "$.a[0]")),
     expected: "$.a[0]",
+  },
+  {
+    testTitle: "facade re-exports schema.validate",
+    run: () => schema.validate("hello", schema.scalar("string")).validSetKeys.length,
+    expected: 0,
+  },
+  {
+    testTitle: "facade re-exports schema.convert",
+    run: () => schema.convert("42", schema.scalar("i64")),
+    expected: 42,
   },
 ];
 
