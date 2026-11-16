@@ -4,7 +4,7 @@
 //! for column order/skip, and optionally write the table to a destination
 //! 2D collection (`write_to_destination`).
 
-use dyn_rt_json_manipulation::application::{get, set};
+use dyn_rt_json_manipulation::application::DynObject;
 use dyn_rt_json_path::RecursiveDescentSegments;
 use dyn_rt_json_schema::Schema;
 use dyn_rt_reflect::{Reflect, ReflectRef};
@@ -110,11 +110,12 @@ impl<'a> Flattener<'a> {
                     });
                 };
                 let target = parse_template(&format!("$[{row_index}][{dest_col}]"))?;
-                set(destination, &target, source_col, schema).map_err(|err| {
-                    MetadatamodelError::Manipulation {
+                DynObject::new(destination)
+                    .with_schema_opt(schema)
+                    .set(&target, source_col)
+                    .map_err(|err| MetadatamodelError::Manipulation {
                         message: format!("write failed at row {row_index} col {dest_col}: {err}"),
-                    }
-                })?;
+                    })?;
             }
         }
         Ok(())
@@ -335,10 +336,13 @@ fn recursive_convert(
             // branching per array element happens below on the actual kind
             group_data_path(&child.position.path_key, model, linear_indexes)?
         };
+        let source_obj = DynObject::read_only(source);
         let values =
-            get(source, &child_segments).map_err(|err| MetadatamodelError::Manipulation {
-                message: err.to_string(),
-            })?;
+            source_obj
+                .get(&child_segments)
+                .map_err(|err| MetadatamodelError::Manipulation {
+                    message: err.to_string(),
+                })?;
         let field_data: Option<&dyn Reflect> = values.first().copied();
 
         if !child.children.is_empty() {

@@ -8,12 +8,14 @@ mod are_equal;
 mod delete;
 mod for_each;
 mod get;
+mod object;
 mod set;
 
 pub use are_equal::{CustomEqualFn, are_equal, are_equal_with};
 pub use delete::delete;
 pub use for_each::for_each;
 pub use get::get;
+pub use object::{DynObject, PathInput, Source};
 pub use set::set;
 
 use std::any::TypeId;

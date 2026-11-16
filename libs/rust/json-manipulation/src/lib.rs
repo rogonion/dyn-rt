@@ -5,7 +5,9 @@
 //! - `domain`: the path cursor used while walking a parsed JSONPath
 //! - `application`: the `get` / `set` / `delete` use cases over
 //!   `&dyn Reflect` / `&mut dyn Reflect`, taking a parsed
-//!   [`dyn_rt_json_path::RecursiveDescentSegments`]
+//!   [`dyn_rt_json_path::RecursiveDescentSegments`], plus [`DynObject`] — the
+//!   stateful entrypoint wrapper (borrowed or owned source, optional schema,
+//!   JSONPath accepted as text or parsed segments)
 //! - `adapters`: string-path entry points (parse via json-path's regex
 //!   tokenizer, then delegate to application)
 //!

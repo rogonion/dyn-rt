@@ -5,7 +5,7 @@
 //! write (a `single` field's cell array is unwrapped; more than one value
 //! errors unless [`SingleCellMode::TakeFirst`]).
 
-use dyn_rt_json_manipulation::application::{delete, set};
+use dyn_rt_json_manipulation::application::DynObject;
 use dyn_rt_json_path::{AccessStrategy, PathSegment, PathSelector, RecursiveDescentSegments};
 use dyn_rt_json_schema::Schema;
 use dyn_rt_reflect::Reflect;
@@ -216,13 +216,14 @@ fn recursive_convert(
             .and_then(|group| group.0.last())
             .is_some_and(|segment| matches!(segment.selector, PathSelector::Key(_)));
         if key_terminal {
-            let _ = delete(destination, &target);
+            let _ = DynObject::new(&mut *destination).delete(&target);
         }
-        set(destination, &target, &value_to_write, schema).map_err(|err| {
-            MetadatamodelError::Manipulation {
+        DynObject::new(&mut *destination)
+            .with_schema_opt(schema)
+            .set(&target, &value_to_write)
+            .map_err(|err| MetadatamodelError::Manipulation {
                 message: format!("write field failed: {err}"),
-            }
-        })?;
+            })?;
     }
 
     // 4. recurse into nested groups

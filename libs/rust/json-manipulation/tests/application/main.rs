@@ -8,4 +8,5 @@ mod are_equal;
 mod delete;
 mod for_each;
 mod get;
+mod object;
 mod set;

@@ -7,7 +7,7 @@
 //!     "Value": [<query condition>, ...]}`
 //! - `{"Type": "FieldGroup", "Negate": bool, "Value": {"<schema path key>": {"<condition>": {...}}}}`
 
-use dyn_rt_json_manipulation::application::{for_each, get};
+use dyn_rt_json_manipulation::application::DynObject;
 use dyn_rt_reflect::{Reflect, ReflectKind};
 use dyn_rt_shared::Value;
 
@@ -64,10 +64,13 @@ impl<'a> DataFilter<'a> {
         }
 
         let root_segments = parse_template(&self.root_json_path_to_value)?;
+        let source_obj = DynObject::read_only(self.source);
         let root_values =
-            get(self.source, &root_segments).map_err(|err| MetadatamodelError::Manipulation {
-                message: err.to_string(),
-            })?;
+            source_obj
+                .get(&root_segments)
+                .map_err(|err| MetadatamodelError::Manipulation {
+                    message: err.to_string(),
+                })?;
         let root_value = root_values
             .first()
             .ok_or_else(|| MetadatamodelError::Filter {
@@ -82,11 +85,12 @@ impl<'a> DataFilter<'a> {
         // iterate the root sequence's entries: `<root>[*]`
         let elements_path = format!("{}[*]", self.root_json_path_to_value);
         let elements_segments = parse_template(&elements_path)?;
-        let elements = get(self.source, &elements_segments).map_err(|err| {
-            MetadatamodelError::Manipulation {
-                message: err.to_string(),
-            }
-        })?;
+        let elements =
+            source_obj
+                .get(&elements_segments)
+                .map_err(|err| MetadatamodelError::Manipulation {
+                    message: err.to_string(),
+                })?;
 
         let mut exclude_indexes: Vec<usize> = Vec::new();
         let query_is_empty = query_condition.as_object().is_none_or(|obj| obj.is_empty());
@@ -218,7 +222,7 @@ impl<'a> DataFilter<'a> {
                 message: "query condition is not an object".to_string(),
             })?;
 
-        let result = for_each(current_value, &segments, &mut |value| {
+        let result = DynObject::read_only(current_value).for_each(&segments, &mut |value| {
             // AND over this field's conditions
             for (condition_key, condition_data) in conditions {
                 let Some(processor) = self.processor(condition_key) else {
@@ -282,11 +286,12 @@ impl<'a> DataFilter<'a> {
 impl FilterContext for DataFilter<'_> {
     fn get_field_group_by_path_key(&self, path_key: &str) -> Result<Value, MetadatamodelError> {
         let segments = parse_template(path_key)?;
-        let values = get(self.metadata_model, &segments).map_err(|err| {
-            MetadatamodelError::Manipulation {
+        let model_obj = DynObject::read_only(self.metadata_model);
+        let values = model_obj
+            .get(&segments)
+            .map_err(|err| MetadatamodelError::Manipulation {
                 message: err.to_string(),
-            }
-        })?;
+            })?;
         let first = values.first().ok_or_else(|| MetadatamodelError::Filter {
             message: "get field/group failed".to_string(),
         })?;

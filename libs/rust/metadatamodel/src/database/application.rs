@@ -10,7 +10,7 @@
 //! - each field's `group:path_key` template is post-processed (core's
 //!   `data_path`) into the actual JSONPath to the field's data.
 
-use dyn_rt_json_manipulation::application::{delete, get, set};
+use dyn_rt_json_manipulation::application::DynObject;
 use dyn_rt_json_path::{AccessStrategy, PathSegment, PathSelector, RecursiveDescentSegments};
 use dyn_rt_json_schema::Schema;
 use dyn_rt_reflect::{Reflect, ReflectKind};
@@ -212,8 +212,8 @@ pub fn field_value_path(
 /// `FieldValue`). `source_is_array` should be true when the source root is a
 /// sequence — [`FieldValue::new`] detects it automatically.
 pub struct FieldValue<'a> {
-    /// The source data to manipulate.
-    pub source: &'a mut dyn Reflect,
+    /// The source data to manipulate, wrapped in the DynObject entrypoint.
+    pub obj: DynObject<'a>,
     /// The extracted database columns (from [`get_column_fields`]).
     pub column_fields: &'a ColumnFields,
     /// Whether the source root is a sequence (auto-detected in
@@ -225,7 +225,7 @@ impl<'a> FieldValue<'a> {
     pub fn new(source: &'a mut dyn Reflect, column_fields: &'a ColumnFields) -> Self {
         let source_is_array = matches!(source.reflect_ref().kind(), ReflectKind::Sequence);
         FieldValue {
-            source,
+            obj: DynObject::new(source),
             column_fields,
             source_is_array,
         }
@@ -255,9 +255,11 @@ impl<'a> FieldValue<'a> {
         indices: &[usize],
     ) -> Result<Vec<&'b dyn Reflect>, MetadatamodelError> {
         let segments = self.path_segments(column_name, suffix_path, indices)?;
-        get(&*self.source, &segments).map_err(|err| MetadatamodelError::Manipulation {
-            message: err.to_string(),
-        })
+        self.obj
+            .get(&segments)
+            .map_err(|err| MetadatamodelError::Manipulation {
+                message: err.to_string(),
+            })
     }
 
     /// Sets `value` at column `column_name` (go's `FieldValue.Set`). A schema
@@ -272,9 +274,11 @@ impl<'a> FieldValue<'a> {
         schema: Option<&Schema>,
     ) -> Result<usize, MetadatamodelError> {
         let segments = self.path_segments(column_name, suffix_path, indices)?;
-        set(self.source, &segments, value, schema).map_err(|err| MetadatamodelError::Manipulation {
-            message: err.to_string(),
-        })
+        self.obj
+            .set_with_schema(&segments, value, schema.cloned())
+            .map_err(|err| MetadatamodelError::Manipulation {
+                message: err.to_string(),
+            })
     }
 
     /// Deletes the value(s) of column `column_name` (go's `FieldValue.Delete`).
@@ -286,8 +290,10 @@ impl<'a> FieldValue<'a> {
         indices: &[usize],
     ) -> Result<usize, MetadatamodelError> {
         let segments = self.path_segments(column_name, suffix_path, indices)?;
-        delete(self.source, &segments).map_err(|err| MetadatamodelError::Manipulation {
-            message: err.to_string(),
-        })
+        self.obj
+            .delete(&segments)
+            .map_err(|err| MetadatamodelError::Manipulation {
+                message: err.to_string(),
+            })
     }
 }
