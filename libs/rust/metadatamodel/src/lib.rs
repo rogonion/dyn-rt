@@ -3,7 +3,8 @@
 //! its own domain/application/adapters).
 //!
 //! Subdomains (port order): `core`, `fieldcolumns`, `database`, `filter`,
-//! `iter`, `flattener`, `unflattener`.
+//! `iter`, `flattener`, `unflattener`, plus the reusable `groupindex`
+//! (instance/signature machinery extracted from `unflattener`).
 //!
 //! The metadata model is a JSON-like `shared::Value` tree, not a concrete
 //! struct (extensibility), and field/group property keys are namespaced
@@ -15,6 +16,7 @@ pub mod error;
 pub mod fieldcolumns;
 pub mod filter;
 pub mod flattener;
+pub mod groupindex;
 pub mod iter;
 pub mod unflattener;
 

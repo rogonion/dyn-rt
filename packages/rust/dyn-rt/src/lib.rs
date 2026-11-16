@@ -70,13 +70,14 @@ pub mod json {
 pub mod metadatamodel {
     //! Metadata model on top of the json modules: one submodule per
     //! subdomain (core, fieldcolumns, database, filter, iter, flattener,
-    //! unflattener), each with domain/application/adapters.
+    //! unflattener, groupindex), each with domain/application/adapters.
     pub use dyn_rt_metadatamodel::core;
     pub use dyn_rt_metadatamodel::database;
     pub use dyn_rt_metadatamodel::error::MetadatamodelError;
     pub use dyn_rt_metadatamodel::fieldcolumns;
     pub use dyn_rt_metadatamodel::filter;
     pub use dyn_rt_metadatamodel::flattener;
+    pub use dyn_rt_metadatamodel::groupindex;
     pub use dyn_rt_metadatamodel::iter;
     pub use dyn_rt_metadatamodel::unflattener;
 }
