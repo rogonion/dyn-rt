@@ -1,0 +1,30 @@
+{
+  "name": "@dyn-rt/reflect",
+  "version": "0.1.0",
+  "private": true,
+  "description": "dyn-rt reflect module (ADR 0010): runtime reflection over native JS/TS values — kind routing + sequence/map/struct/scalar accessors, deep clone, zero, apply. Port of libs/rust/reflect; TS needs no trait machinery, shared's kindOf does the routing.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "lint": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@dyn-rt/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@dyn-rt/test-support": "workspace:*",
+    "@types/node": "^25.3.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  }
+}
