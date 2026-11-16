@@ -10,7 +10,7 @@ import { className, kindOf } from "@dyn-rt/shared";
  * - `Scalar` — primitives and null/undefined (leaves)
  * - `Sequence` — arrays
  * - `Map` — plain objects (string keys)
- * - `Struct` — user class instances (fixed-ish field set, prototype kept)
+ * - `Class` — user class instances (fixed-ish field set, prototype kept)
  * - `Unknown` — opaque leaves we do not traverse into (Date, Map, Set,
  *   RegExp, boxed primitives, functions); `Enum`/`Indirection` have no TS
  *   runtime analogue (TS enums are plain objects; there are no
@@ -19,7 +19,7 @@ export type ReflectRef =
   | "Scalar"
   | "Sequence"
   | "Map"
-  | "Struct"
+  | "Class"
   | "Enum"
   | "Indirection"
   | "Unknown";
@@ -40,7 +40,7 @@ export function reflectRef(value: unknown): ReflectRef {
       ) {
         return "Scalar";
       }
-      return "Struct";
+      return "Class";
     case "null":
     case "undefined":
     case "boolean":
@@ -56,7 +56,7 @@ export function reflectRef(value: unknown): ReflectRef {
 }
 
 /** A human-readable type name for error messages (kind, or class name for
- * struct instances). */
+ * class instances). */
 export function reflectTypeName(value: unknown): string {
   const kind = kindOf(value);
   if (kind === "class-instance") {

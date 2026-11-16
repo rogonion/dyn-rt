@@ -3,7 +3,7 @@
 // into the shape a schema dictates. Unlike Rust (which converts into a
 // `&mut dyn Reflect` target in place), the TS `convert` builds and returns the
 // converted value; a `target` is passed only to preserve its prototype on
-// struct shapes.
+// class shapes.
 
 import { test } from "vitest";
 import { TestReport, newTestTitle } from "@dyn-rt/test-support";
@@ -87,21 +87,21 @@ function yieldTestData(): ConversionCase[] {
       expected: { value: "x", validSetKeys: [] },
     },
     {
-      testTitle: "plain object converts into a struct shape field by field, keeping the target's prototype",
+      testTitle: "plain object converts into a class shape field by field, keeping the target's prototype",
       source: userValue(),
       schema: userSchema(),
       target: new User(),
       expected: { value: { ID: 1, Name: "amy", Email: "amy@example.com" }, validSetKeys: [], instanceOf: User },
     },
     {
-      testTitle: "class instance source converts into a struct shape",
+      testTitle: "class instance source converts into a class shape",
       source: sampleUser(),
       schema: userSchema(),
       target: new User(),
       expected: { value: { ID: 1, Name: "amy", Email: "amy@example.com" }, validSetKeys: [], instanceOf: User },
     },
     {
-      testTitle: "nested plain object converts into nested structs (incl. the Option-like field)",
+      testTitle: "nested plain object converts into nested classes (incl. the Option-like field)",
       source: {
         Name: "amy",
         Age: 30,
@@ -120,7 +120,7 @@ function yieldTestData(): ConversionCase[] {
       },
     },
     {
-      testTitle: "array converts into a sequence of structs",
+      testTitle: "array converts into a sequence of classes",
       source: [{ ID: 7, Name: "widget", Price: 9.99 }],
       schema: listOfProductsSchema(),
       expected: { value: [{ ID: 7, Name: "widget", Price: 9.99 }], validSetKeys: [] },
@@ -182,7 +182,7 @@ function yieldTestData(): ConversionCase[] {
       expected: { value: { Radius: 4.5 }, validSetKeys: ["Circle"], instanceOf: Circle },
     },
     {
-      testTitle: "employee converts with nested struct, list and map fields",
+      testTitle: "employee converts with nested class, list and map fields",
       source: {
         ID: 3,
         Profile: { Name: "amy", Age: 30, Address: { Street: "1 Main St", City: "Springfield", ZipCode: "12345" } },

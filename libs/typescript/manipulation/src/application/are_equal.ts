@@ -2,7 +2,7 @@
 // libs/rust/manipulation/src/application/are_equal.rs, itself ported from
 // go-json's object.AreEqual).
 //
-// Sequences, maps (plain objects) and structs (class instances) are compared
+// Sequences, maps (plain objects) and classes (class instances) are compared
 // element/entry/field-wise (maps by key, so entry order does not matter);
 // scalars by kind plus value; enum-shaped values by variant plus payload;
 // Some payloads are unwrapped before comparing (like go unwrapping Ptr at
@@ -70,7 +70,7 @@ export function areEqual(left: unknown, right: unknown, custom?: CustomEqualMap)
         if (l.variant !== r.variant) return false;
         return areEqual(l.payload, r.payload, custom);
       }
-      // structs compare by field name sets + field values (not by class)
+      // classes compare by field name sets + field values (not by constructor)
       const lRec = l as Record<string, unknown>;
       const rRec = r as Record<string, unknown>;
       const lKeys = Object.keys(lRec);

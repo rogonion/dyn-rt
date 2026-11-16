@@ -1,7 +1,8 @@
 // Shared traversal helpers for the get / set / delete use cases (port of
 // libs/rust/manipulation/src/application/mod.rs). TS values are plain
-// references routed by kindOf: maps are plain objects (string keys), structs
-// are class instances, sequences are arrays. The only "indirection" shape is
+// references routed by kindOf: maps are plain objects (string keys), classes
+// are class instances, sequences are arrays. (TS has no structs — a class is
+// the struct analogue.) The only "indirection" shape is
 // the enum value { variant, payload? } produced by the schema module, whose
 // "Some" payload unwraps on traversal (the analogue of Box / Option::Some).
 
@@ -11,7 +12,7 @@ import type {
   RecursiveDescentSegments,
   SliceSelector,
 } from "@dyn-rt/path";
-import { asMap, asSequence, asStruct, mapKeys, structFieldNames } from "@dyn-rt/reflect";
+import { asMap, asSequence, asClass, mapKeys, classFieldNames } from "@dyn-rt/reflect";
 import { isPlainObject, kindOf } from "@dyn-rt/shared";
 import { convert, isSchemaSet, schemaAtPath, type Schema, type SchemaNode } from "@dyn-rt/schema";
 import { ManipulationError } from "../error.js";
@@ -126,7 +127,7 @@ export function sliceIndices(slice: SliceSelector, len: number): number[] {
  * indices: index members (negatives resolved against `len`, out-of-range
  * skipped), slice members expanded via sliceIndices, wildcard members expand
  * to all indices. Key members are not sequence-targeting and are ignored here
- * (the map and struct union arms handle those). */
+ * (the map and class union arms handle those). */
 export function unionMemberIndices(members: PathSegment[], len: number): number[] {
   const indices: number[] = [];
   for (const member of members) {
@@ -145,10 +146,10 @@ export function unionMemberIndices(members: PathSegment[], len: number): number[
   return indices;
 }
 
-/** A struct field addressed by a selector: keys by name; non-negative indices
+/** A class field addressed by a selector: keys by name; non-negative indices
  * by positional field name ("0", "1", ...) — the tuple analogue, where
  * `$[1]` addresses the second positional field. */
-export function structFieldBySelector(
+export function classFieldBySelector(
   structure: object,
   selector: PathSelector,
 ): { present: boolean; value?: unknown } {
@@ -167,15 +168,15 @@ export function structFieldBySelector(
   return { present: false };
 }
 
-/** The child values of a container (map values, sequence elements, struct
+/** The child values of a container (map values, sequence elements, class
  * fields) — used by the wildcard selector. */
 export function children(value: unknown): unknown[] {
   const map = asMap(value);
   if (map !== undefined) return mapKeys(map).map((key) => map[key]);
   const seq = asSequence(value);
   if (seq !== undefined) return [...seq];
-  const struct = asStruct(value);
-  if (struct !== undefined) return structFieldNames(struct).map((name) => struct[name]);
+  const inst = asClass(value);
+  if (inst !== undefined) return classFieldNames(inst).map((name) => inst[name]);
   throw ManipulationError.pathSegmentInvalid(
     `wildcard selector unsupported for kind ${kindLabel(value)}`,
   );
@@ -190,7 +191,7 @@ export function kindLabel(value: unknown): string {
     case "plain-object":
       return "map";
     case "class-instance":
-      return "struct";
+      return "class";
     case "date":
       return "date";
     case "null":
@@ -282,7 +283,7 @@ export function defaultForNode(node: Schema | undefined): unknown {
   const single = schemaAsNode(node);
   if (single.default !== undefined) return single.default();
   switch (single.shape.kind) {
-    case "Struct":
+    case "Class":
     case "Map":
       return {};
     case "Sequence":

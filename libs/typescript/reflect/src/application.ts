@@ -80,23 +80,23 @@ export function mapLength(map: Record<string, unknown>): number {
 }
 
 // ---------------------------------------------------------------------------
-// struct accessors (class instances; own enumerable string keys are fields)
+// class accessors (class instances; own enumerable string keys are fields)
 // ---------------------------------------------------------------------------
 
-export function asStruct(value: unknown): Record<string, unknown> | undefined {
-  if (reflectRef(value) !== "Struct") return undefined;
+export function asClass(value: unknown): Record<string, unknown> | undefined {
+  if (reflectRef(value) !== "Class") return undefined;
   return value as Record<string, unknown>;
 }
 
-export function structFieldNames(value: object): string[] {
+export function classFieldNames(value: object): string[] {
   return Object.keys(value);
 }
 
-export function structGet(obj: object, name: string): unknown {
+export function classGet(obj: object, name: string): unknown {
   return (obj as Record<string, unknown>)[name];
 }
 
-export function structSet(obj: object, name: string, value: unknown): void {
+export function classSet(obj: object, name: string, value: unknown): void {
   (obj as Record<string, unknown>)[name] = value;
 }
 
@@ -145,7 +145,7 @@ export function reflectClone<T>(value: T): T {
 
 /** A zero value for the given value's shape (port of `reflect_zero`):
  * `0`/`0n`/`false`/`""` for scalars, `[]` for sequences, `{}` for maps, a
- * same-prototype instance with zeroed fields for structs, `null` for
+ * same-prototype instance with zeroed fields for classes, `null` for
  * null/undefined, `undefined` for opaque values. */
 export function reflectZero(value: unknown): unknown {
   switch (reflectRef(value)) {
@@ -160,7 +160,7 @@ export function reflectZero(value: unknown): unknown {
       return [];
     case "Map":
       return {};
-    case "Struct": {
+    case "Class": {
       const zero: Record<string, unknown> = Object.create(Object.getPrototypeOf(value));
       for (const key of Object.keys(value as object)) {
         zero[key] = reflectZero((value as Record<string, unknown>)[key]);
@@ -172,7 +172,7 @@ export function reflectZero(value: unknown): unknown {
   }
 }
 
-/** Deep-assign `source` into `target` (port of `reflect_apply` for map/struct
+/** Deep-assign `source` into `target` (port of `reflect_apply` for map/class
  * targets): keys absent from `source` are removed, present keys are replaced
  * with deep clones. The target keeps its prototype. */
 export function reflectApply(target: object, source: unknown): void {

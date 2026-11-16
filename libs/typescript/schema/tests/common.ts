@@ -14,7 +14,7 @@ import {
   scalar,
   schemaSet,
   sequenceNode,
-  structNode,
+  classNode,
   type Schema,
   type SchemaNode,
 } from "../src/index.js";
@@ -127,7 +127,7 @@ export const anyNode = (): SchemaNode => any();
 export const jsonStringNode = (): SchemaNode => jsonScalar("string");
 
 export function userSchema(): SchemaNode {
-  return structNode("User", [
+  return classNode("User", [
     ["ID", intNode()],
     ["Name", stringNode()],
     ["Email", stringNode()],
@@ -135,7 +135,7 @@ export function userSchema(): SchemaNode {
 }
 
 export function productSchema(): SchemaNode {
-  return structNode("Product", [
+  return classNode("Product", [
     ["ID", intNode()],
     ["Name", stringNode()],
     ["Price", floatNode()],
@@ -147,7 +147,7 @@ export function listOfProductsSchema(): SchemaNode {
 }
 
 export function addressSchema(): SchemaNode {
-  return structNode("Address", [
+  return classNode("Address", [
     ["Street", stringNode()],
     ["City", stringNode()],
     // go: ZipCode *string -> TS: string | null, modeled as a nilable enum of
@@ -157,7 +157,7 @@ export function addressSchema(): SchemaNode {
 }
 
 export function userProfileSchema(): SchemaNode {
-  return structNode("UserProfile", [
+  return classNode("UserProfile", [
     ["Name", stringNode()],
     ["Age", intNode()],
     ["Address", addressSchema()],
@@ -165,7 +165,7 @@ export function userProfileSchema(): SchemaNode {
 }
 
 export function employeeSchema(): SchemaNode {
-  return structNode("Employee", [
+  return classNode("Employee", [
     ["ID", intNode()],
     ["Profile", userProfileSchema()],
     ["Skills", sequenceNode(stringNode())],
@@ -174,7 +174,7 @@ export function employeeSchema(): SchemaNode {
 }
 
 export function companySchema(): SchemaNode {
-  return structNode("Company", [
+  return classNode("Company", [
     ["Name", stringNode()],
     // the indirection mirrors go's []*User (pointer inside a sequence); in TS
     // values are already references, so it converts straight through
@@ -183,7 +183,7 @@ export function companySchema(): SchemaNode {
 }
 
 export function nestedItemSchema(): SchemaNode {
-  return structNode("NestedItem", [
+  return classNode("NestedItem", [
     ["ID", intNode()],
     ["MapData", mapNode(jsonStringNode(), anyNode())],
     ["ListData", sequenceNode(anyNode())],
@@ -200,11 +200,11 @@ export function jsonMapSchema(): SchemaNode {
 }
 
 export function circleSchema(): SchemaNode {
-  return structNode("Circle", [["Radius", floatNode()]]);
+  return classNode("Circle", [["Radius", floatNode()]]);
 }
 
 export function squareSchema(): SchemaNode {
-  return structNode("Square", [["Side", floatNode()]]);
+  return classNode("Square", [["Side", floatNode()]]);
 }
 
 /** go's ShapeSchema: a set of Circle/Square (default key "default" is
@@ -227,7 +227,7 @@ export function mapUserSchema(): SchemaNode {
 }
 
 export function userWithAddressSchema(): SchemaNode {
-  return structNode("UserWithAddress", [
+  return classNode("UserWithAddress", [
     ["Name", stringNode()],
     ["Address", indirectionNode(addressSchema())],
   ]);

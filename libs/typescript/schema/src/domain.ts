@@ -87,7 +87,7 @@ export interface SchemaNode {
 export type SchemaShape =
   | { kind: "Scalar" }
   | { kind: "Any" }
-  | { kind: "Struct"; fields: [string, Schema][] }
+  | { kind: "Class"; fields: [string, Schema][] }
   | { kind: "Map"; entries: [string, Schema][]; key?: Schema; value?: Schema }
   | { kind: "Sequence"; elements?: Schema; items: [number, Schema][] }
   | { kind: "Indirection"; inner: Schema }
@@ -118,8 +118,8 @@ export function any(): SchemaNode {
   return base("any", { kind: "Any" });
 }
 
-export function structNode(typeName: string, fields: [string, Schema][]): SchemaNode {
-  return base(typeName, { kind: "Struct", fields });
+export function classNode(typeName: string, fields: [string, Schema][]): SchemaNode {
+  return base(typeName, { kind: "Class", fields });
 }
 
 export function mapNode(key: Schema, value: Schema): SchemaNode {

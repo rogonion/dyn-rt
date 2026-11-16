@@ -13,7 +13,7 @@
 // the source in a field and can reassign it).
 
 import type { PathSegment, RecursiveDescentSegments } from "@dyn-rt/path";
-import { asMap, asSequence, asStruct, mapContainsKey, mapKeys, mapSet, seqPush, seqSet, structFieldNames } from "@dyn-rt/reflect";
+import { asMap, asSequence, asClass, mapContainsKey, mapKeys, mapSet, seqPush, seqSet, classFieldNames } from "@dyn-rt/reflect";
 import type { Schema } from "@dyn-rt/schema";
 import { ManipulationError } from "../error.js";
 import { PathCursor } from "../domain.js";
@@ -26,7 +26,7 @@ import {
   schemaNodeAt,
   selectorLabel,
   sliceIndices,
-  structFieldBySelector,
+  classFieldBySelector,
   unionMemberIndices,
   unwrapAll,
   isEnumValue,
@@ -82,7 +82,7 @@ function applyRootInPlace(source: unknown, converted: unknown): void {
 }
 
 // count is threaded through a small callback so the explicit parameter flow
-// stays readable without a mutable counter struct
+// stays readable without a mutable counter class
 type Count = () => void;
 
 /** Linear traversal (no `..`); sets at the current segment. */
@@ -200,22 +200,22 @@ function linearSet(
     }
   }
 
-  const struct = asStruct(current);
-  if (struct !== undefined) {
+  const inst = asClass(current);
+  if (inst !== undefined) {
     switch (segment.selector.kind) {
       case "Root":
         advanceSet(current, segments, cursor, valueToSet, schema, path, count);
         return;
       case "Key":
       case "Index": {
-        const field = structFieldBySelector(struct, segment.selector);
+        const field = classFieldBySelector(inst, segment.selector);
         if (!field.present) {
-          throw ManipulationError.valueAtPathSegmentInvalid(`struct field ${label} not found`);
+          throw ManipulationError.valueAtPathSegmentInvalid(`class field ${label} not found`);
         }
         const name = segment.selector.kind === "Key" ? segment.selector.key : String(segment.selector.index);
         const fieldPath = [...path, segment];
         if (terminal) {
-          struct[name] = convertAtPath(valueToSet, fieldPath, schema);
+          inst[name] = convertAtPath(valueToSet, fieldPath, schema);
           count();
         } else {
           path.push(segment);
@@ -225,14 +225,14 @@ function linearSet(
         return;
       }
       case "Wildcard": {
-        for (const name of structFieldNames(struct)) {
+        for (const name of classFieldNames(inst)) {
           const fieldPath = [...path, segment];
           if (terminal) {
-            struct[name] = convertAtPath(valueToSet, fieldPath, schema);
+            inst[name] = convertAtPath(valueToSet, fieldPath, schema);
             count();
           } else {
             path.push(segment);
-            linearSet(struct[name], segments, cursor.nextInGroup(), valueToSet, schema, path, count);
+            linearSet(inst[name], segments, cursor.nextInGroup(), valueToSet, schema, path, count);
             path.pop();
           }
         }
@@ -241,12 +241,12 @@ function linearSet(
       case "Union": {
         for (const member of segment.selector.members) {
           if (member.selector.kind !== "Key" && member.selector.kind !== "Index") continue;
-          const field = structFieldBySelector(struct, member.selector);
+          const field = classFieldBySelector(inst, member.selector);
           if (!field.present) continue;
           const name = member.selector.kind === "Key" ? member.selector.key : String(member.selector.index);
           const fieldPath = [...path, segment];
           if (terminal) {
-            struct[name] = convertAtPath(valueToSet, fieldPath, schema);
+            inst[name] = convertAtPath(valueToSet, fieldPath, schema);
             count();
           } else {
             path.push(segment);
@@ -257,7 +257,7 @@ function linearSet(
         return;
       }
       default:
-        throw ManipulationError.pathSegmentInvalid(`segment ${label} unsupported for kind struct`);
+        throw ManipulationError.pathSegmentInvalid(`segment ${label} unsupported for kind class`);
     }
   }
 
@@ -395,14 +395,14 @@ function descentSet(
     return;
   }
 
-  const struct = asStruct(current);
-  if (struct !== undefined) {
-    for (const name of structFieldNames(struct)) {
-      const field = struct[name];
+  const inst = asClass(current);
+  if (inst !== undefined) {
+    for (const name of classFieldNames(inst)) {
+      const field = inst[name];
       if (name === key) {
         path.push(segment);
         if (cursor.isTerminal(segments)) {
-          struct[name] = convertAtPath(valueToSet, path, schema);
+          inst[name] = convertAtPath(valueToSet, path, schema);
           count();
         } else if (cursor.isGroupEnd(segments)) {
           descentSet(field, segments, cursor.nextGroup(), valueToSet, schema, path, count);

@@ -5,13 +5,13 @@
 // is still `.delete(...)`, which is legal).
 //
 // Deletion is parent-side: a map key is removed, a sequence element spliced
-// out (descending indices so they stay valid), a struct field reset to its
+// out (descending indices so they stay valid), a class field reset to its
 // zero value. Returns how many values were deleted. A root-only path resets a
 // container source in place; a primitive root can only be reset through
 // DynObject (which reassigns its held source).
 
 import type { RecursiveDescentSegments } from "@dyn-rt/path";
-import { asMap, asSequence, asStruct, mapContainsKey, mapDelete, mapKeys, seqDeleteIndex, structFieldNames } from "@dyn-rt/reflect";
+import { asMap, asSequence, asClass, mapContainsKey, mapDelete, mapKeys, seqDeleteIndex, classFieldNames } from "@dyn-rt/reflect";
 import { reflectZero } from "@dyn-rt/reflect";
 import { ManipulationError } from "../error.js";
 import { PathCursor } from "../domain.js";
@@ -22,7 +22,7 @@ import {
   resolveIndex,
   selectorLabel,
   sliceIndices,
-  structFieldBySelector,
+  classFieldBySelector,
   unionMemberIndices,
   unwrapAll,
 } from "./helpers.js";
@@ -58,10 +58,10 @@ function resetRootInPlace(source: unknown): void {
     for (const key of Object.keys(map)) delete map[key];
     return;
   }
-  const struct = asStruct(source);
-  if (struct !== undefined) {
-    for (const name of structFieldNames(struct)) {
-      struct[name] = reflectZero(struct[name]);
+  const inst = asClass(source);
+  if (inst !== undefined) {
+    for (const name of classFieldNames(inst)) {
+      inst[name] = reflectZero(inst[name]);
     }
     return;
   }
@@ -171,19 +171,19 @@ function linearDelete(
     }
   }
 
-  const struct = asStruct(current);
-  if (struct !== undefined) {
+  const inst = asClass(current);
+  if (inst !== undefined) {
     switch (segment.selector.kind) {
       case "Root":
         advanceDelete(current, segments, cursor, count);
         return;
       case "Key":
       case "Index": {
-        const field = structFieldBySelector(struct, segment.selector);
+        const field = classFieldBySelector(inst, segment.selector);
         if (!field.present) return; // missing field: no-op
         const name = segment.selector.kind === "Key" ? segment.selector.key : String(segment.selector.index);
         if (terminal) {
-          struct[name] = reflectZero(field.value);
+          inst[name] = reflectZero(field.value);
           count();
         } else {
           linearDelete(field.value, segments, cursor.nextInGroup(), count);
@@ -191,12 +191,12 @@ function linearDelete(
         return;
       }
       case "Wildcard": {
-        for (const name of structFieldNames(struct)) {
+        for (const name of classFieldNames(inst)) {
           if (terminal) {
-            struct[name] = reflectZero(struct[name]);
+            inst[name] = reflectZero(inst[name]);
             count();
           } else {
-            linearDelete(struct[name], segments, cursor.nextInGroup(), count);
+            linearDelete(inst[name], segments, cursor.nextInGroup(), count);
           }
         }
         return;
@@ -204,11 +204,11 @@ function linearDelete(
       case "Union": {
         for (const member of segment.selector.members) {
           if (member.selector.kind !== "Key" && member.selector.kind !== "Index") continue;
-          const field = structFieldBySelector(struct, member.selector);
+          const field = classFieldBySelector(inst, member.selector);
           if (!field.present) continue;
           const name = member.selector.kind === "Key" ? member.selector.key : String(member.selector.index);
           if (terminal) {
-            struct[name] = reflectZero(field.value);
+            inst[name] = reflectZero(field.value);
             count();
           } else {
             linearDelete(field.value, segments, cursor.nextInGroup(), count);
@@ -217,7 +217,7 @@ function linearDelete(
         return;
       }
       default:
-        throw ManipulationError.pathSegmentInvalid(`segment ${label} unsupported for kind struct`);
+        throw ManipulationError.pathSegmentInvalid(`segment ${label} unsupported for kind class`);
     }
   }
 
@@ -322,12 +322,12 @@ function descentDelete(
     return;
   }
 
-  const struct = asStruct(current);
-  if (struct !== undefined) {
-    for (const name of structFieldNames(struct)) {
-      const field = struct[name];
+  const inst = asClass(current);
+  if (inst !== undefined) {
+    for (const name of classFieldNames(inst)) {
+      const field = inst[name];
       if (name === key && cursor.isTerminal(segments)) {
-        struct[name] = reflectZero(field);
+        inst[name] = reflectZero(field);
         count();
         continue;
       }

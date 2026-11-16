@@ -12,7 +12,7 @@ import {
 } from "../domain.js";
 import { SchemaError } from "../error.js";
 
-/** Options for validation (port of go's `Validation` struct). */
+/** Options for validation (port of go's `Validation` class). */
 export interface ValidationOptions {
   /** Stop at the first matching node of a set (go's default: true). */
   validateOnFirstMatch?: boolean;
@@ -120,9 +120,9 @@ function validateNodeWith(
       }
       return;
     }
-    case "Struct": {
+    case "Class": {
       if (kindOf(data) !== "plain-object" && kindOf(data) !== "class-instance") {
-        throw fail(path, `expected struct, found ${kindOf(data)}`);
+        throw fail(path, `expected class, found ${kindOf(data)}`);
       }
       const record = data as Record<string, unknown>;
       for (const [fieldName, fieldSchema] of node.shape.fields) {
@@ -139,7 +139,7 @@ function validateNodeWith(
       return;
     }
     case "Map": {
-      // maps are plain objects; a class instance is a struct, not a map
+      // maps are plain objects; a class instance is a class, not a map
       if (kindOf(data) !== "plain-object") {
         throw fail(path, `expected map, found ${kindOf(data)}`);
       }

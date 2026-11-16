@@ -56,20 +56,20 @@ interface ValidationCase {
 function yieldTestData(): ValidationCase[] {
   // strict user schema: childrenMustBeValid plus an extra Nickname field
   const base = userSchema();
-  if (base.shape.kind !== "Struct") throw new Error("userSchema must be a struct");
+  if (base.shape.kind !== "Class") throw new Error("userSchema must be a class node");
   const strictUserSchema: SchemaNode = {
     ...base,
     childrenMustBeValid: true,
-    shape: { kind: "Struct", fields: [...base.shape.fields, ["Nickname", scalar("string")]] },
+    shape: { kind: "Class", fields: [...base.shape.fields, ["Nickname", scalar("string")]] },
   };
 
   // address schema with the ZipCode node made non-nilable
   const address = addressSchema();
-  if (address.shape.kind !== "Struct") throw new Error("addressSchema must be a struct");
+  if (address.shape.kind !== "Class") throw new Error("addressSchema must be a class node");
   const nonNilableAddressSchema: SchemaNode = {
     ...address,
     shape: {
-      kind: "Struct",
+      kind: "Class",
       fields: address.shape.fields.map(([name, schema]): [string, Schema] => {
         if (name === "ZipCode" && "shape" in schema) {
           return [name, { ...schema, nilable: false }];
@@ -93,7 +93,7 @@ function yieldTestData(): ValidationCase[] {
       expected: { error: "expected string, found number" },
     },
     {
-      testTitle: "validate class instance against its struct schema",
+      testTitle: "validate class instance against its class schema",
       data: sampleUser(),
       schema: userSchema(),
       expected: { ok: [] },
@@ -137,7 +137,7 @@ function yieldTestData(): ValidationCase[] {
       expected: { error: "expected string, found number" },
     },
     {
-      testTitle: "validate employee (nested struct, string list, string->int map)",
+      testTitle: "validate employee (nested class, string list, string->int map)",
       data: sampleEmployee(),
       schema: employeeSchema(),
       expected: { ok: [] },
@@ -202,10 +202,10 @@ function yieldTestData(): ValidationCase[] {
       testTitle: "scalar is not valid against the shape set",
       data: 42,
       schema: shapeSchema(),
-      expected: { error: "expected struct, found number" },
+      expected: { error: "expected class, found number" },
     },
     {
-      testTitle: "struct (class instance) data is invalid against a map schema (kind mismatch)",
+      testTitle: "class-instance data is invalid against a map schema (kind mismatch)",
       data: sampleUser(),
       schema: mapUserSchema(),
       expected: { error: "expected map, found class-instance" },

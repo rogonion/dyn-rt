@@ -29,7 +29,7 @@ function yieldTestData(): GetCase[] {
       expectedValues: ["placeholder"],
     },
     {
-      // nested struct field (go's anonymous struct case)
+      // nested class field (go's anonymous struct case)
       testTitle: "class-instance field path (go case 1 equivalent)",
       root: new UserProfile({
         Name: "amy",
@@ -51,7 +51,7 @@ function yieldTestData(): GetCase[] {
       expectedValues: ["Alice", "Bob", "Item 1", "Item 2"],
     },
     {
-      // go case 3: union on a struct
+      // go case 3: union on a class
       testTitle: "union operator over class-instance fields (go case 3)",
       root: new ComplexData({ User: new User({ ID: 10, Name: "Charlie", Email: "charlie@example.com" }) }),
       path: "$.User['ID', 'Name']",

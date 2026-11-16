@@ -133,13 +133,13 @@ function resolveWithCollectionKey(
       ? schemaAsNode(shape.elements, validSetKeys)
       : resolveAt(index + 1, segments, shape.elements, validSetKeys);
   }
-  if (shape.kind === "Struct") {
+  if (shape.kind === "Class") {
     if (shape.fields.length === 0) {
       throw SchemaError.schemaPathError("schema child nodes empty");
     }
     const field = shape.fields.find(([name]) => name === collectionKey);
     if (field === undefined) {
-      throw SchemaError.schemaPathError(`schema for struct field '${collectionKey}' not found`);
+      throw SchemaError.schemaPathError(`schema for class field '${collectionKey}' not found`);
     }
     return index === last
       ? schemaAsNode(field[1], validSetKeys)

@@ -69,7 +69,7 @@ function yieldTestData(): AreEqualCase[] {
       expected: false,
     },
     {
-      testTitle: "struct comparison is by fields, not by class",
+      testTitle: "class instance vs plain object with same fields are different kinds",
       left: new Address({ Street: "s", City: "c", ZipCode: null }),
       right: { Street: "s", City: "c", ZipCode: null },
       expected: false, // class-instance vs plain-object are different kinds

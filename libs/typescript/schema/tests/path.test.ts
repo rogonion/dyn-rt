@@ -30,22 +30,22 @@ function yieldTestData(): PathCase[] {
       testTitle: "root resolves to the schema root node",
       path: "$",
       schema: userSchema(),
-      expected: { kind: "Struct", typeName: "User", validSetKeys: [] },
+      expected: { kind: "Class", typeName: "User", validSetKeys: [] },
     },
     {
-      testTitle: "struct field resolves to its scalar node",
+      testTitle: "class field resolves to its scalar node",
       path: "$.Name",
       schema: userSchema(),
       expected: { kind: "Scalar", typeName: "string", validSetKeys: [] },
     },
     {
-      testTitle: "nested struct field path",
+      testTitle: "nested class field path",
       path: "$.Address.Street",
       schema: userProfileSchema(),
       expected: { kind: "Scalar", typeName: "string", validSetKeys: [] },
     },
     {
-      testTitle: "sequence index through an indirection into a struct field",
+      testTitle: "sequence index through an indirection into a class field",
       path: "$.Employees[0].Name",
       schema: companySchema(),
       expected: { kind: "Scalar", typeName: "string", validSetKeys: [] },
@@ -66,7 +66,7 @@ function yieldTestData(): PathCase[] {
       testTitle: "sequence index resolves to the element schema",
       path: "$[0]",
       schema: listOfProductsSchema(),
-      expected: { kind: "Struct", typeName: "Product", validSetKeys: [] },
+      expected: { kind: "Class", typeName: "Product", validSetKeys: [] },
     },
     {
       // the set's default key "default" is absent from the nodes, so the
@@ -74,10 +74,10 @@ function yieldTestData(): PathCase[] {
       testTitle: "set-valued element resolves to its default/first node and records the key",
       path: "$[0]",
       schema: listOfShapesSchema(),
-      expected: { kind: "Struct", typeName: "Circle", validSetKeys: ["Circle"] },
+      expected: { kind: "Class", typeName: "Circle", validSetKeys: ["Circle"] },
     },
     {
-      testTitle: "unknown struct field errors",
+      testTitle: "unknown class field errors",
       path: "$.Unknown",
       schema: userSchema(),
       expected: { error: "not found" },

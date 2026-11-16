@@ -8,7 +8,7 @@
 // nothing.
 
 import type { PathSegment, RecursiveDescentSegments } from "@dyn-rt/path";
-import { asMap, asSequence, asStruct, mapContainsKey, mapKeys, structFieldNames } from "@dyn-rt/reflect";
+import { asMap, asSequence, asClass, mapContainsKey, mapKeys, classFieldNames } from "@dyn-rt/reflect";
 import { ManipulationError } from "../error.js";
 import { PathCursor } from "../domain.js";
 import {
@@ -18,7 +18,7 @@ import {
   resolveIndex,
   selectorLabel,
   sliceIndices,
-  structFieldBySelector,
+  classFieldBySelector,
   unionMemberIndices,
   unwrapAll,
 } from "./helpers.js";
@@ -64,10 +64,10 @@ function linearGet(value: unknown, segments: RecursiveDescentSegments, cursor: P
         if (!mapContainsKey(map, key)) return [];
         return advanceGet(map[key], segments, cursor);
       }
-      const struct = asStruct(current);
-      if (struct !== undefined) {
-        if (!Object.prototype.hasOwnProperty.call(struct, key)) return [];
-        return advanceGet(struct[key], segments, cursor);
+      const inst = asClass(current);
+      if (inst !== undefined) {
+        if (!Object.prototype.hasOwnProperty.call(inst, key)) return [];
+        return advanceGet(inst[key], segments, cursor);
       }
       throw ManipulationError.pathSegmentInvalid(
         `key segment ${label} unsupported for kind ${kindLabel(current)}`,
@@ -79,10 +79,10 @@ function linearGet(value: unknown, segments: RecursiveDescentSegments, cursor: P
         const idx = resolveIndex(segment.selector.index, seq.length);
         return advanceGet(seq[idx], segments, cursor);
       }
-      // struct positional field (the tuple analogue: $[1] == field "1")
-      const struct = asStruct(current);
-      if (struct !== undefined) {
-        const field = structFieldBySelector(struct, segment.selector);
+      // class positional field (the tuple analogue: $[1] == field "1")
+      const inst = asClass(current);
+      if (inst !== undefined) {
+        const field = classFieldBySelector(inst, segment.selector);
         if (!field.present) return [];
         return advanceGet(field.value, segments, cursor);
       }
@@ -131,7 +131,7 @@ function selectorGet(selected: unknown[], segments: RecursiveDescentSegments, cu
   return results;
 }
 
-/** Selects union members: keys against maps/structs, indices against sequences. */
+/** Selects union members: keys against maps/classes, indices against sequences. */
 function unionSelect(value: unknown, members: PathSegment[]): unknown[] {
   const current = unwrapAll(value);
   const map = asMap(current);
@@ -154,15 +154,15 @@ function unionSelect(value: unknown, members: PathSegment[]): unknown[] {
     // concrete indices
     return unionMemberIndices(members, seq.length).map((idx) => seq[idx]);
   }
-  const struct = asStruct(current);
-  if (struct !== undefined) {
+  const inst = asClass(current);
+  if (inst !== undefined) {
     const selected: unknown[] = [];
     for (const member of members) {
       if (member.selector.kind === "Key" || member.selector.kind === "Index") {
-        const field = structFieldBySelector(struct, member.selector);
+        const field = classFieldBySelector(inst, member.selector);
         if (field.present) selected.push(field.value);
       } else if (member.selector.kind === "Wildcard") {
-        for (const name of structFieldNames(struct)) selected.push(struct[name]);
+        for (const name of classFieldNames(inst)) selected.push(inst[name]);
       }
     }
     return selected;
@@ -221,10 +221,10 @@ function descentGet(value: unknown, segments: RecursiveDescentSegments, cursor: 
     }
     return results;
   }
-  const struct = asStruct(current);
-  if (struct !== undefined) {
-    for (const name of structFieldNames(struct)) {
-      const field = struct[name];
+  const inst = asClass(current);
+  if (inst !== undefined) {
+    for (const name of classFieldNames(inst)) {
+      const field = inst[name];
       if (name === key) {
         try {
           results.push(...advanceGet(field, segments, cursor));

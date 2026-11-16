@@ -4,7 +4,7 @@
 // map[string]any / Value objects, arrays for slices/tuples. Capitalized field
 // names keep parity with the go fixtures.
 
-import { mapNode, nilable, scalar, structNode, type SchemaNode } from "@dyn-rt/schema";
+import { mapNode, nilable, scalar, classNode, type SchemaNode } from "@dyn-rt/schema";
 
 const stringNode = (): SchemaNode => scalar("string");
 
@@ -70,12 +70,12 @@ export class UserWithAddress {
 // ---------------------------------------------------------------------------
 
 export function userProfileSchema(): SchemaNode {
-  return structNode("UserProfile", [
+  return classNode("UserProfile", [
     ["Name", stringNode()],
     ["Age", scalar("i64")],
     [
       "Address",
-      structNode("Address", [
+      classNode("Address", [
         ["Street", stringNode()],
         ["City", stringNode()],
         // go's ZipCode *string -> TS string | null, modeled as a nilable scalar

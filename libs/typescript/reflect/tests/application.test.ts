@@ -1,4 +1,4 @@
-// Application-layer suite for reflect (ADR 0004/0009): sequence/map/struct/
+// Application-layer suite for reflect (ADR 0004/0009): sequence/map/class/
 // scalar accessors plus reflectClone / reflectZero / reflectApply
 // (src/application.ts).
 
@@ -7,7 +7,7 @@ import { TestReport, newTestTitle } from "@dyn-rt/test-support";
 import {
   asMap,
   asSequence,
-  asStruct,
+  asClass,
   mapContainsKey,
   mapDelete,
   mapGet,
@@ -26,9 +26,9 @@ import {
   seqLength,
   seqPush,
   seqSet,
-  structFieldNames,
-  structGet,
-  structSet,
+  classFieldNames,
+  classGet,
+  classSet,
 } from "../src/index.js";
 
 class Address {
@@ -85,18 +85,18 @@ const accessorCases: AccessorCase[] = [
     expected: [1, false, ["a", "b"], 2, true, false, { b: 2 }],
   },
   {
-    testTitle: "struct accessors over a class instance",
+    testTitle: "class accessors over a class instance",
     run: () => {
       const user = new User(1, "Alice", new Address("Main St", "Nairobi"), ["x"]);
-      const names = structFieldNames(user);
-      structSet(user, "Name", "Bob");
-      return [names, structGet(user, "Name"), structGet(user, "Address") instanceof Address];
+      const names = classFieldNames(user);
+      classSet(user, "Name", "Bob");
+      return [names, classGet(user, "Name"), classGet(user, "Address") instanceof Address];
     },
     expected: [["ID", "Name", "Address", "Tags"], "Bob", true],
   },
   {
     testTitle: "kind-mismatch accessors return undefined",
-    run: () => [asSequence({}), asMap([1]), asStruct({ a: 1 })],
+    run: () => [asSequence({}), asMap([1]), asClass({ a: 1 })],
     expected: [undefined, undefined, undefined],
   },
   {
@@ -166,7 +166,7 @@ const accessorCases: AccessorCase[] = [
 test("accessor cases (src/application.ts)", () => {
   const report = new TestReport(
     "accessor_cases",
-    "sequence/map/struct/scalar accessors + clone/zero/apply (src/application.ts)",
+    "sequence/map/class/scalar accessors + clone/zero/apply (src/application.ts)",
   );
   for (const testCase of accessorCases) {
     report.beginCase(newTestTitle(testCase.testTitle));

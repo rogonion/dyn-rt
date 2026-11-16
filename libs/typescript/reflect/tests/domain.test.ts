@@ -45,9 +45,9 @@ const refCases: RefCase[] = [
     expectedTypeName: "plain-object",
   },
   {
-    testTitle: "class instance is Struct",
+    testTitle: "class instance is Class",
     value: new User(1, "Alice"),
-    expected: "Struct",
+    expected: "Class",
     expectedTypeName: "User",
   },
   {

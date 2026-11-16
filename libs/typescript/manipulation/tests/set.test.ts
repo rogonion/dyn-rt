@@ -96,8 +96,8 @@ function yieldTestData(): SetCase[] {
       expectedRoot: new UserProfile({ Name: "amy" }),
     },
     {
-      // schema-driven creation of a nested struct + nilable field
-      testTitle: "set creates nested struct and field via schema (go implicit creation)",
+      // schema-driven creation of a nested class + nilable field
+      testTitle: "set creates nested class and field via schema (go implicit creation)",
       root: new UserProfile(),
       path: "$.Address.ZipCode",
       value: "1234",

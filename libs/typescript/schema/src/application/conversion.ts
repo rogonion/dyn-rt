@@ -2,7 +2,7 @@
 // convert data into the shape a schema dictates. TS is dynamically typed, so
 // instead of driving a `&mut dyn Reflect` target in place, `convert` builds
 // and returns the converted value; when a `target` is passed and both are
-// struct-shaped, the result keeps the target's prototype. Scalar coercions
+// class-shaped, the result keeps the target's prototype. Scalar coercions
 // follow go's convertTo{Int,Float,String,Bool}.
 
 import { reflectClone } from "@dyn-rt/reflect";
@@ -16,7 +16,7 @@ import {
 } from "../domain.js";
 import { SchemaError } from "../error.js";
 
-/** Options for conversion (port of go's `Conversion` struct). */
+/** Options for conversion (port of go's `Conversion` class). */
 export interface ConversionOptions {
   /** Custom converters keyed by the SOURCE data's type name. */
   customConverters?: Record<string, (data: unknown, node: SchemaNode, path: SchemaPath) => unknown>;
@@ -36,7 +36,7 @@ function isNil(value: unknown): boolean {
 }
 
 /** Converts `source` against `schema` into a new value (target optional, for
- * prototype preservation on struct shapes). Throws SchemaError. */
+ * prototype preservation on class shapes). Throws SchemaError. */
 export function convert(source: unknown, schema: Schema, target?: unknown): unknown {
   return convertWith(source, schema, target, {}).value;
 }
@@ -115,10 +115,10 @@ function convertNodeWith(
   switch (node.shape.kind) {
     case "Scalar":
       return convertScalar(source, node, path);
-    case "Struct": {
+    case "Class": {
       const fields = node.shape.fields;
       if (!isPlainObject(source) && !isClassInstance(source)) {
-        throw fail(path, `unsupported source kind '${typeof source}' for struct conversion`);
+        throw fail(path, `unsupported source kind '${typeof source}' for class conversion`);
       }
       // preserve the target's prototype when a target object is given
       const result: Record<string, unknown> =
@@ -133,7 +133,7 @@ function convertNodeWith(
         for (const key of Object.keys(sourceMap)) {
           const field = fields.find(([name]) => name === key);
           if (field === undefined) {
-            throw fail(path, `schema for field '${key}' not found for struct conversion`);
+            throw fail(path, `schema for field '${key}' not found for class conversion`);
           }
           const childPath = [...path, { kind: "Key", key } as const];
           try {
@@ -143,7 +143,7 @@ function convertNodeWith(
           }
         }
       } else {
-        // struct source (class instance): convert field by field, matched by
+        // class source (class instance): convert field by field, matched by
         // name; schema fields absent from the source are skipped
         for (const [fieldName, fieldSchema] of fields) {
           if (!Object.prototype.hasOwnProperty.call(sourceMap, fieldName)) {
