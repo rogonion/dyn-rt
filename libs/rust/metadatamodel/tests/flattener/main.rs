@@ -4,7 +4,7 @@
 //! go-metadatamodel/flattener's flatten_test.go), incl. single-cardinality
 //! fields/groups and WriteToDestination.
 
-use dyn_rt_manipulation::application::are_equal;
+use dyn_rt_manipulation::application::{DynObject, are_equal};
 use dyn_rt_metadatamodel::core::domain::{FIELDS_KEY, props};
 use dyn_rt_metadatamodel::flattener::Flattener;
 use dyn_rt_reflect::{Reflect, ReflectStruct};
@@ -582,7 +582,7 @@ fn flatten_cases() {
         let model = (case.model)();
         let source = (case.source)();
         match Flattener::new(&model) {
-            Ok(mut flattener) => match flattener.flatten(source.as_ref()) {
+            Ok(mut flattener) => match flattener.flatten(&DynObject::read_only(source.as_ref())) {
                 Ok(()) => {
                     let got = table_of(flattener.result());
                     if !are_equal(&got, &case.expected) {
@@ -618,7 +618,7 @@ fn write_to_destination_case() {
             return;
         }
     };
-    if let Err(err) = flattener.flatten(source.as_ref()) {
+    if let Err(err) = flattener.flatten(&DynObject::read_only(source.as_ref())) {
         report.fail_case(format!("flatten failed: {err}"));
         report.finish();
         return;
@@ -629,7 +629,7 @@ fn write_to_destination_case() {
         Value::from(vec![Value::Null, Value::Null, Value::Null]),
         Value::from(vec![Value::Null, Value::Null, Value::Null]),
     ]);
-    if let Err(err) = flattener.write_to_destination(&mut destination, None) {
+    if let Err(err) = flattener.write_to_destination(&mut DynObject::new(&mut destination)) {
         report.fail_case(format!("write_to_destination failed: {err}"));
     } else {
         let expected = table_of(flattener.result());

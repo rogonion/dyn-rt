@@ -21,8 +21,8 @@ use crate::error::MetadatamodelError;
 /// `DataFilter`).
 pub struct DataFilter<'a> {
     /// The source data to filter (the root value at `root_json_path_to_value`
-    /// must be a sequence).
-    pub source: &'a dyn Reflect,
+    /// must be a sequence), as a DynObject handle.
+    pub source: DynObject<'a>,
     /// The metadata model describing the source data.
     pub metadata_model: &'a MetadataModel,
     /// Condition processors keyed by condition name.
@@ -36,7 +36,7 @@ pub struct DataFilter<'a> {
 }
 
 impl<'a> DataFilter<'a> {
-    pub fn new(source: &'a dyn Reflect, metadata_model: &'a MetadataModel) -> Self {
+    pub fn new(source: DynObject<'a>, metadata_model: &'a MetadataModel) -> Self {
         DataFilter {
             source,
             metadata_model,
@@ -64,9 +64,8 @@ impl<'a> DataFilter<'a> {
         }
 
         let root_segments = parse_template(&self.root_json_path_to_value)?;
-        let source_obj = DynObject::read_only(self.source);
         let root_values =
-            source_obj
+            self.source
                 .get(&root_segments)
                 .map_err(|err| MetadatamodelError::Manipulation {
                     message: err.to_string(),
@@ -85,12 +84,11 @@ impl<'a> DataFilter<'a> {
         // iterate the root sequence's entries: `<root>[*]`
         let elements_path = format!("{}[*]", self.root_json_path_to_value);
         let elements_segments = parse_template(&elements_path)?;
-        let elements =
-            source_obj
-                .get(&elements_segments)
-                .map_err(|err| MetadatamodelError::Manipulation {
-                    message: err.to_string(),
-                })?;
+        let elements = self.source.get(&elements_segments).map_err(|err| {
+            MetadatamodelError::Manipulation {
+                message: err.to_string(),
+            }
+        })?;
 
         let mut exclude_indexes: Vec<usize> = Vec::new();
         let query_is_empty = query_condition.as_object().is_none_or(|obj| obj.is_empty());

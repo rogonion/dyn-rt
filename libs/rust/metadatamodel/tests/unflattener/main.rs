@@ -5,7 +5,7 @@
 //! cardinality-aware writes (single-cardinality unwrap, multi-value error /
 //! take-first) and a flatten->unflatten round-trip.
 
-use dyn_rt_manipulation::application::are_equal;
+use dyn_rt_manipulation::application::{DynObject, are_equal};
 use dyn_rt_metadatamodel::core::domain::{FIELDS_KEY, props};
 use dyn_rt_metadatamodel::flattener::Flattener;
 use dyn_rt_metadatamodel::unflattener::{SingleCellMode, Unflattener};
@@ -553,7 +553,10 @@ fn unflatten_cases() {
             UnflattenOp::Users { table, expected } => {
                 let schema = Schema::Node(user_schema());
                 let mut dest: Vec<UserRow> = Vec::new();
-                let mut unflattener = match Unflattener::new(&model, &mut dest, Some(&schema)) {
+                let mut unflattener = match Unflattener::new(
+                    &model,
+                    DynObject::new(&mut dest).with_schema_opt(Some(&schema)),
+                ) {
                     Ok(u) => u,
                     Err(err) => {
                         report.fail_case(format!("new failed: {err}"));
@@ -572,7 +575,10 @@ fn unflatten_cases() {
             UnflattenOp::Employees { table, expected } => {
                 let schema = Schema::Node(employee_schema());
                 let mut dest: Vec<EmployeeRow> = Vec::new();
-                let mut unflattener = match Unflattener::new(&model, &mut dest, Some(&schema)) {
+                let mut unflattener = match Unflattener::new(
+                    &model,
+                    DynObject::new(&mut dest).with_schema_opt(Some(&schema)),
+                ) {
                     Ok(u) => u,
                     Err(err) => {
                         report.fail_case(format!("new failed: {err}"));
@@ -596,7 +602,10 @@ fn unflatten_cases() {
             } => {
                 let schema = Schema::Node(user_bio_schema());
                 let mut dest: Vec<UserWithBio> = Vec::new();
-                let mut unflattener = match Unflattener::new(&model, &mut dest, Some(&schema)) {
+                let mut unflattener = match Unflattener::new(
+                    &model,
+                    DynObject::new(&mut dest).with_schema_opt(Some(&schema)),
+                ) {
                     Ok(u) => u,
                     Err(err) => {
                         report.fail_case(format!("new failed: {err}"));
@@ -689,7 +698,7 @@ fn flatten_unflatten_roundtrip_case() {
             return;
         }
     };
-    if let Err(err) = flattener.flatten(&source) {
+    if let Err(err) = flattener.flatten(&DynObject::read_only(&source)) {
         report.fail_case(format!("flatten failed: {err}"));
         report.finish();
         return;
@@ -698,7 +707,10 @@ fn flatten_unflatten_roundtrip_case() {
 
     let schema = Schema::Node(employee_schema());
     let mut dest: Vec<EmployeeRow> = Vec::new();
-    let mut unflattener = match Unflattener::new(&model, &mut dest, Some(&schema)) {
+    let mut unflattener = match Unflattener::new(
+        &model,
+        DynObject::new(&mut dest).with_schema_opt(Some(&schema)),
+    ) {
         Ok(u) => u,
         Err(err) => {
             report.fail_case(format!("unflattener new failed: {err}"));

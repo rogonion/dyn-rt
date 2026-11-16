@@ -7,8 +7,7 @@
 
 use dyn_rt_manipulation::application::DynObject;
 use dyn_rt_path::{AccessStrategy, PathSegment, PathSelector, RecursiveDescentSegments};
-use dyn_rt_reflect::Reflect;
-use dyn_rt_schema::Schema;
+
 use dyn_rt_shared::Value;
 
 use super::domain::{GroupCollection, GroupIndexNode, GroupIndexTree, Signature, SingleCellMode};
@@ -30,10 +29,9 @@ pub struct Unflattener<'a, 'd> {
     pub model: &'a MetadataModel,
     /// Extracted (and repositioned) column fields driving column order/skip.
     pub column_fields: ColumnFields,
-    /// Where the reconstructed collection is written.
-    pub destination: &'d mut dyn Reflect,
-    /// Optional schema guiding set (creation/coercion).
-    pub schema: Option<&'d Schema>,
+    /// Where the reconstructed collection is written (a DynObject; attach a
+    /// schema to it to guide set creation/coercion).
+    pub destination: DynObject<'d>,
     /// How to handle a `single`-cardinality field whose cell has >1 values.
     pub single_cell_mode: SingleCellMode,
     tree: GroupIndexTree,
@@ -45,28 +43,25 @@ impl<'a, 'd> Unflattener<'a, 'd> {
     /// model (go's `NewUnflattener` + default extraction in `Unflatten`).
     pub fn new(
         model: &'a MetadataModel,
-        destination: &'d mut dyn Reflect,
-        schema: Option<&'d Schema>,
+        destination: DynObject<'d>,
     ) -> Result<Self, MetadatamodelError> {
         let mut column_fields = extract(model, &Default::default())?;
         column_fields.reposition();
         column_fields.update_index_in_repositioned();
-        Self::with_column_fields(model, column_fields, destination, schema)
+        Self::with_column_fields(model, column_fields, destination)
     }
 
     /// Creates an unflattener with caller-provided column fields.
     pub fn with_column_fields(
         model: &'a MetadataModel,
         column_fields: ColumnFields,
-        destination: &'d mut dyn Reflect,
-        schema: Option<&'d Schema>,
+        destination: DynObject<'d>,
     ) -> Result<Self, MetadatamodelError> {
         let tree = build_group_index_tree(model, "$", &column_fields)?;
         Ok(Unflattener {
             model,
             column_fields,
             destination,
-            schema,
             single_cell_mode: SingleCellMode::default(),
             tree,
             index: GroupCollection::default(),
@@ -80,8 +75,7 @@ impl<'a, 'd> Unflattener<'a, 'd> {
                 &self.tree,
                 self.model,
                 &self.column_fields,
-                self.destination,
-                self.schema,
+                &mut self.destination,
                 self.single_cell_mode,
                 &mut self.index,
                 &[],
@@ -165,8 +159,7 @@ fn recursive_convert(
     tree: &GroupIndexTree,
     model: &MetadataModel,
     column_fields: &ColumnFields,
-    destination: &mut dyn Reflect,
-    schema: Option<&Schema>,
+    destination: &mut DynObject,
     single_cell_mode: SingleCellMode,
     parent_collection: &mut GroupCollection,
     linear_indexes: &[usize],
@@ -216,14 +209,13 @@ fn recursive_convert(
             .and_then(|group| group.0.last())
             .is_some_and(|segment| matches!(segment.selector, PathSelector::Key(_)));
         if key_terminal {
-            let _ = DynObject::new(&mut *destination).delete(&target);
+            let _ = destination.delete(&target);
         }
-        DynObject::new(&mut *destination)
-            .with_schema_opt(schema)
-            .set(&target, &value_to_write)
-            .map_err(|err| MetadatamodelError::Manipulation {
+        destination.set(&target, &value_to_write).map_err(|err| {
+            MetadatamodelError::Manipulation {
                 message: format!("write field failed: {err}"),
-            })?;
+            }
+        })?;
     }
 
     // 4. recurse into nested groups
@@ -234,7 +226,6 @@ fn recursive_convert(
             model,
             column_fields,
             destination,
-            schema,
             single_cell_mode,
             child_collection,
             &current_path_indexes,

@@ -7,7 +7,6 @@
 use dyn_rt_manipulation::application::DynObject;
 use dyn_rt_path::RecursiveDescentSegments;
 use dyn_rt_reflect::{Reflect, ReflectRef};
-use dyn_rt_schema::Schema;
 use dyn_rt_shared::Value;
 
 use super::domain::{ConversionNode, FlattenedRow, FlattenedTable};
@@ -67,7 +66,8 @@ impl<'a> Flattener<'a> {
     /// Flattens `source` and appends the rows to the result. When the source
     /// root is a sequence, each element is flattened individually (go's
     /// `Flatten`).
-    pub fn flatten(&mut self, source: &dyn Reflect) -> Result<(), MetadatamodelError> {
+    pub fn flatten(&mut self, source: &DynObject) -> Result<(), MetadatamodelError> {
+        let source: &dyn Reflect = source.source();
         if matches!(
             source.reflect_ref().kind(),
             dyn_rt_reflect::ReflectKind::Sequence
@@ -92,11 +92,11 @@ impl<'a> Flattener<'a> {
 
     /// Writes the current result to a destination 2D collection at
     /// `$[row][col]`, honoring the unskipped current column read order
-    /// (go's `WriteToDestination`).
+    /// (go's `WriteToDestination`). The destination's attached schema (if
+    /// any) guides coercion/creation.
     pub fn write_to_destination(
         &self,
-        destination: &mut dyn Reflect,
-        schema: Option<&Schema>,
+        destination: &mut DynObject,
     ) -> Result<(), MetadatamodelError> {
         let read_order = self.column_fields.current_read_order();
         for (row_index, row) in self.result.iter().enumerate() {
@@ -110,12 +110,11 @@ impl<'a> Flattener<'a> {
                     });
                 };
                 let target = parse_template(&format!("$[{row_index}][{dest_col}]"))?;
-                DynObject::new(destination)
-                    .with_schema_opt(schema)
-                    .set(&target, source_col)
-                    .map_err(|err| MetadatamodelError::Manipulation {
+                destination.set(&target, source_col).map_err(|err| {
+                    MetadatamodelError::Manipulation {
                         message: format!("write failed at row {row_index} col {dest_col}: {err}"),
-                    })?;
+                    }
+                })?;
             }
         }
         Ok(())

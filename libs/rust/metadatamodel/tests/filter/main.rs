@@ -4,6 +4,7 @@
 //! against a root sequence in source data, returning the excluded indexes
 //! (port of go-metadatamodel/filter's filter_data_test.go).
 
+use dyn_rt_manipulation::application::DynObject;
 use dyn_rt_metadatamodel::core::domain::{FIELDS_KEY, props};
 use dyn_rt_metadatamodel::filter::DataFilter;
 use dyn_rt_metadatamodel::filter::domain::{condition, condition_props, field_type, query};
@@ -441,7 +442,7 @@ fn filter_data_cases() {
         report.begin_case(new_test_title!(case.test_title));
         let source = (case.source)();
         let model = (case.model)();
-        let mut data_filter = DataFilter::new(source.as_ref(), &model);
+        let mut data_filter = DataFilter::new(DynObject::read_only(source.as_ref()), &model);
         data_filter.silence_errors = case.silence_errors;
         match data_filter.filter(
             &case.query,

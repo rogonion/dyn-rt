@@ -4,7 +4,7 @@
 //! GetColumnFields) and get/set/delete of field values in source data
 //! through those columns (`FieldValue`, port of go's FieldValue).
 
-use dyn_rt_manipulation::application::are_equal;
+use dyn_rt_manipulation::application::{DynObject, are_equal};
 use dyn_rt_metadatamodel::core::domain::{FIELDS_KEY, props};
 use dyn_rt_metadatamodel::database::{FieldValue, GetColumnFieldsOptions, get_column_fields};
 use dyn_rt_metadatamodel::fieldcolumns::PropMatch;
@@ -790,7 +790,7 @@ fn field_value_cases() {
         };
         let mut source = (case.source)();
         {
-            let mut field_value = FieldValue::new(source.as_mut(), &column_fields);
+            let mut field_value = FieldValue::new(DynObject::new(source.as_mut()), &column_fields);
             match &case.op {
                 FieldValueOp::Get {
                     column,

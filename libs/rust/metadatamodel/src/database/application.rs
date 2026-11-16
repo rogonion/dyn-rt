@@ -222,10 +222,10 @@ pub struct FieldValue<'a> {
 }
 
 impl<'a> FieldValue<'a> {
-    pub fn new(source: &'a mut dyn Reflect, column_fields: &'a ColumnFields) -> Self {
-        let source_is_array = matches!(source.reflect_ref().kind(), ReflectKind::Sequence);
+    pub fn new(source: DynObject<'a>, column_fields: &'a ColumnFields) -> Self {
+        let source_is_array = matches!(source.source().reflect_ref().kind(), ReflectKind::Sequence);
         FieldValue {
-            obj: DynObject::new(source),
+            obj: source,
             column_fields,
             source_is_array,
         }
