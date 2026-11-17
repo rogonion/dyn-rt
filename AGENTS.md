@@ -21,7 +21,6 @@ feature/subpath gating so consumers only bundle what they use (ADR 0003).
 ## Layout (ADR 0001)
 
 ```
-apps/<lang>/<name>/       executables / composition roots — wire adapters into the core here
 libs/<lang>/<module>/     ONE crate per module (ADR 0007): shared, test-support (dev-only),
                           path, manipulation, schema, reflect, metadatamodel.
                           Inside each module crate: src/domain, src/application, src/adapters
@@ -101,12 +100,11 @@ misc/                     scratch notes, drawio MCP notes
 - Dependencies point inward. Between modules this is compiler-enforced (crate
   = module, ADR 0007): e.g. `manipulation` may depend on `path` and
   `shared`, never the reverse. Inside a module crate, layers are dirs:
-  `domain` (std only) <- `application` <- `adapters`/apps. Never invert.
+  `domain` (std only) <- `application` <- `adapters`. Never invert.
 - `serde` / `serde_json` and `regex` are allowed ONLY in a module's
-  `src/adapters/` dir and in `apps/` composition roots. `domain` and
-  `application` never import them.
+  `src/adapters/` dir. `domain` and `application` never import them.
 - Ports are roles the core needs; definitions live in the module's domain,
-  implementations live in its adapters or in apps.
+  implementations live in its adapters.
 - Errors: each module core defines one closed error enum. Adapters translate
   native failures into it. No `anyhow` across boundaries.
 - Core code does no IO at all; what tests may read is defined by the Testing

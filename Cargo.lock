@@ -24,13 +24,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dyn-rt-cli"
-version = "0.1.0"
-dependencies = [
- "dyn-rt",
-]
-
-[[package]]
 name = "dyn-rt-manipulation"
 version = "0.1.0"
 dependencies = [

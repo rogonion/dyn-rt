@@ -31,93 +31,140 @@ Structural rules:
   `group:*`, `field:*`, `view:*`, `input:*`, `edit:*`, `query:*`, `extract:*`,
   `db:*` (see `src/core/domain.ts` for the full list).
 
-## Comprehensive nested example
+## Comprehensive nested example (full JSON)
 
 An Employee model: root fields `ID` (primary key) and `Skills` (expanded into
 separate columns), plus a nested group `Profile` holding `Name`, `Age`, and a
 double-nested group `Address` (`Street`, `City`, `ZipCode`), all with the
-`db:*` mapping properties. Written in TypeScript (the house style — test data
-and models are written in-code, and the model IS a plain JSON value):
+`db:*` mapping properties. Since the model IS a plain JSON value, here is the
+full document as it is stored/serialized (in code you write it as an object
+literal — the test suites do exactly that):
 
-```ts
-import { metadatamodel } from "@dyn-rt/dyn-rt";
-
-const { props, FIELDS_KEY } = metadatamodel.core;
-
-const fld = (pathKey: string, name: string, dataType: string, extra: object = {}) => [
-  { [props.GROUP_PATH_KEY]: pathKey, [props.GROUP_NAME]: name, [props.FIELD_DATA_TYPE]: dataType, ...extra },
-];
-
-const grp = (pathKey: string, name: string, fields: object, extra: object = {}) => [
-  {
-    [props.GROUP_PATH_KEY]: pathKey,
-    [props.GROUP_NAME]: name,
-    [FIELDS_KEY]: [fields],
-    ...extra,
-  },
-];
-
-const employeeModel = {
-  [props.GROUP_PATH_KEY]: "$",
-  [props.GROUP_NAME]: "Employee",
-  [props.DB_TABLE_COLLECTION_UID]: "Employee",
-  [props.DB_JOIN_DEPTH]: 0,
-  [props.DB_TABLE_COLLECTION_NAME]: "Employee",
-  [props.GROUP_READ_ORDER_OF_FIELDS]: ["ID", "Profile", "Skills"],
-  [FIELDS_KEY]: [
+```json
+{
+  "group:path_key": "$",
+  "group:name": "Employee",
+  "db:table_collection_uid": "Employee",
+  "db:join_depth": 0,
+  "db:table_collection_name": "Employee",
+  "group:read_order_of_fields": ["ID", "Profile", "Skills"],
+  "group:fields": [
     {
-      ID: fld("$['group:fields'][*].ID[*]", "ID", "Number", {
-        [props.GROUP_IS_PRIMARY_KEY]: true,
-        [props.DB_TABLE_COLLECTION_UID]: "Employee",
-        [props.DB_JOIN_DEPTH]: 0,
-        [props.DB_TABLE_COLLECTION_NAME]: "Employee",
-        [props.DB_COLUMN_NAME]: "ID",
-      }),
-      Profile: grp(
-        "$['group:fields'][*].Profile[*]",
-        "Profile",
+      "ID": [
         {
-          Name: fld("$['group:fields'][*].Profile[*]['group:fields'][*].Name[*]", "Name", "Text", {
-            [props.DB_TABLE_COLLECTION_UID]: "Profile",
-            [props.DB_JOIN_DEPTH]: 1,
-            [props.DB_TABLE_COLLECTION_NAME]: "Profile",
-            [props.DB_COLUMN_NAME]: "Name",
-          }),
-          Age: fld("$['group:fields'][*].Profile[*]['group:fields'][*].Age[*]", "Age", "Number", {
-            [props.DB_TABLE_COLLECTION_UID]: "Profile",
-            [props.DB_JOIN_DEPTH]: 1,
-            [props.DB_TABLE_COLLECTION_NAME]: "Profile",
-            [props.DB_COLUMN_NAME]: "Age",
-          }),
-          Address: grp(
-            "$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]",
-            "Address",
+          "group:path_key": "$['group:fields'][*].ID[*]",
+          "group:name": "ID",
+          "field:data_type": "Number",
+          "group:is_primary_key": true,
+          "db:table_collection_uid": "Employee",
+          "db:join_depth": 0,
+          "db:table_collection_name": "Employee",
+          "db:column_name": "ID"
+        }
+      ],
+      "Profile": [
+        {
+          "group:path_key": "$['group:fields'][*].Profile[*]",
+          "group:name": "Profile",
+          "db:table_collection_uid": "Profile",
+          "db:join_depth": 1,
+          "db:table_collection_name": "Profile",
+          "group:fields": [
             {
-              Street: fld("$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].Street[*]", "Street", "Text", { /* db:* of the Address collection */ }),
-              City: fld("$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].City[*]", "City", "Text", { /* ... */ }),
-              ZipCode: fld("$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].ZipCode[*]", "ZipCode", "Text", { /* ... */ }),
-            },
-            { [props.DB_TABLE_COLLECTION_UID]: "Address", [props.DB_JOIN_DEPTH]: 2, [props.DB_TABLE_COLLECTION_NAME]: "Address" },
-          ),
-        },
-        { [props.DB_TABLE_COLLECTION_UID]: "Profile", [props.DB_JOIN_DEPTH]: 1, [props.DB_TABLE_COLLECTION_NAME]: "Profile" },
-      ),
-      Skills: fld("$['group:fields'][*].Skills[*]", "Skills", "Text", {
-        [props.VIEW_VALUES_IN_SEPARATE_COLUMNS]: true,
-        [props.VIEW_MAX_VALUES_IN_SEPARATE_COLUMNS]: 2,
-        [props.VIEW_SEPARATE_COLUMNS_HEADER_FORMAT]: "skill [*]",
-        [props.DB_COLUMN_NAME]: "Skills",
-        [props.DB_TABLE_COLLECTION_UID]: "Employee",
-        [props.DB_JOIN_DEPTH]: 0,
-        [props.DB_TABLE_COLLECTION_NAME]: "Employee",
-      }),
-    },
-  ],
-};
+              "Name": [
+                {
+                  "group:path_key": "$['group:fields'][*].Profile[*]['group:fields'][*].Name[*]",
+                  "group:name": "Name",
+                  "field:data_type": "Text",
+                  "db:table_collection_uid": "Profile",
+                  "db:join_depth": 1,
+                  "db:table_collection_name": "Profile",
+                  "db:column_name": "Name"
+                }
+              ],
+              "Age": [
+                {
+                  "group:path_key": "$['group:fields'][*].Profile[*]['group:fields'][*].Age[*]",
+                  "group:name": "Age",
+                  "field:data_type": "Number",
+                  "db:table_collection_uid": "Profile",
+                  "db:join_depth": 1,
+                  "db:table_collection_name": "Profile",
+                  "db:column_name": "Age"
+                }
+              ],
+              "Address": [
+                {
+                  "group:path_key": "$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]",
+                  "group:name": "Address",
+                  "db:table_collection_uid": "Address",
+                  "db:join_depth": 2,
+                  "db:table_collection_name": "Address",
+                  "group:fields": [
+                    {
+                      "Street": [
+                        {
+                          "group:path_key": "$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].Street[*]",
+                          "group:name": "Street",
+                          "field:data_type": "Text",
+                          "db:table_collection_uid": "Address",
+                          "db:join_depth": 2,
+                          "db:table_collection_name": "Address",
+                          "db:column_name": "Street"
+                        }
+                      ],
+                      "City": [
+                        {
+                          "group:path_key": "$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].City[*]",
+                          "group:name": "City",
+                          "field:data_type": "Text",
+                          "db:table_collection_uid": "Address",
+                          "db:join_depth": 2,
+                          "db:table_collection_name": "Address",
+                          "db:column_name": "City"
+                        }
+                      ],
+                      "ZipCode": [
+                        {
+                          "group:path_key": "$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].ZipCode[*]",
+                          "group:name": "ZipCode",
+                          "field:data_type": "Text",
+                          "db:table_collection_uid": "Address",
+                          "db:join_depth": 2,
+                          "db:table_collection_name": "Address",
+                          "db:column_name": "ZipCode"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Skills": [
+        {
+          "group:path_key": "$['group:fields'][*].Skills[*]",
+          "group:name": "Skills",
+          "field:data_type": "Text",
+          "view:values_in_separate_columns": true,
+          "view:max_values_in_separate_columns": 2,
+          "view:separate_columns_header_format": "skill [*]",
+          "db:table_collection_uid": "Employee",
+          "db:join_depth": 0,
+          "db:table_collection_name": "Employee",
+          "db:column_name": "Skills"
+        }
+      ]
+    }
+  ]
+}
 ```
 
-Because the model is a plain value, the same document serializes to JSON
-as-is and can itself be traversed with `path`/`manipulation`.
+Because the model is a plain value, it can itself be traversed with
+`path`/`manipulation` — e.g. `$.['group:fields'][0].Profile[0]` reaches the
+Profile group's props inside the model.
 
 ## Path templates: `group:path_key`
 
@@ -232,25 +279,26 @@ OR over a nested group's entry count and a nested field:
   ] }
 ```
 
-Negated field condition with the root focused on one entry's group array
-(`rootJsonPathKey` / `rootJsonPathToValue`) — against `$[2].Address` of a
-`UserProfileRow[]`, excludes `[1]` (only the second address entry, whose City
-begins with "City 4", fails the negated condition):
+Negated field condition with the root focused on one entry's group array —
+the query condition itself is plain JSON, and the focus is given by the two
+`filter()` arguments `rootJsonPathKey` / `rootJsonPathToValue`:
 
-```ts
-const filter = new metadatamodel.filter.DataFilter(
-  manipulation.DynObject.new(userProfiles),
-  userProfileModel,
-);
-const excluded = filter.filter(
-  { Type: "FieldGroup", Negate: true, Value: {
+```json
+{
+  "Type": "FieldGroup",
+  "Negate": true,
+  "Value": {
     "$['group:fields'][*].Address[*]['group:fields'][*].City[*]": {
-      BeginsWith: { AssumedFieldType: "Text", Value: "City 4" } } } },
-  "$['group:fields'][*].Address[*]", // rootJsonPathKey
-  "$[2].Address",                    // rootJsonPathToValue
-);
-// => [1]
+      "BeginsWith": { "AssumedFieldType": "Text", "Value": "City 4" }
+    }
+  }
+}
 ```
+
+Called as `filter.filter(query, "$['group:fields'][*].Address[*]", "$[2].Address")`
+against a `UserProfileRow[]`, this evaluates the condition per entry of
+`$[2].Address` and returns `[1]` — only the second address entry (City
+"City 4") fails the negated condition.
 
 Timestamp condition compared at `yyyy-mm-dd` granularity:
 
