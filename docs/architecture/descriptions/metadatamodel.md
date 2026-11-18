@@ -275,7 +275,10 @@ indexes `[0, 1, 3]` for products with IDs 0..3 where only "Product 2" matches:
       "Negate": false, 
       "Value": {
         "$['group:fields'][*].Name[*]": {
-          "EndsWith": { "AssumedFieldType": "Text", "Value": "2" }
+          "EndsWith": { 
+            "AssumedFieldType": "Text", 
+            "Value": "2" 
+          }
         } 
       } 
     }
@@ -296,12 +299,16 @@ OR over a nested group's entry count and a nested field:
       "Negate": false, 
       "Value": {
         "$['group:fields'][*].Address[*]": {
-          "NoOfEntriesGreaterThan": { "Value": 1 } 
+          "NoOfEntriesGreaterThan": { 
+            "Value": 1 
+          } 
         } 
       } 
     },
     { 
-      "Type": "FieldGroup", "Negate": false, "Value": {
+      "Type": "FieldGroup", 
+      "Negate": false, 
+      "Value": {
         "$['group:fields'][*].Address[*]['group:fields'][*].City[*]": {
           "BeginsWith": { 
             "AssumedFieldType": "Text", 
@@ -324,7 +331,10 @@ the query condition itself is plain JSON, and the focus is given by the two
   "Negate": true,
   "Value": {
     "$['group:fields'][*].Address[*]['group:fields'][*].City[*]": {
-      "BeginsWith": { "AssumedFieldType": "Text", "Value": "City 4" }
+      "BeginsWith": { 
+        "AssumedFieldType": "Text", 
+        "Value": "City 4" 
+      }
     }
   }
 }
@@ -338,28 +348,38 @@ against a `UserProfileRow[]`, this evaluates the condition per entry of
 Timestamp condition compared at `yyyy-mm-dd` granularity:
 
 ```jsonc
-{ "Type": "FieldGroup", "Negate": false, "Value": {
-  "$['group:fields'][*].Created[*]": {
-    "GreaterThan": {
-      "AssumedFieldType": "Timestamp",
-      "DateTimeFormat": "yyyy-mm-dd",
-      "Value": "2024-01-01T00:00:00Z"
-    }
-  } } }
+{ 
+  "Type": "FieldGroup", 
+  "Negate": false, 
+  "Value": {
+    "$['group:fields'][*].Created[*]": {
+      "GreaterThan": {
+        "AssumedFieldType": "Timestamp",
+        "DateTimeFormat": "yyyy-mm-dd",
+        "Value": "2024-01-01T00:00:00Z"
+      }
+    } 
+  } 
+}
 ```
 
 Text equality against multiple values, case-insensitive, negated at the field
 level:
 
 ```jsonc
-{ "Type": "FieldGroup", "Negate": true, "Value": {
-  "$['group:fields'][*].Name[*]": {
-    "EqualTo": {
-      "AssumedFieldType": "Text",
-      "CaseInsensitive": true,
-      "Values": ["product 1", "PRODUCT 3"]
-    }
-  } } }
+{ 
+  "Type": "FieldGroup", 
+  "Negate": true, 
+  "Value": {
+    "$['group:fields'][*].Name[*]": {
+      "EqualTo": {
+        "AssumedFieldType": "Text",
+        "CaseInsensitive": true,
+        "Values": ["product 1", "PRODUCT 3"]
+      }
+    } 
+  } 
+}
 ```
 
 ## Flatten / unflatten
