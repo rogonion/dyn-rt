@@ -3,7 +3,7 @@ name = "dyn-rt-reflect-derive"
 description = "Derive macros for dyn-rt-reflect (ADR 0008): Reflect (base, Unknown), ReflectStruct, ReflectEnum — per-shape, each emitting the base impl too."
 version.workspace = true
 edition.workspace = true
-license-file.workspace = true
+license.workspace = true
 
 [lib]
 proc-macro = true

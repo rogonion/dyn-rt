@@ -3,19 +3,19 @@ name = "dyn-rt-metadatamodel"
 description = "dyn-rt metadatamodel: metadata model (JSON-like Value) + field/group traversal, flattening, filtering, field columns, database mapping."
 version.workspace = true
 edition.workspace = true
-license-file.workspace = true
+license.workspace = true
 
 [features]
 # text deserialization of metadata model documents (serde json) into Value
 deser = ["dep:serde_json"]
 
 [dependencies]
-dyn-rt-manipulation = { path = "../manipulation" }
-dyn-rt-path = { path = "../path" }
-dyn-rt-schema = { path = "../schema" }
-dyn-rt-reflect = { path = "../reflect" }
-dyn-rt-shared = { path = "../shared" }
+dyn-rt-manipulation = { path = "../manipulation", version = "0.1.0" }
+dyn-rt-path = { path = "../path", version = "0.1.0" }
+dyn-rt-schema = { path = "../schema", version = "0.1.0" }
+dyn-rt-reflect = { path = "../reflect", version = "0.1.0" }
+dyn-rt-shared = { path = "../shared", version = "0.1.0" }
 serde_json = { version = "1", optional = true }
 
 [dev-dependencies]
-dyn-rt-test-support = { path = "../test-support" }
+dyn-rt-test-support = { path = "../test-support", version = "0.1.0" }

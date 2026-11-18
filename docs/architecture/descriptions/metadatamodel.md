@@ -250,17 +250,35 @@ indexes `[0, 1, 3]` for products with IDs 0..3 where only "Product 2" matches:
 
 ```jsonc
 {
-  "Type": "LogicalOperator", "LogicalOperator": "And", "Negate": false,
+  "Type": "LogicalOperator", 
+  "LogicalOperator": "And", 
+  "Negate": false,
   "Value": [
-    { "Type": "FieldGroup", "Negate": false, "Value": {
-      "$['group:fields'][*].ID[*]": {
-        "GreaterThan": { "AssumedFieldType": "Number", "Value": 0 },
-        "LessThan":    { "AssumedFieldType": "Number", "Value": 3 }
-      } } } },
-    { "Type": "FieldGroup", "Negate": false, "Value": {
-      "$['group:fields'][*].Name[*]": {
-        "EndsWith": { "AssumedFieldType": "Text", "Value": "2" }
-      } } } }
+    { 
+      "Type": "FieldGroup", 
+      "Negate": false, 
+      "Value": {
+        "$['group:fields'][*].ID[*]": {
+          "GreaterThan": { 
+              "AssumedFieldType": "Number", 
+              "Value": 0 
+            },
+          "LessThan": { 
+            "AssumedFieldType": "Number", 
+            "Value": 3 
+          }
+        } 
+      } 
+    },
+    { 
+      "Type": "FieldGroup", 
+      "Negate": false, 
+      "Value": {
+        "$['group:fields'][*].Name[*]": {
+          "EndsWith": { "AssumedFieldType": "Text", "Value": "2" }
+        } 
+      } 
+    }
   ]
 }
 ```
@@ -268,15 +286,32 @@ indexes `[0, 1, 3]` for products with IDs 0..3 where only "Product 2" matches:
 OR over a nested group's entry count and a nested field:
 
 ```jsonc
-{ "Type": "LogicalOperator", "LogicalOperator": "Or", "Negate": false,
+{ 
+  "Type": "LogicalOperator", 
+  "LogicalOperator": "Or", 
+  "Negate": false,
   "Value": [
-    { "Type": "FieldGroup", "Negate": false, "Value": {
-      "$['group:fields'][*].Address[*]": {
-        "NoOfEntriesGreaterThan": { "Value": 1 } } } },
-    { "Type": "FieldGroup", "Negate": false, "Value": {
-      "$['group:fields'][*].Address[*]['group:fields'][*].City[*]": {
-        "BeginsWith": { "AssumedFieldType": "Text", "Value": "Streete" } } } }
-  ] }
+    { 
+      "Type": "FieldGroup", 
+      "Negate": false, 
+      "Value": {
+        "$['group:fields'][*].Address[*]": {
+          "NoOfEntriesGreaterThan": { "Value": 1 } 
+        } 
+      } 
+    },
+    { 
+      "Type": "FieldGroup", "Negate": false, "Value": {
+        "$['group:fields'][*].Address[*]['group:fields'][*].City[*]": {
+          "BeginsWith": { 
+            "AssumedFieldType": "Text", 
+            "Value": "Streete" 
+          } 
+        } 
+      } 
+    }
+  ] 
+}
 ```
 
 Negated field condition with the root focused on one entry's group array —

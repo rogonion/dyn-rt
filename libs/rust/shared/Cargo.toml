@@ -3,9 +3,9 @@ name = "dyn-rt-shared"
 description = "Shared substrate for dyn-rt modules: the pure Value/Number model and the json error vocabulary. std only."
 version.workspace = true
 edition.workspace = true
-license-file.workspace = true
+license.workspace = true
 
 [dependencies]
 
 [dev-dependencies]
-dyn-rt-test-support = { path = "../test-support" }
+dyn-rt-test-support = { path = "../test-support", version = "0.1.0" }

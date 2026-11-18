@@ -1,7 +1,6 @@
 {
   "name": "@dyn-rt/metadatamodel",
   "version": "0.1.0",
-  "private": true,
   "description": "dyn-rt metadatamodel (TS): the metadata model as an extensible JSON-like Value tree — field/group props, templated group:path_key paths, strict cardinality, plus the fieldcolumns / database / iter / filter / flattener / unflattener / groupindex subdomains. Port of libs/rust/metadatamodel.",
   "type": "module",
   "exports": {
@@ -9,8 +8,9 @@
   },
   "types": "./src/index.ts",
   "files": [
-    "src",
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -30,5 +30,35 @@
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
+  },
+  "license": "MIT",
+  "author": "Declan Joseph <declan.obu@outlook.com>",
+  "keywords": [
+    "dyn-rt",
+    "metadata-model",
+    "flattener",
+    "unflattener",
+    "filter",
+    "fieldcolumns",
+    "database"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rogonion/dyn-rt.git",
+    "directory": "libs/typescript/metadatamodel"
+  },
+  "bugs": {
+    "url": "https://github.com/rogonion/dyn-rt/issues"
+  },
+  "homepage": "https://github.com/rogonion/dyn-rt",
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "types": "./dist/index.d.ts",
+    "main": "./dist/index.js"
   }
 }

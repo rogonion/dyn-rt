@@ -1,7 +1,6 @@
 {
   "name": "@dyn-rt/manipulation",
   "version": "0.1.0",
-  "private": true,
   "description": "dyn-rt manipulation module (ADR 0010): get / set / delete / for_each / are_equal over native values at a JSONPath, plus the DynObject entrypoint wrapper. Port of libs/rust/manipulation; TS values are references, so mutation is direct and no reflect-ceremony is needed.",
   "type": "module",
   "exports": {
@@ -9,8 +8,9 @@
   },
   "types": "./src/index.ts",
   "files": [
-    "src",
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -29,5 +29,34 @@
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
+  },
+  "license": "MIT",
+  "author": "Declan Joseph <declan.obu@outlook.com>",
+  "keywords": [
+    "dyn-rt",
+    "jsonpath",
+    "get",
+    "set",
+    "delete",
+    "tree-manipulation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rogonion/dyn-rt.git",
+    "directory": "libs/typescript/manipulation"
+  },
+  "bugs": {
+    "url": "https://github.com/rogonion/dyn-rt/issues"
+  },
+  "homepage": "https://github.com/rogonion/dyn-rt",
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "types": "./dist/index.d.ts",
+    "main": "./dist/index.js"
   }
 }

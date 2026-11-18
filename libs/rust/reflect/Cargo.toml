@@ -3,7 +3,7 @@ name = "dyn-rt-reflect"
 description = "dyn-rt reflect module: general-purpose runtime reflection for Rust (go-reflect analogue). domain/application are std-only; adapters hold the Value/std impls."
 version.workspace = true
 edition.workspace = true
-license-file.workspace = true
+license.workspace = true
 
 [features]
 # External-type adapters: the only place their crates may be imported
@@ -12,13 +12,13 @@ serde-json = ["dep:serde_json"]
 
 [dependencies]
 # imported ONLY in src/adapters/ (impl Reflect for shared::Value)
-dyn-rt-shared = { path = "../shared" }
+dyn-rt-shared = { path = "../shared", version = "0.1.0" }
 # derive macros, re-exported at the crate root (serde-style)
-dyn-rt-reflect-derive = { path = "../reflect-derive" }
+dyn-rt-reflect-derive = { path = "../reflect-derive", version = "0.1.0" }
 # imported ONLY in src/adapters/serde_json.rs behind the serde-json feature
 serde_json = { version = "1", optional = true }
 
 [dev-dependencies]
-dyn-rt-test-support = { path = "../test-support" }
+dyn-rt-test-support = { path = "../test-support", version = "0.1.0" }
 # enable the adapter under test when running this crate's own tests
 dyn-rt-reflect = { path = ".", features = ["serde-json"] }

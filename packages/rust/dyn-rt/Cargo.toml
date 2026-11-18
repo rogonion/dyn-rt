@@ -3,7 +3,11 @@ name = "dyn-rt"
 description = "dyn-rt dynamic runtime: one crate, per-module features (ADR 0003/0007/0010). Modules: path, schema, manipulation, reflect, json (JSON value model only), metadatamodel."
 version.workspace = true
 edition.workspace = true
-license-file.workspace = true
+license.workspace = true
+readme = "README.md"
+documentation = "https://docs.rs/dyn-rt"
+keywords = ["dynamic-runtime", "jsonpath", "reflection", "schema", "metadata-model"]
+categories = ["data-structures", "parsing", "encoding"]
 
 [features]
 default = ["json", "path", "schema", "manipulation", "reflect"]
@@ -22,10 +26,10 @@ name = "schema_deser"
 required-features = ["deser"]
 
 [dependencies]
-dyn-rt-manipulation = { path = "../../../libs/rust/manipulation", optional = true }
-dyn-rt-path = { path = "../../../libs/rust/path", optional = true }
-dyn-rt-schema = { path = "../../../libs/rust/schema", optional = true }
-dyn-rt-metadatamodel = { path = "../../../libs/rust/metadatamodel", optional = true }
-dyn-rt-reflect = { path = "../../../libs/rust/reflect", optional = true }
-dyn-rt-shared = { path = "../../../libs/rust/shared", optional = true }
+dyn-rt-manipulation = { path = "../../../libs/rust/manipulation", version = "0.1.0", optional = true }
+dyn-rt-path = { path = "../../../libs/rust/path", version = "0.1.0", optional = true }
+dyn-rt-schema = { path = "../../../libs/rust/schema", version = "0.1.0", optional = true }
+dyn-rt-metadatamodel = { path = "../../../libs/rust/metadatamodel", version = "0.1.0", optional = true }
+dyn-rt-reflect = { path = "../../../libs/rust/reflect", version = "0.1.0", optional = true }
+dyn-rt-shared = { path = "../../../libs/rust/shared", version = "0.1.0", optional = true }
 

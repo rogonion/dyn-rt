@@ -1,0 +1,13 @@
+# @dyn-rt/schema
+
+dyn-rt schema module (ADR 0010): JSON-like schema trees over native values — validation, conversion, schema-path resolution. Port of libs/rust/schema; TS values are plain data, so no reflect ceremony is needed.
+
+Schemas over reflected data (Scalar, Any, Class, Map, Sequence, Indirection, Enum, plus sets): validate a value, convert it into the schema shape.
+
+Part of [dyn-rt](https://github.com/rogonion/dyn-rt) — a dynamic runtime layer
+over a language's own data types: JSONPath-style paths, reflection, schemas,
+get/set/delete manipulation, and a metadata-model layer on top. See the repo
+README and `docs/architecture/` (ADRs + descriptions, incl. the metadata
+model and filter query conditions) for the full picture.
+
+License: MIT (see LICENSE).

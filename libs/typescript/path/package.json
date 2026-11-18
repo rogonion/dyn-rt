@@ -1,7 +1,6 @@
 {
   "name": "@dyn-rt/path",
   "version": "0.1.0",
-  "private": true,
   "description": "dyn-rt path module (ADR 0010): JSONPath AST + parse use cases over any reflected tree. Port of libs/rust/path. Hexagon inside: domain (std only), application, adapters (regex tokenizer).",
   "type": "module",
   "exports": {
@@ -9,8 +8,9 @@
   },
   "types": "./src/index.ts",
   "files": [
-    "src",
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -23,5 +23,33 @@
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
+  },
+  "license": "MIT",
+  "author": "Declan Joseph <declan.obu@outlook.com>",
+  "keywords": [
+    "dyn-rt",
+    "jsonpath",
+    "path",
+    "parser",
+    "query"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rogonion/dyn-rt.git",
+    "directory": "libs/typescript/path"
+  },
+  "bugs": {
+    "url": "https://github.com/rogonion/dyn-rt/issues"
+  },
+  "homepage": "https://github.com/rogonion/dyn-rt",
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "types": "./dist/index.d.ts",
+    "main": "./dist/index.js"
   }
 }

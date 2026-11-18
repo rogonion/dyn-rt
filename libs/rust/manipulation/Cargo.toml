@@ -3,13 +3,13 @@ name = "dyn-rt-manipulation"
 description = "dyn-rt manipulation module: get/set/delete over reflected data via JSONPath (application use cases over reflect; adapters parse string paths). Depends on shared, reflect, path, schema."
 version.workspace = true
 edition.workspace = true
-license-file.workspace = true
+license.workspace = true
 
 [dependencies]
-dyn-rt-shared = { path = "../shared" }
-dyn-rt-reflect = { path = "../reflect" }
-dyn-rt-path = { path = "../path" }
-dyn-rt-schema = { path = "../schema" }
+dyn-rt-shared = { path = "../shared", version = "0.1.0" }
+dyn-rt-reflect = { path = "../reflect", version = "0.1.0" }
+dyn-rt-path = { path = "../path", version = "0.1.0" }
+dyn-rt-schema = { path = "../schema", version = "0.1.0" }
 
 [dev-dependencies]
-dyn-rt-test-support = { path = "../test-support" }
+dyn-rt-test-support = { path = "../test-support", version = "0.1.0" }
