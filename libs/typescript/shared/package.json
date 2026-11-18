@@ -1,6 +1,6 @@
 {
   "name": "@dyn-rt/shared",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Pure JSON value model + runtime value-kind helpers shared by all dyn-rt TypeScript modules. Std-only (no deps); port of libs/rust/shared.",
   "type": "module",
   "exports": {

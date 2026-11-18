@@ -18,15 +18,15 @@ deser = [
 ]
 
 [dependencies]
-dyn-rt-shared = { path = "../shared", version = "0.1.0" }
-dyn-rt-reflect = { path = "../reflect", version = "0.1.0" }
-dyn-rt-path = { path = "../path", version = "0.1.0" }
+dyn-rt-shared = { path = "../shared", version = "1.0.0" }
+dyn-rt-reflect = { path = "../reflect", version = "1.0.0" }
+dyn-rt-path = { path = "../path", version = "1.0.0" }
 # imported ONLY in src/adapters/deser.rs behind the deser feature
 serde_json = { version = "1", optional = true }
 serde_yaml = { version = "0.9", optional = true }
 toml = { version = "0.8", optional = true }
 
 [dev-dependencies]
-dyn-rt-test-support = { path = "../test-support", version = "0.1.0" }
+dyn-rt-test-support = { path = "../test-support", version = "1.0.0" }
 # enable the adapters under test when running this crate's own tests
 dyn-rt-schema = { path = ".", features = ["deser"] }

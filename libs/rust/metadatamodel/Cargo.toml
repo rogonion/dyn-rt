@@ -10,12 +10,12 @@ license.workspace = true
 deser = ["dep:serde_json"]
 
 [dependencies]
-dyn-rt-manipulation = { path = "../manipulation", version = "0.1.0" }
-dyn-rt-path = { path = "../path", version = "0.1.0" }
-dyn-rt-schema = { path = "../schema", version = "0.1.0" }
-dyn-rt-reflect = { path = "../reflect", version = "0.1.0" }
-dyn-rt-shared = { path = "../shared", version = "0.1.0" }
+dyn-rt-manipulation = { path = "../manipulation", version = "1.0.0" }
+dyn-rt-path = { path = "../path", version = "1.0.0" }
+dyn-rt-schema = { path = "../schema", version = "1.0.0" }
+dyn-rt-reflect = { path = "../reflect", version = "1.0.0" }
+dyn-rt-shared = { path = "../shared", version = "1.0.0" }
 serde_json = { version = "1", optional = true }
 
 [dev-dependencies]
-dyn-rt-test-support = { path = "../test-support", version = "0.1.0" }
+dyn-rt-test-support = { path = "../test-support", version = "1.0.0" }

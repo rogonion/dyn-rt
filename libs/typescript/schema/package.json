@@ -1,6 +1,6 @@
 {
   "name": "@dyn-rt/schema",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "dyn-rt schema module (ADR 0010): JSON-like schema trees over native values — validation, conversion, schema-path resolution. Port of libs/rust/schema; TS values are plain data, so no reflect ceremony is needed.",
   "type": "module",
   "exports": {

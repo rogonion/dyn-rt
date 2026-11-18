@@ -1,6 +1,6 @@
 {
   "name": "@dyn-rt/reflect",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "dyn-rt reflect module (ADR 0010): runtime reflection over native JS/TS values — kind routing + sequence/map/struct/scalar accessors, deep clone, zero, apply. Port of libs/rust/reflect; TS needs no trait machinery, shared's kindOf does the routing.",
   "type": "module",
   "exports": {

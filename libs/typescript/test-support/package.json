@@ -1,6 +1,6 @@
 {
   "name": "@dyn-rt/test-support",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Dev-only data-driven test harness for dyn-rt TypeScript modules (ADR 0004): case tables in code, one test loop per suite, per-case PASS/FAIL logging via TestReport.",
   "type": "module",

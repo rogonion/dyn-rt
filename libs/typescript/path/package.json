@@ -1,6 +1,6 @@
 {
   "name": "@dyn-rt/path",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "dyn-rt path module (ADR 0010): JSONPath AST + parse use cases over any reflected tree. Port of libs/rust/path. Hexagon inside: domain (std only), application, adapters (regex tokenizer).",
   "type": "module",
   "exports": {

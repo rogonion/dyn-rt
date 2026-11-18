@@ -1,6 +1,6 @@
 {
   "name": "@dyn-rt/dyn-rt",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "dyn-rt dynamic runtime — single publishable TypeScript package facading libs/typescript modules via subpath exports (ADR 0003).",
   "type": "module",
   "exports": {

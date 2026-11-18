@@ -1,6 +1,6 @@
 {
   "name": "@dyn-rt/metadatamodel",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "dyn-rt metadatamodel (TS): the metadata model as an extensible JSON-like Value tree — field/group props, templated group:path_key paths, strict cardinality, plus the fieldcolumns / database / iter / filter / flattener / unflattener / groupindex subdomains. Port of libs/rust/metadatamodel.",
   "type": "module",
   "exports": {

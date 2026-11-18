@@ -1,6 +1,6 @@
 {
   "name": "@dyn-rt/manipulation",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "dyn-rt manipulation module (ADR 0010): get / set / delete / for_each / are_equal over native values at a JSONPath, plus the DynObject entrypoint wrapper. Port of libs/rust/manipulation; TS values are references, so mutation is direct and no reflect-ceremony is needed.",
   "type": "module",
   "exports": {

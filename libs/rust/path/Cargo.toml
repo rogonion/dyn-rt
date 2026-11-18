@@ -10,4 +10,4 @@ license.workspace = true
 regex = "1"
 
 [dev-dependencies]
-dyn-rt-test-support = { path = "../test-support", version = "0.1.0" }
+dyn-rt-test-support = { path = "../test-support", version = "1.0.0" }

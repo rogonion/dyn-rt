@@ -33,27 +33,106 @@ See `docs/architecture/ADRs/` for the decisions and
 ## Layout
 
 ```
-apps/       executables (composition roots)
 libs/       one crate/package per module (ADR 0007): shared, test-support (dev-only),
             path, reflect, schema, manipulation, metadatamodel —
             each with src/{domain, application, adapters} inside
-            (metadatamodel: one subdir per subdomain, each domain/application/index)
+            (metadatamodel: one subdir per subdomain, each domain/application/adapters)
 packages/   publishable export entrypoints (one per ecosystem, ADR 0003)
 docs/       architecture ADRs + descriptions
+misc/       scratch notes
 ```
 
-## Example (TypeScript)
+This is a library repo — there is no `apps/`; executables/composition roots
+live in consuming projects.
+
+## Examples
+
+Per-module snippets in both ecosystems. The Rust snippets below are a
+condensed form of the runnable tour in
+[packages/rust/dyn-rt/examples/modules.rs](packages/rust/dyn-rt/examples/modules.rs):
+
+```sh
+cargo run -p dyn-rt --example modules --features metadatamodel
+```
+
+### Rust
+
+```rust
+use dyn_rt::json::Value;
+use dyn_rt::manipulation::DynObject;
+use dyn_rt::reflect::{ReflectStruct, kind_of};
+use dyn_rt::schema::{Schema, SchemaNode, convert, validate};
+
+#[derive(ReflectStruct, Clone, Debug, Default, PartialEq)]
+#[reflect(new)]
+struct User {
+    #[reflect(rename = "ID")]
+    id: Vec<i64>,
+    #[reflect(rename = "Name")]
+    name: Vec<String>,
+}
+
+// json — the JSON data model (Value / Number / JsonError)
+let mut doc = Value::object([
+    ("ID", Value::from(vec![Value::from(101i64)])),
+    ("Name", Value::from(vec![Value::from("Alice")])),
+]);
+
+// path — parse a JSONPath into segments (Display renders it back)
+let segments = dyn_rt::path::parse("$.ID[0]"); // "$.ID[0]"
+
+// reflect — runtime reflection over the native struct
+let user = User { id: vec![1], name: vec!["Alice".to_string()] };
+kind_of(&user); // ReflectKind::Struct
+
+// schema — validate + convert
+let schema = Schema::Node(SchemaNode::scalar::<i64>());
+validate(&42i64, &schema).unwrap();
+let mut target = 0i64;
+convert(&42i64, &schema, &mut target).unwrap(); // target == 42
+
+// manipulation — DynObject get / set / delete at a JSONPath
+let mut obj = DynObject::new(&mut doc);
+obj.get("$.ID[0]").unwrap();                      // 1 value
+obj.set("$.Name[0]", &Value::from("Alicia")).unwrap();
+obj.delete("$.ID").unwrap();
+
+// metadatamodel — post-process a group:path_key template, flatten to a 2D table
+let data_path = dyn_rt::metadatamodel::core::data_path(
+    "$['group:fields'][*].ID[*]", &[], dyn_rt::metadatamodel::core::Cardinality::Array,
+).unwrap(); // "$.ID[0]"
+let mut flattener = dyn_rt::metadatamodel::flattener::Flattener::new(&model).unwrap();
+flattener.flatten(&DynObject::read_only(&user)).unwrap();
+flattener.result();
+```
+
+### TypeScript
 
 ```ts
-import { metadatamodel, manipulation, path, schema } from "@dyn-rt/dyn-rt";
+import { shared, path, schema, manipulation, metadatamodel } from "@dyn-rt/dyn-rt";
 
-// explore any native structure at any depth with a JSONPath
+// any native structure works — plain objects, arrays, class instances, ...
 const user = { ID: [101], Name: ["Alice"], Address: [{ City: ["Nairobi"] }] };
-const obj = manipulation.DynObject.new(user);
-obj.get("$.Address[*].City[*]");            // => ["Nairobi"]
-obj.set("$.Name[0]", "Alicia");             // => 1
 
-// a metadata model is a plain value: fields/groups with <section>:<key> props
+// reflect — kindOf distinguishes built-ins and class instances
+shared.kindOf(user); // "plain-object"
+
+// path — parse a JSONPath into segments
+path.parsePath(new path.RegexPathTokenizer(), "$.ID[0]");
+
+// schema — validate + convert
+const numSchema = schema.scalar("number");
+schema.validate(42, numSchema);
+schema.convert(42, numSchema); // 42
+
+// manipulation — explore/set/delete any structure at any depth with a JSONPath
+const obj = manipulation.DynObject.new(user);
+obj.get("$.Address[*].City[*]");  // => ["Nairobi"]
+obj.set("$.Name[0]", "Alicia");   // => 1
+obj.delete("$.ID");               // => 1
+
+// metadatamodel — a metadata model is a plain value: fields/groups with
+// <section>:<key> props, always arrays down to the field props
 const model = {
   [metadatamodel.core.props.GROUP_PATH_KEY]: "$",
   [metadatamodel.core.FIELDS_KEY]: [
@@ -68,12 +147,17 @@ metadatamodel.core.dataPath("$['group:fields'][*].ID[*]", [], "array"); // "$.ID
 // flatten nested data to a 2D table, filter rows by query conditions, ...
 const flattener = new metadatamodel.flattener.Flattener(model);
 flattener.flatten(manipulation.DynObject.new(user));
-flattener.result();                         // => [[[101]]]
+flattener.result();                                   // => [[[101]]]
+const dataFilter = new metadatamodel.filter.DataFilter(
+  manipulation.DynObject.new(rows), model,
+);
+dataFilter.filter(queryCondition); // indexes that did NOT pass the filter
 ```
 
 See [docs/architecture/descriptions/metadatamodel.md](docs/architecture/descriptions/metadatamodel.md)
 for a comprehensive nested metadata model (groups, `db:*` column mapping,
-cardinality, separate columns) and filter query-condition examples.
+cardinality, separate columns) and the full JSON structure of filter
+query conditions.
 
 ## Commands
 
