@@ -46,6 +46,7 @@
   },
   "homepage": "https://github.com/rogonion/dyn-rt",
   "publishConfig": {
+    "access": "public",
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",

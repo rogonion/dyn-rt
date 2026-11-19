@@ -12,6 +12,13 @@ ts-install = "pnpm install"
 ts-build = "pnpm -r --if-present build"
 ts-test = "pnpm -r --if-present test"
 ts-lint = "pnpm -r --if-present lint"
+# Publishes the 7 public @dyn-rt/* packages to npm in dependency order
+# (pnpm -r is topological; workspace:* deps are rewritten to 1.0.0 and
+# publishConfig swaps exports to dist/, access public is baked in).
+# Requires npm auth (npm login, or NPM_TOKEN in env) and a clean git tree.
+# Dry-run first: uv run poe ts-publish-dry
+ts-publish-dry = "pnpm -r publish --dry-run --no-git-checks"
+ts-publish = "pnpm -r build && pnpm -r publish --no-git-checks"
 
 fmt = ["rs-fmt"]
 lint = ["rs-clippy", "ts-lint"]
