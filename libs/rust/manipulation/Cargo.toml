@@ -4,6 +4,8 @@ description = "dyn-rt manipulation module: get/set/delete over reflected data vi
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 readme = "README.md"
 
 [dependencies]
@@ -13,4 +15,4 @@ dyn-rt-path = { path = "../path", version = "1.0.0" }
 dyn-rt-schema = { path = "../schema", version = "1.0.0" }
 
 [dev-dependencies]
-dyn-rt-test-support = { path = "../test-support", version = "1.0.0" }
+dyn-rt-test-support = { path = "../test-support" }

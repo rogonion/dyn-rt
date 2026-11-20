@@ -4,6 +4,8 @@ description = "dyn-rt reflect module: general-purpose runtime reflection for Rus
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 readme = "README.md"
 
 [features]
@@ -20,6 +22,6 @@ dyn-rt-reflect-derive = { path = "../reflect-derive", version = "1.0.0" }
 serde_json = { version = "1", optional = true }
 
 [dev-dependencies]
-dyn-rt-test-support = { path = "../test-support", version = "1.0.0" }
+dyn-rt-test-support = { path = "../test-support" }
 # enable the adapter under test when running this crate's own tests
 dyn-rt-reflect = { path = ".", features = ["serde-json"] }

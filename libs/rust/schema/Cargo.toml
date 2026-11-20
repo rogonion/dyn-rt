@@ -4,6 +4,8 @@ description = "dyn-rt schema module: schema model (domain), validation + schema-
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 readme = "README.md"
 
 [features]
@@ -28,6 +30,6 @@ serde_yaml = { version = "0.9", optional = true }
 toml = { version = "0.8", optional = true }
 
 [dev-dependencies]
-dyn-rt-test-support = { path = "../test-support", version = "1.0.0" }
+dyn-rt-test-support = { path = "../test-support" }
 # enable the adapters under test when running this crate's own tests
 dyn-rt-schema = { path = ".", features = ["deser"] }

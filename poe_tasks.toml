@@ -8,6 +8,21 @@ rs-clippy = "cargo clippy --workspace --all-targets -- -D warnings"
 rs-test = "cargo test --workspace"
 rs-build = "cargo build --workspace"
 
+# Publishes the Rust crates to crates.io in dependency order (cargo publish
+# resolves path deps with `version` against the index, so each crate needs
+# its deps published first). Requires `cargo login` once. The dev-only
+# dyn-rt-test-support stays publish = false: dev-deps are path-only so they
+# are not resolved against the registry at publish time.
+rs-pub-shared = "cargo publish -p dyn-rt-shared"
+rs-pub-path = "cargo publish -p dyn-rt-path"
+rs-pub-reflect = "cargo publish -p dyn-rt-reflect"
+rs-pub-schema = "cargo publish -p dyn-rt-schema"
+rs-pub-manipulation = "cargo publish -p dyn-rt-manipulation"
+rs-pub-metadatamodel = "cargo publish -p dyn-rt-metadatamodel"
+rs-pub-facade = "cargo publish -p dyn-rt"
+rs-publish-dry = "cargo publish --dry-run -p dyn-rt-shared"
+rs-publish = ["rs-pub-shared", "rs-pub-path", "rs-pub-reflect", "rs-pub-schema", "rs-pub-manipulation", "rs-pub-metadatamodel", "rs-pub-facade"]
+
 ts-install = "pnpm install"
 ts-build = "pnpm -r --if-present build"
 ts-test = "pnpm -r --if-present test"
@@ -18,7 +33,8 @@ ts-lint = "pnpm -r --if-present lint"
 # Requires npm auth (npm login, or NPM_TOKEN in env) and a clean git tree.
 # Dry-run first: uv run poe ts-publish-dry
 ts-publish-dry = "pnpm -r publish --dry-run --no-git-checks"
-ts-publish = "pnpm -r build && pnpm -r publish --no-git-checks"
+ts-publish-run = "pnpm -r publish --no-git-checks"
+ts-publish = ["ts-build", "ts-publish-run"]
 
 fmt = ["rs-fmt"]
 lint = ["rs-clippy", "ts-lint"]

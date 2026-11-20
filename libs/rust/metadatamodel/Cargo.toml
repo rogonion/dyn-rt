@@ -4,6 +4,8 @@ description = "dyn-rt metadatamodel: metadata model (JSON-like Value) + field/gr
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 readme = "README.md"
 
 [features]
@@ -19,4 +21,4 @@ dyn-rt-shared = { path = "../shared", version = "1.0.0" }
 serde_json = { version = "1", optional = true }
 
 [dev-dependencies]
-dyn-rt-test-support = { path = "../test-support", version = "1.0.0" }
+dyn-rt-test-support = { path = "../test-support" }

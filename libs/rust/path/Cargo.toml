@@ -4,6 +4,8 @@ description = "dyn-rt path module: JSONPath AST (domain), parse use cases (appli
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 readme = "README.md"
 
 [dependencies]
@@ -11,4 +13,4 @@ readme = "README.md"
 regex = "1"
 
 [dev-dependencies]
-dyn-rt-test-support = { path = "../test-support", version = "1.0.0" }
+dyn-rt-test-support = { path = "../test-support" }
