@@ -15,13 +15,14 @@ rs-build = "cargo build --workspace"
 # are not resolved against the registry at publish time.
 rs-pub-shared = "cargo publish -p dyn-rt-shared"
 rs-pub-path = "cargo publish -p dyn-rt-path"
+rs-pub-reflect-derive = "cargo publish -p dyn-rt-reflect-derive"
 rs-pub-reflect = "cargo publish -p dyn-rt-reflect"
 rs-pub-schema = "cargo publish -p dyn-rt-schema"
 rs-pub-manipulation = "cargo publish -p dyn-rt-manipulation"
 rs-pub-metadatamodel = "cargo publish -p dyn-rt-metadatamodel"
 rs-pub-facade = "cargo publish -p dyn-rt"
 rs-publish-dry = "cargo publish --dry-run -p dyn-rt-shared"
-rs-publish = ["rs-pub-shared", "rs-pub-path", "rs-pub-reflect", "rs-pub-schema", "rs-pub-manipulation", "rs-pub-metadatamodel", "rs-pub-facade"]
+rs-publish = ["rs-pub-shared", "rs-pub-path", "rs-pub-reflect-derive", "rs-pub-reflect", "rs-pub-schema", "rs-pub-manipulation", "rs-pub-metadatamodel", "rs-pub-facade"]
 
 ts-install = "pnpm install"
 ts-build = "pnpm -r --if-present build"
