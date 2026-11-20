@@ -1,13 +1,28 @@
 # @dyn-rt/reflect
 
-dyn-rt reflect module (ADR 0010): runtime reflection over native JS/TS values — kind routing + sequence/map/struct/scalar accessors, deep clone, zero, apply. Port of libs/rust/reflect; TS needs no trait machinery, shared's kindOf does the routing.
+dyn-rt reflect module: runtime introspection helpers routed on `shared.kindOf` — sequences (arrays), maps (plain objects), class instances (the struct analogue), scalars, deep clone / zero. Port of libs/rust/reflect.
 
-Runtime reflection over native TS values mapped onto the dyn-rt shape vocabulary (Scalar / Sequence / Map / Class / Unknown), usable independently of the rest of dyn-rt.
+```ts
+import { reflect, shared } from "@dyn-rt/dyn-rt";
 
-Part of [dyn-rt](https://github.com/rogonion/dyn-rt) — a dynamic runtime layer
-over a language's own data types: JSONPath-style paths, reflection, schemas,
-get/set/delete manipulation, and a metadata-model layer on top. See the repo
-README and `docs/architecture/` (ADRs + descriptions, incl. the metadata
-model and filter query conditions) for the full picture.
+class User {
+  ID: number[] = [];
+  Name: string[] = [];
+  meta: Record<string, [number, string][]> = {};
+}
+const user = new User();
+user.ID = [1];
+user.meta = { k1: [[1, "one"]] };
 
-License: MIT (see LICENSE).
+shared.kindOf(user);                  // "class-instance"
+reflect.asSequence(user.ID);          // [1]
+reflect.asMap(user.meta);             // { k1: [[1, "one"]] }
+reflect.classFieldNames(user);        // ["ID", "Name", "meta"]
+reflect.classGet(user, "ID");         // [1]
+reflect.scalarString("x");            // "x"
+reflect.reflectClone(user);           // deep clone
+```
+
+Full examples (incl. complex nested class shapes): <https://github.com/rogonion/dyn-rt/blob/main/docs/examples/typescript/reflect.md>
+
+Part of [dyn-rt](https://github.com/rogonion/dyn-rt). License: MIT (see LICENSE).

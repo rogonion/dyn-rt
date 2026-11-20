@@ -1,13 +1,33 @@
 # @dyn-rt/metadatamodel
 
-dyn-rt metadatamodel (TS): the metadata model as an extensible JSON-like Value tree — field/group props, templated group:path_key paths, strict cardinality, plus the fieldcolumns / database / iter / filter / flattener / unflattener / groupindex subdomains. Port of libs/rust/metadatamodel.
+dyn-rt metadatamodel module: the metadata model as an extensible plain JSON-like object (fields/groups with `<section>:<key>` props, always arrays down to the field props, `group:path_key` templates keeping `[*]`, single/array cardinality) with subdomains: core, fieldcolumns, database, iter, filter, flattener, unflattener, groupindex. Port of libs/rust/metadatamodel.
 
-The metadata model as an extensible JSON-like tree (section:key props, templated group:path_key, strict single/array cardinality) with subdomains: core, fieldcolumns, database, iter, filter, flattener, unflattener, groupindex.
+```ts
+import { manipulation, metadatamodel } from "@dyn-rt/dyn-rt";
+const core = metadatamodel.core;
 
-Part of [dyn-rt](https://github.com/rogonion/dyn-rt) — a dynamic runtime layer
-over a language's own data types: JSONPath-style paths, reflection, schemas,
-get/set/delete manipulation, and a metadata-model layer on top. See the repo
-README and `docs/architecture/` (ADRs + descriptions, incl. the metadata
-model and filter query conditions) for the full picture.
+const model = {
+  [core.props.GROUP_PATH_KEY]: "$",
+  [core.FIELDS_KEY]: [
+    {
+      ID: [
+        {
+          [core.props.GROUP_PATH_KEY]: "$['group:fields'][*].ID[*]",
+          [core.props.GROUP_IS_PRIMARY_KEY]: true,
+        },
+      ],
+    },
+  ],
+};
 
-License: MIT (see LICENSE).
+core.dataPath("$['group:fields'][*].ID[*]", [], "array"); // "$.ID[0]"
+
+const rows = [{ ID: [101] }];
+const flattener = new metadatamodel.flattener.Flattener(model);
+flattener.flatten(manipulation.DynObject.new(rows));
+flattener.result(); // [[[101]]]
+```
+
+Full examples (all subdomains, mixed cardinality, flatten/unflatten roundtrip, filter query conditions): <https://github.com/rogonion/dyn-rt/blob/main/docs/examples/typescript/metadatamodel.md> — plus the long-form model + query-condition JSON in `docs/architecture/descriptions/metadatamodel.md`.
+
+Part of [dyn-rt](https://github.com/rogonion/dyn-rt). License: MIT (see LICENSE).

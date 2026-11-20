@@ -4,6 +4,7 @@ description = "dyn-rt metadatamodel: metadata model (JSON-like Value) + field/gr
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+readme = "README.md"
 
 [features]
 # text deserialization of metadata model documents (serde json) into Value

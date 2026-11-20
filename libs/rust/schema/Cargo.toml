@@ -4,6 +4,7 @@ description = "dyn-rt schema module: schema model (domain), validation + schema-
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+readme = "README.md"
 
 [features]
 # Text deserialization adapters (serde formats). The serde crates are

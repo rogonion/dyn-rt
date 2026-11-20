@@ -1,13 +1,28 @@
 # @dyn-rt/manipulation
 
-dyn-rt manipulation module (ADR 0010): get / set / delete / for_each / are_equal over native values at a JSONPath, plus the DynObject entrypoint wrapper. Port of libs/rust/manipulation; TS values are references, so mutation is direct and no reflect-ceremony is needed.
+dyn-rt manipulation module: `DynObject` — the entrypoint wrapping any source value — with `get` / `set` / `delete` / `forEach` at a JSONPath (string or parsed AST), plus `areEqual` deep comparison. Port of libs/rust/manipulation.
 
-The DynObject entrypoint: get / set / delete / forEach at a JSONPath (string or parsed segments) over any reflected value, schema-guided sets, and deep-equal areEqual.
+```ts
+import { manipulation } from "@dyn-rt/dyn-rt";
 
-Part of [dyn-rt](https://github.com/rogonion/dyn-rt) — a dynamic runtime layer
-over a language's own data types: JSONPath-style paths, reflection, schemas,
-get/set/delete manipulation, and a metadata-model layer on top. See the repo
-README and `docs/architecture/` (ADRs + descriptions, incl. the metadata
-model and filter query conditions) for the full picture.
+const doc = {
+  ID: [101, 102],
+  Address: [{ City: ["Nairobi", "Mombasa"] }],
+};
+const obj = manipulation.DynObject.new(doc);
 
-License: MIT (see LICENSE).
+obj.get("$.ID[*]");      // 2 values
+obj.get("$.ID[-1]");     // negative index
+obj.get("$..City[*]");   // ["Nairobi", "Mombasa"] — recursive descent
+obj.set("$.ID[0]", 7);   // => 1
+obj.delete("$.ID[1]");   // => 1
+
+manipulation.areEqual({ a: [1] }, { a: [1] }); // true
+```
+
+Works on plain objects, arrays, and class instances at any depth, e.g.
+`obj.get("$.Maybe.City[0]")` through an optional nested class field.
+
+Full examples (incl. complex nested class shapes): <https://github.com/rogonion/dyn-rt/blob/main/docs/examples/typescript/manipulation.md>
+
+Part of [dyn-rt](https://github.com/rogonion/dyn-rt). License: MIT (see LICENSE).

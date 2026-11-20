@@ -4,6 +4,7 @@ description = "dyn-rt reflect module: general-purpose runtime reflection for Rus
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+readme = "README.md"
 
 [features]
 # External-type adapters: the only place their crates may be imported

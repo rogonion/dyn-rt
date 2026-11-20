@@ -4,6 +4,7 @@ description = "Shared substrate for dyn-rt modules: the pure Value/Number model 
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+readme = "README.md"
 
 [dependencies]
 

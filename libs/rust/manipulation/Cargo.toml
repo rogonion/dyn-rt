@@ -4,6 +4,7 @@ description = "dyn-rt manipulation module: get/set/delete over reflected data vi
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+readme = "README.md"
 
 [dependencies]
 dyn-rt-shared = { path = "../shared", version = "1.0.0" }

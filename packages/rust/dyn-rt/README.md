@@ -20,12 +20,39 @@ use (ADR 0003):
 | `deser` | Text deserialization (serde json/yaml/toml) into reflect-able values |
 
 ```rust
-use dyn_rt::{json::Value, manipulation::DynObject, path};
+use dyn_rt::json::Value;
+use dyn_rt::manipulation::DynObject;
 
-let mut doc = Value::object([("name", Value::from("dyn-rt"))]);
-let obj = DynObject::new(&mut doc);
-let found = obj.get(&path::parse_path(...)); // ...
+let mut doc = Value::object([
+    ("ID", Value::from(vec![Value::from(101i64)])),
+    ("Address", Value::from(vec![Value::object([(
+        "City",
+        Value::from(vec![Value::from("Nairobi")]),
+    )])])),
+]);
+
+let mut obj = DynObject::new(&mut doc);
+let found = obj.get("$.ID[0]").unwrap();        // 1 value
+let cities = obj.get("$..City[*]").unwrap();    // recursive descent
+obj.set("$.ID[0]", &Value::from(7i64)).unwrap();
+obj.delete("$.Address").unwrap();
 ```
+
+Runnable tour through every module:
+
+```sh
+cargo run -p dyn-rt --example modules --features metadatamodel
+cargo run -p dyn-rt --example schema_deser --features deser
+```
+
+**Full per-module examples (verified, incl. complex nested shapes):**
+<https://github.com/rogonion/dyn-rt/tree/main/docs/examples/rust> —
+[shared](https://github.com/rogonion/dyn-rt/blob/main/docs/examples/rust/shared.md) ·
+[path](https://github.com/rogonion/dyn-rt/blob/main/docs/examples/rust/path.md) ·
+[reflect](https://github.com/rogonion/dyn-rt/blob/main/docs/examples/rust/reflect.md) ·
+[schema](https://github.com/rogonion/dyn-rt/blob/main/docs/examples/rust/schema.md) ·
+[manipulation](https://github.com/rogonion/dyn-rt/blob/main/docs/examples/rust/manipulation.md) ·
+[metadatamodel](https://github.com/rogonion/dyn-rt/blob/main/docs/examples/rust/metadatamodel.md)
 
 See the repository for full docs: <https://github.com/rogonion/dyn-rt>
 (ADRs in `docs/architecture/ADRs/`, long-form descriptions in

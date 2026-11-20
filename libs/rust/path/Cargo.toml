@@ -4,6 +4,7 @@ description = "dyn-rt path module: JSONPath AST (domain), parse use cases (appli
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+readme = "README.md"
 
 [dependencies]
 # `regex` is imported ONLY in src/adapters.rs (ADR 0002/0007)
