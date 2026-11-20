@@ -80,10 +80,4 @@ export interface FilterContext {
 
 /** A condition processor: decides whether `valueFound` satisfies
  * `condition` with the parameters in `filterValue` (go's `ConditionTrue`). */
-export type ConditionProcessor = (
-  ctx: FilterContext,
-  pathKey: string,
-  condition: string,
-  valueFound: unknown,
-  filterValue: Value,
-) => boolean;
+export type ConditionProcessor = (ctx: FilterContext, pathKey: string, condition: string, valueFound: unknown, filterValue: Value) => boolean;

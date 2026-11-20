@@ -5,10 +5,10 @@ dyn-rt shared module: the JSON value model (`Value` is a type alias over plain J
 ```ts
 import { shared } from "@dyn-rt/dyn-rt";
 
-shared.kindOf({ a: 1 });   // "plain-object"
-shared.kindOf([1, 2]);     // "array"
+shared.kindOf({ a: 1 }); // "plain-object"
+shared.kindOf([1, 2]); // "array"
 shared.kindOf(new Date()); // "date"
-shared.kindOf(new Map());  // "class-instance"
+shared.kindOf(new Map()); // "class-instance"
 shared.isPlainObject({ a: 1 }); // true
 ```
 

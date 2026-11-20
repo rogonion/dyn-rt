@@ -15,13 +15,7 @@ export class JsonError extends Error {
   readonly expected: string | undefined;
   readonly found: string | undefined;
 
-  private constructor(
-    kind: JsonErrorKind,
-    message: string,
-    path?: string,
-    expected?: string,
-    found?: string,
-  ) {
+  private constructor(kind: JsonErrorKind, message: string, path?: string, expected?: string, found?: string) {
     super(message);
     this.name = "JsonError";
     this.kind = kind;
@@ -42,13 +36,7 @@ export class JsonError extends Error {
 
   /** A path resolved to a value of an unexpected type. */
   static typeMismatch(path: string, expected: string, found: string): JsonError {
-    return new JsonError(
-      "TypeMismatch",
-      `type mismatch at ${path}: expected ${expected}, found ${found}`,
-      path,
-      expected,
-      found,
-    );
+    return new JsonError("TypeMismatch", `type mismatch at ${path}: expected ${expected}, found ${found}`, path, expected, found);
   }
 
   /**

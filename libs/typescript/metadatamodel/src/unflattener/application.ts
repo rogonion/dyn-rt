@@ -9,34 +9,13 @@
 import { DynObject } from "@dyn-rt/manipulation";
 import type { RecursiveDescentSegments } from "@dyn-rt/path";
 import type { Value } from "@dyn-rt/shared";
-import {
-  cardinalityOf,
-  containsNestedGroups,
-  dataPathModelAware,
-  fieldsOf,
-  isGroup,
-  parseTemplate,
-  pathKeyOf,
-  prop,
-  propsOf,
-  readOrderOf,
-} from "../core/index.js";
+import { cardinalityOf, containsNestedGroups, dataPathModelAware, fieldsOf, isGroup, parseTemplate, pathKeyOf, prop, propsOf, readOrderOf } from "../core/index.js";
 import { FIELDS_KEY, props, type MetadataModel } from "../core/domain.js";
 import { MetadatamodelError } from "../error.js";
-import {
-  ColumnFields,
-  extract,
-  groupColumnIndexes,
-  maxFlatColumns,
-  type FieldColumnPosition,
-} from "../fieldcolumns/index.js";
+import { ColumnFields, extract, groupColumnIndexes, maxFlatColumns, type FieldColumnPosition } from "../fieldcolumns/index.js";
 import type { FlattenedTable } from "../flattener/index.js";
 import { GroupCollection, Signature } from "../groupindex/index.js";
-import {
-  DEFAULT_SINGLE_CELL_MODE,
-  type GroupIndexTree,
-  type SingleCellMode,
-} from "./domain.js";
+import { DEFAULT_SINGLE_CELL_MODE, type GroupIndexTree, type SingleCellMode } from "./domain.js";
 
 /** Converts a 2D table into a nested collection written to `destination`
  * (go's `Unflattener`). The destination root is always a collection. */
@@ -70,27 +49,14 @@ export class Unflattener {
   }
 
   /** Creates an unflattener with caller-provided column fields. */
-  static withColumnFields(
-    model: MetadataModel,
-    columnFields: ColumnFields,
-    destination: DynObject,
-  ): Unflattener {
+  static withColumnFields(model: MetadataModel, columnFields: ColumnFields, destination: DynObject): Unflattener {
     return new Unflattener(model, destination, columnFields);
   }
 
   /** Processes every row of `table` into the destination (go's `Unflatten`). */
   unflatten(table: FlattenedTable): void {
     for (const row of table) {
-      recursiveConvert(
-        this.tree,
-        this.model,
-        this.columnFields,
-        this.destination,
-        this.singleCellMode,
-        this.index,
-        [],
-        row,
-      );
+      recursiveConvert(this.tree, this.model, this.columnFields, this.destination, this.singleCellMode, this.index, [], row);
     }
   }
 }
@@ -99,11 +65,7 @@ export class Unflattener {
 // group index tree (go's recursiveInitGroupIndexTree)
 // ---------------------------------------------------------------------------
 
-function buildGroupIndexTree(
-  group: MetadataModel,
-  groupPathKey: string,
-  columnFields: ColumnFields,
-): GroupIndexTree {
+function buildGroupIndexTree(group: MetadataModel, groupPathKey: string, columnFields: ColumnFields): GroupIndexTree {
   const columnIndexes = groupColumnIndexes(columnFields, group);
   const tree: GroupIndexTree = {
     pathKey: groupPathKey,
@@ -118,9 +80,7 @@ function buildGroupIndexTree(
   for (const key of order) {
     const entry = fieldsObj[key];
     if (entry === undefined) {
-      throw MetadatamodelError.invalidModel(
-        `field ${JSON.stringify(key)} not found in ${JSON.stringify(FIELDS_KEY)}[0]`,
-      );
+      throw MetadatamodelError.invalidModel(`field ${JSON.stringify(key)} not found in ${JSON.stringify(FIELDS_KEY)}[0]`);
     }
     const fgProps = propsOf(entry);
     const pathKey = pathKeyOf(fgProps);
@@ -165,8 +125,7 @@ function recursiveConvert(
   row: Value[],
 ): void {
   // 1. signature from primary key columns (else all columns)
-  const signatureColumns =
-    tree.columnIndexes.primary.length > 0 ? tree.columnIndexes.primary : tree.columnIndexes.all;
+  const signatureColumns = tree.columnIndexes.primary.length > 0 ? tree.columnIndexes.primary : tree.columnIndexes.all;
   const signature = new Signature().generateSignature(row, signatureColumns);
 
   // 2. get/create the instance
@@ -213,25 +172,14 @@ function recursiveConvert(
     try {
       destination.set(target, valueToWrite);
     } catch (err) {
-      throw MetadatamodelError.manipulation(
-        `write field failed: ${err instanceof Error ? err.message : String(err)}`,
-      );
+      throw MetadatamodelError.manipulation(`write field failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
   // 4. recurse into nested groups
   for (const child of tree.children) {
     const childCollection = node.getOrCreateGroup(child.suffix);
-    recursiveConvert(
-      child,
-      model,
-      columnFields,
-      destination,
-      singleCellMode,
-      childCollection,
-      currentPathIndexes,
-      row,
-    );
+    recursiveConvert(child, model, columnFields, destination, singleCellMode, childCollection, currentPathIndexes, row);
   }
 }
 
@@ -239,11 +187,7 @@ function recursiveConvert(
  * collection, so the first path index addresses the root entry; the rest
  * address the nested groups. Separate-column leaves additionally index the
  * field's own array with their header index. */
-function leafTargetPath(
-  position: FieldColumnPosition,
-  model: MetadataModel,
-  pathIndexes: number[],
-): RecursiveDescentSegments {
+function leafTargetPath(position: FieldColumnPosition, model: MetadataModel, pathIndexes: number[]): RecursiveDescentSegments {
   const rootIndex = pathIndexes[0];
   const rest = pathIndexes.slice(1);
   if (rootIndex === undefined) {
@@ -280,20 +224,14 @@ function leafTargetPath(
 /** Applies cardinality to a cell before writing: a `single` field's cell
  * array is unwrapped (erroring on >1 values unless TakeFirst); an `array`
  * field's cell is written as-is. */
-function valueForCell(
-  cell: Value,
-  fieldProps: Value,
-  singleCellMode: SingleCellMode,
-): Value {
+function valueForCell(cell: Value, fieldProps: Value, singleCellMode: SingleCellMode): Value {
   const cardinality = cardinalityOf(fieldProps);
   if (cardinality === "single") {
     if (Array.isArray(cell)) {
       if (cell.length === 0) return null;
       if (cell.length === 1) return cell[0]!;
       if (singleCellMode === "TakeFirst") return cell[0]!;
-      throw MetadatamodelError.unflatten(
-        `single-cardinality field cell has ${cell.length} values`,
-      );
+      throw MetadatamodelError.unflatten(`single-cardinality field cell has ${cell.length} values`);
     }
     return cell;
   }

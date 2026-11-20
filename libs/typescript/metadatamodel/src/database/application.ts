@@ -15,18 +15,7 @@ import { DynObject } from "@dyn-rt/manipulation";
 import type { RecursiveDescentSegments } from "@dyn-rt/path";
 import { reflectRef } from "@dyn-rt/reflect";
 import type { Schema } from "@dyn-rt/schema";
-import type { Value } from "@dyn-rt/shared";
-import {
-  cardinalityOf,
-  dataPath,
-  fieldsOf,
-  isGroup,
-  parseTemplate,
-  pathKeyOf,
-  prop,
-  propsOf,
-  readOrderOf,
-} from "../core/index.js";
+import { cardinalityOf, dataPath, fieldsOf, isGroup, parseTemplate, pathKeyOf, prop, propsOf, readOrderOf } from "../core/index.js";
 import { FIELDS_KEY, props, type MetadataModel } from "../core/domain.js";
 import { MetadatamodelError } from "../error.js";
 import { PropMatch } from "../fieldcolumns/index.js";
@@ -54,17 +43,9 @@ export interface GetColumnFieldsOptions {
 /** Extracts the database columns of one table collection from the metadata
  * model (go's `GetColumnFields.Get`). Requires `tableCollectionUid` OR both
  * `joinDepth` and `tableCollectionName`. */
-export function getColumnFields(
-  model: MetadataModel,
-  options: GetColumnFieldsOptions,
-): ColumnFields {
-  if (
-    options.tableCollectionUid === undefined &&
-    (options.joinDepth === undefined || options.tableCollectionName === undefined)
-  ) {
-    throw MetadatamodelError.getColumnFields(
-      "db:table_collection_uid or db:join_depth and db:table_collection_name is required",
-    );
+export function getColumnFields(model: MetadataModel, options: GetColumnFieldsOptions): ColumnFields {
+  if (options.tableCollectionUid === undefined && (options.joinDepth === undefined || options.tableCollectionName === undefined)) {
+    throw MetadatamodelError.getColumnFields("db:table_collection_uid or db:join_depth and db:table_collection_name is required");
   }
 
   const out = new ColumnFields();
@@ -74,28 +55,20 @@ export function getColumnFields(
 
 /** Recursive walk over every field/group of `model` in read order (go's
  * `iter.ForEach` as used by `GetColumnFields.Get`). */
-function walkFields(
-  model: MetadataModel,
-  options: GetColumnFieldsOptions,
-  out: ColumnFields,
-): void {
+function walkFields(model: MetadataModel, options: GetColumnFieldsOptions, out: ColumnFields): void {
   const fieldsObj = fieldsOf(model);
   const order = readOrderOf(model);
 
   for (const key of order) {
     const entry = fieldsObj[key];
     if (entry === undefined) {
-      throw MetadatamodelError.invalidModel(
-        `field ${JSON.stringify(key)} not found in ${JSON.stringify(FIELDS_KEY)}[0]`,
-      );
+      throw MetadatamodelError.invalidModel(`field ${JSON.stringify(key)} not found in ${JSON.stringify(FIELDS_KEY)}[0]`);
     }
     const fieldProps = propsOf(entry);
 
     // skip / add affect collection only — descent into groups continues
-    const skipped =
-      options.skip !== undefined && options.skip.isValid() && options.skip.firstMatch(fieldProps);
-    const notAdded =
-      options.add !== undefined && options.add.isValid() && !options.add.firstMatch(fieldProps);
+    const skipped = options.skip !== undefined && options.skip.isValid() && options.skip.firstMatch(fieldProps);
+    const notAdded = options.add !== undefined && options.add.isValid() && !options.add.firstMatch(fieldProps);
     if (skipped || notAdded) {
       if (isGroup(fieldProps)) {
         walkFields(fieldProps, options, out);
@@ -110,11 +83,9 @@ function walkFields(
       matches = typeof uid === "string" && uid === options.tableCollectionUid;
     } else {
       const depth = prop(fieldProps, props.DB_JOIN_DEPTH);
-      const depthMatches =
-        typeof depth === "number" && depth === (options.joinDepth ?? Number.MIN_SAFE_INTEGER);
+      const depthMatches = typeof depth === "number" && depth === (options.joinDepth ?? Number.MIN_SAFE_INTEGER);
       const name = prop(fieldProps, props.DB_TABLE_COLLECTION_NAME);
-      const nameMatches =
-        typeof name === "string" && name === (options.tableCollectionName ?? undefined);
+      const nameMatches = typeof name === "string" && name === (options.tableCollectionName ?? undefined);
       matches = depthMatches && nameMatches;
     }
     if (!matches) {
@@ -130,9 +101,7 @@ function walkFields(
     const columnProp = prop(fieldProps, props.DB_COLUMN_NAME);
     const columnName = typeof columnProp === "string" ? columnProp : "";
     if (columnName === "") {
-      throw MetadatamodelError.getColumnFields(
-        `db:column_name not found in field/group property ${JSON.stringify(key)}`,
-      );
+      throw MetadatamodelError.getColumnFields(`db:column_name not found in field/group property ${JSON.stringify(key)}`);
     }
     if (out.get(columnName) !== undefined) {
       throw MetadatamodelError.getColumnFields(`duplicate db:column_name '${columnName}' found`);
@@ -153,21 +122,13 @@ function walkFields(
  * When `sourceIsArray` is true the source root is itself a sequence, so the
  * first index addresses the root entry and the remaining indices the
  * template's wildcards. */
-export function fieldValuePath(
-  columnFields: ColumnFields,
-  columnName: string,
-  suffixPath: string,
-  indices: number[],
-  sourceIsArray: boolean,
-): RecursiveDescentSegments {
+export function fieldValuePath(columnFields: ColumnFields, columnName: string, suffixPath: string, indices: number[], sourceIsArray: boolean): RecursiveDescentSegments {
   if (columnName === "") {
     throw MetadatamodelError.fieldValue("column field name is empty");
   }
   const fieldProps = columnFields.get(columnName);
   if (fieldProps === undefined) {
-    throw MetadatamodelError.fieldValue(
-      `field with db:column_name '${columnName}' not found`,
-    );
+    throw MetadatamodelError.fieldValue(`field with db:column_name '${columnName}' not found`);
   }
   const template = pathKeyOf(fieldProps);
   const cardinality = cardinalityOf(fieldProps);
@@ -210,11 +171,7 @@ export class FieldValue {
     this.sourceIsArray = reflectRef(obj.getSource()) === "Sequence";
   }
 
-  private pathSegments(
-    columnName: string,
-    suffixPath: string,
-    indices: number[],
-  ): RecursiveDescentSegments {
+  private pathSegments(columnName: string, suffixPath: string, indices: number[]): RecursiveDescentSegments {
     return fieldValuePath(this.columnFields, columnName, suffixPath, indices, this.sourceIsArray);
   }
 
@@ -232,13 +189,7 @@ export class FieldValue {
   /** Sets `value` at column `columnName` (go's `FieldValue.Set`). A schema
    * guides coercion and creation of missing intermediate structures.
    * Returns how many values were set. */
-  set(
-    columnName: string,
-    value: unknown,
-    suffixPath: string,
-    indices: number[],
-    schema?: Schema,
-  ): number {
+  set(columnName: string, value: unknown, suffixPath: string, indices: number[], schema?: Schema): number {
     const segments = this.pathSegments(columnName, suffixPath, indices);
     try {
       return this.obj.setWithSchema(segments, value, schema);

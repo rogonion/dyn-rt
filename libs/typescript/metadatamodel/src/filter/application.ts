@@ -15,13 +15,7 @@ import { dataPathKeepWildcards, parseTemplate } from "../core/index.js";
 import type { MetadataModel } from "../core/domain.js";
 import { MetadatamodelError } from "../error.js";
 import { defaultFilterProcessors } from "./conditions.js";
-import {
-  query,
-  parseLogicalOperator,
-  type ConditionProcessor,
-  type FilterContext,
-  type LogicalOperator,
-} from "./domain.js";
+import { query, parseLogicalOperator, type ConditionProcessor, type FilterContext, type LogicalOperator } from "./domain.js";
 
 /** Filters source data whose structure is defined by a metadata model (go's
  * `DataFilter`). */
@@ -130,8 +124,7 @@ export class DataFilter implements FilterContext {
       results.push(this.isQueryConditionTrue(condition, currentValue));
     }
 
-    const combined =
-      operator === "Or" ? results.some((r) => r) : results.every((r) => r);
+    const combined = operator === "Or" ? results.some((r) => r) : results.every((r) => r);
     return negate ? !combined : combined;
   }
 
@@ -155,8 +148,7 @@ export class DataFilter implements FilterContext {
       results.push(this.isFieldGroupConditionTrue(pathKey, condition, currentValue));
     }
 
-    const combined =
-      operator === "Or" ? results.some((r) => r) : results.every((r) => r);
+    const combined = operator === "Or" ? results.some((r) => r) : results.every((r) => r);
     return negate ? !combined : combined;
   }
 
@@ -164,11 +156,7 @@ export class DataFilter implements FilterContext {
    * (wildcards kept), iterates every matched value, and ANDs the
    * conditions; OR over the matched values (go's
    * `isFieldGroupConditionTrue`). */
-  private isFieldGroupConditionTrue(
-    pathKey: string,
-    queryCondition: Value,
-    currentValue: unknown,
-  ): boolean {
+  private isFieldGroupConditionTrue(pathKey: string, queryCondition: Value, currentValue: unknown): boolean {
     const conditions = asObject(queryCondition);
     if (conditions === undefined || Object.keys(conditions).length === 0) {
       return this.errorOrFalse("query condition is empty");
@@ -190,9 +178,7 @@ export class DataFilter implements FilterContext {
             if (this.silenceErrors) {
               continue;
             }
-            loopError = MetadatamodelError.filter(
-              `no processor for filter condition '${conditionKey}'`,
-            );
+            loopError = MetadatamodelError.filter(`no processor for filter condition '${conditionKey}'`);
             return false;
           }
           let conditionTrue: boolean;
@@ -202,10 +188,7 @@ export class DataFilter implements FilterContext {
             if (this.silenceErrors) {
               continue;
             }
-            loopError =
-              err instanceof MetadatamodelError
-                ? err
-                : MetadatamodelError.filter(err instanceof Error ? err.message : String(err));
+            loopError = err instanceof MetadatamodelError ? err : MetadatamodelError.filter(err instanceof Error ? err.message : String(err));
             return false;
           }
           if (!conditionTrue) {

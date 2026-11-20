@@ -35,12 +35,7 @@ import {
 /** Sets `value` at `segments` in `source`, optionally guided by `schema` for
  * coercion and intermediate-structure creation. Returns how many values were
  * set. */
-export function set(
-  source: unknown,
-  segments: RecursiveDescentSegments,
-  value: unknown,
-  schema?: Schema,
-): number {
+export function set(source: unknown, segments: RecursiveDescentSegments, value: unknown, schema?: Schema): number {
   if (isRootOnly(segments)) {
     const converted = convertAtPath(value, [], schema);
     applyRootInPlace(source, converted);
@@ -76,9 +71,7 @@ function applyRootInPlace(source: unknown, converted: unknown): void {
     Object.assign(target, converted);
     return;
   }
-  throw ManipulationError.valueAtPathSegmentInvalid(
-    "cannot replace a primitive root in place; use DynObject.set which reassigns its held source",
-  );
+  throw ManipulationError.valueAtPathSegmentInvalid("cannot replace a primitive root in place; use DynObject.set which reassigns its held source");
 }
 
 // count is threaded through a small callback so the explicit parameter flow
@@ -86,23 +79,13 @@ function applyRootInPlace(source: unknown, converted: unknown): void {
 type Count = () => void;
 
 /** Linear traversal (no `..`); sets at the current segment. */
-function linearSet(
-  value: unknown,
-  segments: RecursiveDescentSegments,
-  cursor: PathCursor,
-  valueToSet: unknown,
-  schema: Schema | undefined,
-  path: PathSegment[],
-  count: Count,
-): void {
-  let current = unwrapAll(value);
+function linearSet(value: unknown, segments: RecursiveDescentSegments, cursor: PathCursor, valueToSet: unknown, schema: Schema | undefined, path: PathSegment[], count: Count): void {
+  const current = unwrapAll(value);
   // a Some-enum payload is traversed through the wrapper object; an empty or
   // non-Some wrapper is an error here (like Rust's empty indirection/None)
   if (current === null || current === undefined || isEnumValue(current)) {
     const segment = segments[cursor.recursive]![cursor.collection]!;
-    throw ManipulationError.valueAtPathSegmentInvalid(
-      `value nil or invalid at segment ${selectorLabel(segment.selector)}`,
-    );
+    throw ManipulationError.valueAtPathSegmentInvalid(`value nil or invalid at segment ${selectorLabel(segment.selector)}`);
   }
   const segment = segments[cursor.recursive]![cursor.collection]!;
   const label = selectorLabel(segment.selector);
@@ -147,7 +130,10 @@ function linearSet(
         for (const member of segment.selector.members) {
           if (member.selector.kind !== "Key") continue;
           const key = member.selector.key;
-          const memberSegment: PathSegment = { accessStrategy: member.accessStrategy, selector: { kind: "Key", key } };
+          const memberSegment: PathSegment = {
+            accessStrategy: member.accessStrategy,
+            selector: { kind: "Key", key },
+          };
           ensureMapEntry(map, key, memberSegment, path, schema);
           const entryPath = [...path, memberSegment];
           if (terminal) {
@@ -261,19 +247,11 @@ function linearSet(
     }
   }
 
-  throw ManipulationError.pathSegmentInvalid(
-    `segment ${label} unsupported for kind ${kindLabel(current)}`,
-  );
+  throw ManipulationError.pathSegmentInvalid(`segment ${label} unsupported for kind ${kindLabel(current)}`);
 }
 
 /** Ensures a map entry exists, creating it with a default when absent. */
-function ensureMapEntry(
-  map: Record<string, unknown>,
-  key: string,
-  segment: PathSegment,
-  path: PathSegment[],
-  schema: Schema | undefined,
-): void {
+function ensureMapEntry(map: Record<string, unknown>, key: string, segment: PathSegment, path: PathSegment[], schema: Schema | undefined): void {
   if (mapContainsKey(map, key)) return;
   const entryPath = [...path, segment];
   mapSet(map, key, defaultForNode(schemaNodeAt(entryPath, schema)));
@@ -309,15 +287,7 @@ function setSequenceIndex(
 }
 
 /** Advances past the current (root) segment. */
-function advanceSet(
-  value: unknown,
-  segments: RecursiveDescentSegments,
-  cursor: PathCursor,
-  valueToSet: unknown,
-  schema: Schema | undefined,
-  path: PathSegment[],
-  count: Count,
-): void {
+function advanceSet(value: unknown, segments: RecursiveDescentSegments, cursor: PathCursor, valueToSet: unknown, schema: Schema | undefined, path: PathSegment[], count: Count): void {
   if (cursor.isTerminal(segments)) {
     applyRootInPlace(value, convertAtPath(valueToSet, path, schema));
     count();
@@ -330,32 +300,20 @@ function advanceSet(
 
 /** Recursive descent (`..`) set: applies the rest of the path at every level
  * where the search key matches, and keeps descending into all children. */
-function descentSet(
-  value: unknown,
-  segments: RecursiveDescentSegments,
-  cursor: PathCursor,
-  valueToSet: unknown,
-  schema: Schema | undefined,
-  path: PathSegment[],
-  count: Count,
-): void {
-  let current = unwrapAll(value);
+function descentSet(value: unknown, segments: RecursiveDescentSegments, cursor: PathCursor, valueToSet: unknown, schema: Schema | undefined, path: PathSegment[], count: Count): void {
+  const current = unwrapAll(value);
   const segment = segments[cursor.recursive]![cursor.collection]!;
   const label = selectorLabel(segment.selector);
 
   if (current === null || current === undefined || isEnumValue(current)) {
-    throw ManipulationError.valueAtPathSegmentInvalid(
-      `value nil or invalid at recursive descent ${label}`,
-    );
+    throw ManipulationError.valueAtPathSegmentInvalid(`value nil or invalid at recursive descent ${label}`);
   }
   if (segment.selector.kind === "Root") {
     linearSet(current, segments, cursor, valueToSet, schema, path, count);
     return;
   }
   if (segment.selector.kind !== "Key") {
-    throw ManipulationError.pathSegmentInvalid(
-      `recursive descent search segment ${label} is not a key`,
-    );
+    throw ManipulationError.pathSegmentInvalid(`recursive descent search segment ${label} is not a key`);
   }
   const key = segment.selector.key;
 
@@ -416,7 +374,5 @@ function descentSet(
     return;
   }
 
-  throw ManipulationError.valueAtPathSegmentInvalid(
-    `unsupported value at recursive descent search segment ${label} (kind ${kindLabel(current)})`,
-  );
+  throw ManipulationError.valueAtPathSegmentInvalid(`unsupported value at recursive descent search segment ${label} (kind ${kindLabel(current)})`);
 }

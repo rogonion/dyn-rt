@@ -4,8 +4,8 @@
   "private": true,
   "description": "dyn-rt dynamic runtime monorepo root (pnpm workspace; see packages/typescript)",
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Declan Joseph <declan.obu@outlook.com>",
+  "license": "MIT",
   "packageManager": "pnpm@10.26.1",
   "engines": {
     "runtime": {
@@ -14,5 +14,16 @@
       "onFail": "download"
     }
   },
-  "dependencies": {}
+  "dependencies": {},
+  "scripts": {
+    "lint:eslint": "eslint .",
+    "fmt": "prettier --write .",
+    "fmt:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "prettier": "^3.10.1",
+    "typescript-eslint": "^8.73.0"
+  }
 }

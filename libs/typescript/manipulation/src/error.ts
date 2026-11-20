@@ -2,10 +2,7 @@
 // libs/rust/manipulation/src/error.rs. TS uses exceptions instead of Rust's
 // Result, so this is a single Error subclass with a closed `kind` union.
 
-export type ManipulationErrorKind =
-  | "PathSegmentInvalid"
-  | "ValueAtPathSegmentInvalid"
-  | "ConversionFailed";
+export type ManipulationErrorKind = "PathSegmentInvalid" | "ValueAtPathSegmentInvalid" | "ConversionFailed";
 
 export class ManipulationError extends Error {
   readonly kind: ManipulationErrorKind;
@@ -25,10 +22,7 @@ export class ManipulationError extends Error {
   /** The value at a path segment is missing or not usable — e.g. a map key
    * that does not exist, an index out of bounds, a nil source. */
   static valueAtPathSegmentInvalid(message: string): ManipulationError {
-    return new ManipulationError(
-      "ValueAtPathSegmentInvalid",
-      `value at path segment invalid: ${message}`,
-    );
+    return new ManipulationError("ValueAtPathSegmentInvalid", `value at path segment invalid: ${message}`);
   }
 
   /** Converting the value to set (or a map key) into the destination shape

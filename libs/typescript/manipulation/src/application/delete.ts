@@ -15,17 +15,7 @@ import { asMap, asSequence, asClass, mapContainsKey, mapDelete, mapKeys, seqDele
 import { reflectZero } from "@dyn-rt/reflect";
 import { ManipulationError } from "../error.js";
 import { PathCursor } from "../domain.js";
-import {
-  isEnumValue,
-  isRootOnly,
-  kindLabel,
-  resolveIndex,
-  selectorLabel,
-  sliceIndices,
-  classFieldBySelector,
-  unionMemberIndices,
-  unwrapAll,
-} from "./helpers.js";
+import { isEnumValue, isRootOnly, kindLabel, resolveIndex, selectorLabel, sliceIndices, classFieldBySelector, unionMemberIndices, unwrapAll } from "./helpers.js";
 
 /** Deletes the value(s) in `source` at `segments`, returning how many were
  * deleted. */
@@ -65,20 +55,13 @@ function resetRootInPlace(source: unknown): void {
     }
     return;
   }
-  throw ManipulationError.valueAtPathSegmentInvalid(
-    "cannot reset a primitive root in place; use DynObject.delete which reassigns its held source",
-  );
+  throw ManipulationError.valueAtPathSegmentInvalid("cannot reset a primitive root in place; use DynObject.delete which reassigns its held source");
 }
 
 type Count = () => void;
 
 /** Linear traversal (no `..`); deletes at the current segment. */
-function linearDelete(
-  value: unknown,
-  segments: RecursiveDescentSegments,
-  cursor: PathCursor,
-  count: Count,
-): void {
+function linearDelete(value: unknown, segments: RecursiveDescentSegments, cursor: PathCursor, count: Count): void {
   const current = unwrapAll(value);
   const segment = segments[cursor.recursive]![cursor.collection]!;
   const label = selectorLabel(segment.selector);
@@ -221,21 +204,12 @@ function linearDelete(
     }
   }
 
-  throw ManipulationError.pathSegmentInvalid(
-    `segment ${label} unsupported for kind ${kindLabel(current)}`,
-  );
+  throw ManipulationError.pathSegmentInvalid(`segment ${label} unsupported for kind ${kindLabel(current)}`);
 }
 
 /** Deletes or recurses into each selected sequence index (indices are
  * pre-sorted descending so deletions don't shift later indices). */
-function selectorDeleteIndices(
-  seq: unknown[],
-  indices: number[],
-  segments: RecursiveDescentSegments,
-  cursor: PathCursor,
-  terminal: boolean,
-  count: Count,
-): void {
+function selectorDeleteIndices(seq: unknown[], indices: number[], segments: RecursiveDescentSegments, cursor: PathCursor, terminal: boolean, count: Count): void {
   for (const idx of indices) {
     if (terminal) {
       seqDeleteIndex(seq, idx);
@@ -247,12 +221,7 @@ function selectorDeleteIndices(
 }
 
 /** Advances past the current segment (used for the root segment). */
-function advanceDelete(
-  value: unknown,
-  segments: RecursiveDescentSegments,
-  cursor: PathCursor,
-  count: Count,
-): void {
+function advanceDelete(value: unknown, segments: RecursiveDescentSegments, cursor: PathCursor, count: Count): void {
   if (cursor.isTerminal(segments)) {
     resetRootInPlace(value);
     count();
@@ -264,29 +233,20 @@ function advanceDelete(
 }
 
 /** Recursive descent (`..`) delete. */
-function descentDelete(
-  value: unknown,
-  segments: RecursiveDescentSegments,
-  cursor: PathCursor,
-  count: Count,
-): void {
+function descentDelete(value: unknown, segments: RecursiveDescentSegments, cursor: PathCursor, count: Count): void {
   const current = unwrapAll(value);
   const segment = segments[cursor.recursive]![cursor.collection]!;
   const label = selectorLabel(segment.selector);
 
   if (current === null || current === undefined || isEnumValue(current)) {
-    throw ManipulationError.valueAtPathSegmentInvalid(
-      `value nil or invalid at recursive descent ${label}`,
-    );
+    throw ManipulationError.valueAtPathSegmentInvalid(`value nil or invalid at recursive descent ${label}`);
   }
   if (segment.selector.kind === "Root") {
     linearDelete(current, segments, cursor, count);
     return;
   }
   if (segment.selector.kind !== "Key") {
-    throw ManipulationError.pathSegmentInvalid(
-      `recursive descent search segment ${label} is not a key`,
-    );
+    throw ManipulationError.pathSegmentInvalid(`recursive descent search segment ${label} is not a key`);
   }
   const key = segment.selector.key;
 
@@ -343,7 +303,5 @@ function descentDelete(
     return;
   }
 
-  throw ManipulationError.valueAtPathSegmentInvalid(
-    `unsupported value at recursive descent search segment ${label} (kind ${kindLabel(current)})`,
-  );
+  throw ManipulationError.valueAtPathSegmentInvalid(`unsupported value at recursive descent search segment ${label} (kind ${kindLabel(current)})`);
 }

@@ -31,7 +31,7 @@ a JSON encoding; in-language tables show accepted inputs directly.
   `fail_case(detail)`. The report has a root suite title + description and
   logs one line per case, pass or fail:
   `Test case -> N/M : [[[ title ]]] || PASS` (failures add `|| FAIL ||
-  expected ... ; got ...`). All cases are evaluated, then `finish()` panics
+expected ... ; got ...`). All cases are evaluated, then `finish()` panics
   once with the failure summary if any case failed; opting into
   `abort_on_failure()` panics on the first failing case instead.
 - Constructor macros for building case data are the sanctioned way to keep

@@ -6,12 +6,7 @@
 // the enum value { variant, payload? } produced by the schema module, whose
 // "Some" payload unwraps on traversal (the analogue of Box / Option::Some).
 
-import type {
-  PathSegment,
-  PathSelector,
-  RecursiveDescentSegments,
-  SliceSelector,
-} from "@dyn-rt/path";
+import type { PathSegment, PathSelector, RecursiveDescentSegments, SliceSelector } from "@dyn-rt/path";
 import { asMap, asSequence, asClass, mapKeys, classFieldNames } from "@dyn-rt/reflect";
 import { isPlainObject, kindOf } from "@dyn-rt/shared";
 import { convert, isSchemaSet, schemaAtPath, type Schema, type SchemaNode } from "@dyn-rt/schema";
@@ -24,10 +19,7 @@ import { ManipulationError } from "../error.js";
 /** True for an enum-shaped value ({ variant: string, payload? }) — the shape
  * the schema module's enum conversion produces. */
 export function isEnumValue(value: unknown): value is { variant: string; payload?: unknown } {
-  return (
-    isPlainObject(value) &&
-    typeof (value as Record<string, unknown>).variant === "string"
-  );
+  return isPlainObject(value) && typeof (value as Record<string, unknown>).variant === "string";
 }
 
 /** Unwraps one level of indirection: the payload of a `Some` enum value.
@@ -58,17 +50,13 @@ export function unwrapAll(value: unknown): unknown {
 export function resolveIndex(index: number, len: number): number {
   if (index >= 0) {
     if (index >= len) {
-      throw ManipulationError.valueAtPathSegmentInvalid(
-        `index ${index} out of range (length ${len})`,
-      );
+      throw ManipulationError.valueAtPathSegmentInvalid(`index ${index} out of range (length ${len})`);
     }
     return index;
   }
   const idx = len + index;
   if (idx < 0) {
-    throw ManipulationError.valueAtPathSegmentInvalid(
-      `index ${index} out of range (length ${len})`,
-    );
+    throw ManipulationError.valueAtPathSegmentInvalid(`index ${index} out of range (length ${len})`);
   }
   return idx;
 }
@@ -87,17 +75,13 @@ export function sliceIndices(slice: SliceSelector, len: number): number[] {
   const resolveBound = (bound: number, isStart: boolean): number => {
     if (bound >= 0) {
       if (bound >= len) {
-        throw ManipulationError.pathSegmentInvalid(
-          `slice bound ${bound} out of range (length ${len})${isStart ? " (start)" : " (end)"}`,
-        );
+        throw ManipulationError.pathSegmentInvalid(`slice bound ${bound} out of range (length ${len})${isStart ? " (start)" : " (end)"}`);
       }
       return bound;
     }
     const v = len + bound;
     if (v < 0) {
-      throw ManipulationError.pathSegmentInvalid(
-        `slice bound ${bound} out of range (length ${len})`,
-      );
+      throw ManipulationError.pathSegmentInvalid(`slice bound ${bound} out of range (length ${len})`);
     }
     return v;
   };
@@ -106,9 +90,7 @@ export function sliceIndices(slice: SliceSelector, len: number): number[] {
   let step = 1;
   if (slice.step !== undefined && slice.step > 0) {
     if (slice.step >= len) {
-      throw ManipulationError.pathSegmentInvalid(
-        `slice step ${slice.step} out of range (length ${len})`,
-      );
+      throw ManipulationError.pathSegmentInvalid(`slice step ${slice.step} out of range (length ${len})`);
     }
     step = slice.step;
   }
@@ -149,21 +131,14 @@ export function unionMemberIndices(members: PathSegment[], len: number): number[
 /** A class field addressed by a selector: keys by name; non-negative indices
  * by positional field name ("0", "1", ...) — the tuple analogue, where
  * `$[1]` addresses the second positional field. */
-export function classFieldBySelector(
-  structure: object,
-  selector: PathSelector,
-): { present: boolean; value?: unknown } {
+export function classFieldBySelector(structure: object, selector: PathSelector): { present: boolean; value?: unknown } {
   const record = structure as Record<string, unknown>;
   if (selector.kind === "Key") {
-    return Object.prototype.hasOwnProperty.call(record, selector.key)
-      ? { present: true, value: record[selector.key] }
-      : { present: false };
+    return Object.prototype.hasOwnProperty.call(record, selector.key) ? { present: true, value: record[selector.key] } : { present: false };
   }
   if (selector.kind === "Index" && selector.index >= 0) {
     const name = String(selector.index);
-    return Object.prototype.hasOwnProperty.call(record, name)
-      ? { present: true, value: record[name] }
-      : { present: false };
+    return Object.prototype.hasOwnProperty.call(record, name) ? { present: true, value: record[name] } : { present: false };
   }
   return { present: false };
 }
@@ -177,9 +152,7 @@ export function children(value: unknown): unknown[] {
   if (seq !== undefined) return [...seq];
   const inst = asClass(value);
   if (inst !== undefined) return classFieldNames(inst).map((name) => inst[name]);
-  throw ManipulationError.pathSegmentInvalid(
-    `wildcard selector unsupported for kind ${kindLabel(value)}`,
-  );
+  throw ManipulationError.pathSegmentInvalid(`wildcard selector unsupported for kind ${kindLabel(value)}`);
 }
 
 /** A human label for the value's kind, for error messages. */
@@ -266,9 +239,7 @@ export function scalarZero(typeName: string): unknown {
 /** Reduces a schema to a single node (sets yield their default/first node). */
 function schemaAsNode(schema: Schema): SchemaNode {
   if (!isSchemaSet(schema)) return schema;
-  const hit = schema.defaultKey !== undefined
-    ? schema.nodes.find(([key]) => key === schema.defaultKey)
-    : undefined;
+  const hit = schema.defaultKey !== undefined ? schema.nodes.find(([key]) => key === schema.defaultKey) : undefined;
   const first = hit ?? schema.nodes[0];
   if (first === undefined) {
     throw ManipulationError.valueAtPathSegmentInvalid("no schema nodes found");
@@ -291,9 +262,7 @@ export function defaultForNode(node: Schema | undefined): unknown {
     case "Scalar":
       return scalarZero(single.typeName);
     case "Enum":
-      return single.shape.variants.some(([name]) => name === "None")
-        ? { variant: "None" }
-        : null;
+      return single.shape.variants.some(([name]) => name === "None") ? { variant: "None" } : null;
     case "Indirection":
       return defaultForNode(single.shape.inner);
     case "Any":

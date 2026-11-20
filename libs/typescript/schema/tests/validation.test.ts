@@ -5,20 +5,7 @@
 
 import { test } from "vitest";
 import { TestReport, newTestTitle } from "@dyn-rt/test-support";
-import {
-  childrenMustBeValid,
-  enumNode,
-  jsonScalar,
-  mapNode,
-  scalar,
-  schemaSet,
-  sequenceNode,
-  validate,
-  SchemaError,
-  type Schema,
-  type SchemaNode,
-  type ValidationOptions,
-} from "../src/index.js";
+import { childrenMustBeValid, enumNode, jsonScalar, mapNode, scalar, schemaSet, sequenceNode, validate, SchemaError, type Schema, type SchemaNode, type ValidationOptions } from "../src/index.js";
 import {
   addressSchema,
   circleSchema,
@@ -220,19 +207,14 @@ function yieldTestData(): ValidationCase[] {
 }
 
 test("validation_cases", () => {
-  const report = new TestReport(
-    "validation_cases",
-    "Data-driven suite for src/application/validation.ts (ADR 0004/0009): validate / validateNode.",
-  );
+  const report = new TestReport("validation_cases", "Data-driven suite for src/application/validation.ts (ADR 0004/0009): validate / validateNode.");
   for (const testCase of yieldTestData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
     try {
       const outcome = validate(testCase.data, testCase.schema, testCase.options ?? {});
       if ("ok" in testCase.expected) {
         if (!eqArrays(outcome.validSetKeys, testCase.expected.ok)) {
-          report.failCase(
-            `valid set keys: expected ${JSON.stringify(testCase.expected.ok)}, got ${JSON.stringify(outcome.validSetKeys)}`,
-          );
+          report.failCase(`valid set keys: expected ${JSON.stringify(testCase.expected.ok)}, got ${JSON.stringify(outcome.validSetKeys)}`);
         }
       } else {
         report.failCase(`expected error containing ${JSON.stringify(testCase.expected.error)}, got a pass`);

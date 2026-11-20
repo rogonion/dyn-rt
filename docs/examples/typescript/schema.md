@@ -13,10 +13,10 @@ nodes name a JS scalar type.
 import { schema } from "@dyn-rt/dyn-rt";
 
 const numSchema = schema.scalar("number");
-schema.validate(42, numSchema);                    // ok, returns ValidationOutcome
-schema.validate(42, numSchema).validSetKeys;       // []
-schema.validate("nope", numSchema);                // throws SchemaError
-schema.convert(42, numSchema);                     // 42
+schema.validate(42, numSchema); // ok, returns ValidationOutcome
+schema.validate(42, numSchema).validSetKeys; // []
+schema.validate("nope", numSchema); // throws SchemaError
+schema.convert(42, numSchema); // 42
 ```
 
 `scalar` accepts `"number" | "string" | "boolean" | "bigint" | "null"` (plus

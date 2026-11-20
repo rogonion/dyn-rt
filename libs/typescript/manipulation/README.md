@@ -11,11 +11,11 @@ const doc = {
 };
 const obj = manipulation.DynObject.new(doc);
 
-obj.get("$.ID[*]");      // 2 values
-obj.get("$.ID[-1]");     // negative index
-obj.get("$..City[*]");   // ["Nairobi", "Mombasa"] — recursive descent
-obj.set("$.ID[0]", 7);   // => 1
-obj.delete("$.ID[1]");   // => 1
+obj.get("$.ID[*]"); // 2 values
+obj.get("$.ID[-1]"); // negative index
+obj.get("$..City[*]"); // ["Nairobi", "Mombasa"] — recursive descent
+obj.set("$.ID[0]", 7); // => 1
+obj.delete("$.ID[1]"); // => 1
 
 manipulation.areEqual({ a: [1] }, { a: [1] }); // true
 ```

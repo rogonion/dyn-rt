@@ -7,33 +7,21 @@ import { TestReport, newTestTitle } from "@dyn-rt/test-support";
 import { RegexPathTokenizer } from "../src/index.js";
 import type { SplitCase } from "./common.js";
 
-function runSplitSuite(
-  suiteTitle: string,
-  description: string,
-  testData: SplitCase[],
-  split: (tokenizer: RegexPathTokenizer, source: string) => string[],
-): void {
+function runSplitSuite(suiteTitle: string, description: string, testData: SplitCase[], split: (tokenizer: RegexPathTokenizer, source: string) => string[]): void {
   const tokenizer = new RegexPathTokenizer();
   const report = new TestReport(suiteTitle, description);
   for (const testCase of testData) {
     report.beginCase(newTestTitle(testCase.testTitle));
     const result = split(tokenizer, testCase.source);
     if (JSON.stringify(result) !== JSON.stringify(testCase.expected)) {
-      report.failCase(
-        `expected ${JSON.stringify(testCase.expected)} ; got ${JSON.stringify(result)}`,
-      );
+      report.failCase(`expected ${JSON.stringify(testCase.expected)} ; got ${JSON.stringify(result)}`);
     }
   }
   report.finish();
 }
 
 test("split_recursive_descent (src/adapters.ts)", () => {
-  runSplitSuite(
-    "split_recursive_descent",
-    "Adapter suite for src/adapters.ts's RegexPathTokenizer: splitRecursiveDescent step",
-    yieldSplitRecursiveDescent(),
-    (t, s) => t.splitRecursiveDescent(s),
-  );
+  runSplitSuite("split_recursive_descent", "Adapter suite for src/adapters.ts's RegexPathTokenizer: splitRecursiveDescent step", yieldSplitRecursiveDescent(), (t, s) => t.splitRecursiveDescent(s));
 });
 
 function yieldSplitRecursiveDescent(): SplitCase[] {
@@ -69,8 +57,8 @@ function yieldSplitRecursiveDescent(): SplitCase[] {
       testTitle: "slice selector",
     },
     {
-      source: '$.data.user.preferences[\'theme-settings\',"font-size",3]',
-      expected: ['$.data.user.preferences[\'theme-settings\',"font-size",3]'],
+      source: "$.data.user.preferences['theme-settings',\"font-size\",3]",
+      expected: ["$.data.user.preferences['theme-settings',\"font-size\",3]"],
       testTitle: "union selector with mixed types",
     },
     {
@@ -128,12 +116,7 @@ function yieldSplitRecursiveDescent(): SplitCase[] {
 }
 
 test("split_dot_notation (src/adapters.ts)", () => {
-  runSplitSuite(
-    "split_dot_notation",
-    "Adapter suite for src/adapters.ts's RegexPathTokenizer: splitDotNotation step",
-    yieldSplitDotNotation(),
-    (t, s) => t.splitDotNotation(s),
-  );
+  runSplitSuite("split_dot_notation", "Adapter suite for src/adapters.ts's RegexPathTokenizer: splitDotNotation step", yieldSplitDotNotation(), (t, s) => t.splitDotNotation(s));
 });
 
 function yieldSplitDotNotation(): SplitCase[] {
@@ -178,8 +161,8 @@ function yieldSplitDotNotation(): SplitCase[] {
       testTitle: "slice selector attached to property name",
     },
     {
-      source: '$.data.user.preferences[\'theme-settings\',"font-size",3]',
-      expected: ["$", "data", "user", 'preferences[\'theme-settings\',"font-size",3]'],
+      source: "$.data.user.preferences['theme-settings',\"font-size\",3]",
+      expected: ["$", "data", "user", "preferences['theme-settings',\"font-size\",3]"],
       testTitle: "deeply nested property path with mixed union selector",
     },
     {
@@ -189,14 +172,7 @@ function yieldSplitDotNotation(): SplitCase[] {
     },
     {
       source: "$.products['item-details..'].dimensions[0].width.dimensions[2][3].width",
-      expected: [
-        "$",
-        "products['item-details..']",
-        "dimensions[0]",
-        "width",
-        "dimensions[2][3]",
-        "width",
-      ],
+      expected: ["$", "products['item-details..']", "dimensions[0]", "width", "dimensions[2][3]", "width"],
       testTitle: "complex path with dots in quotes, array indices, chained brackets",
     },
     {
@@ -230,12 +206,7 @@ function yieldSplitDotNotation(): SplitCase[] {
 }
 
 test("split_brackets (src/adapters.ts)", () => {
-  runSplitSuite(
-    "split_brackets",
-    "Adapter suite for src/adapters.ts's RegexPathTokenizer: splitBrackets step",
-    yieldSplitBrackets(),
-    (t, s) => t.splitBrackets(s),
-  );
+  runSplitSuite("split_brackets", "Adapter suite for src/adapters.ts's RegexPathTokenizer: splitBrackets step", yieldSplitBrackets(), (t, s) => t.splitBrackets(s));
 });
 
 function yieldSplitBrackets(): SplitCase[] {
@@ -248,7 +219,11 @@ function yieldSplitBrackets(): SplitCase[] {
       expected: ["$", "'a..b'"],
       testTitle: "root split from quoted bracket key",
     },
-    { source: "['c..d']", expected: ["'c..d'"], testTitle: "standalone quoted bracket key with inner dots" },
+    {
+      source: "['c..d']",
+      expected: ["'c..d'"],
+      testTitle: "standalone quoted bracket key with inner dots",
+    },
     {
       source: "$['report-data']",
       expected: ["$", "'report-data'"],
@@ -270,8 +245,8 @@ function yieldSplitBrackets(): SplitCase[] {
       testTitle: "slice selector split from property name",
     },
     {
-      source: 'preferences[\'theme-settings\',"font-size",3]',
-      expected: ["preferences", '\'theme-settings\',"font-size",3'],
+      source: "preferences['theme-settings',\"font-size\",3]",
+      expected: ["preferences", "'theme-settings',\"font-size\",3"],
       testTitle: "mixed union selector split from property name",
     },
     {
@@ -311,7 +286,11 @@ function yieldSplitBrackets(): SplitCase[] {
       expected: ["$", '"user\\"name..data"'],
       testTitle: "root split from escaped double quote bracket key",
     },
-    { source: "$['']", expected: ["$", "''"], testTitle: "root split from empty string bracket key" },
+    {
+      source: "$['']",
+      expected: ["$", "''"],
+      testTitle: "root split from empty string bracket key",
+    },
     {
       source: "$['title_\"main\"..part']",
       expected: ["$", "'title_\"main\"..part'"],

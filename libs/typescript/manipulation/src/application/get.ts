@@ -11,17 +11,7 @@ import type { PathSegment, RecursiveDescentSegments } from "@dyn-rt/path";
 import { asMap, asSequence, asClass, mapContainsKey, mapKeys, classFieldNames } from "@dyn-rt/reflect";
 import { ManipulationError } from "../error.js";
 import { PathCursor } from "../domain.js";
-import {
-  children,
-  isRootOnly,
-  kindLabel,
-  resolveIndex,
-  selectorLabel,
-  sliceIndices,
-  classFieldBySelector,
-  unionMemberIndices,
-  unwrapAll,
-} from "./helpers.js";
+import { children, isRootOnly, kindLabel, resolveIndex, selectorLabel, sliceIndices, classFieldBySelector, unionMemberIndices, unwrapAll } from "./helpers.js";
 
 /** Retrieves the value(s) in `source` at `segments`. An empty path or a lone
  * `$` yields the source itself (unwrapping a Some payload). */
@@ -69,9 +59,7 @@ function linearGet(value: unknown, segments: RecursiveDescentSegments, cursor: P
         if (!Object.prototype.hasOwnProperty.call(inst, key)) return [];
         return advanceGet(inst[key], segments, cursor);
       }
-      throw ManipulationError.pathSegmentInvalid(
-        `key segment ${label} unsupported for kind ${kindLabel(current)}`,
-      );
+      throw ManipulationError.pathSegmentInvalid(`key segment ${label} unsupported for kind ${kindLabel(current)}`);
     }
     case "Index": {
       const seq = asSequence(current);
@@ -86,9 +74,7 @@ function linearGet(value: unknown, segments: RecursiveDescentSegments, cursor: P
         if (!field.present) return [];
         return advanceGet(field.value, segments, cursor);
       }
-      throw ManipulationError.pathSegmentInvalid(
-        `index segment ${label} unsupported for kind ${kindLabel(current)}`,
-      );
+      throw ManipulationError.pathSegmentInvalid(`index segment ${label} unsupported for kind ${kindLabel(current)}`);
     }
     case "Wildcard":
       return selectorGet(children(current), segments, cursor);
@@ -97,9 +83,7 @@ function linearGet(value: unknown, segments: RecursiveDescentSegments, cursor: P
     case "Slice": {
       const seq = asSequence(current);
       if (seq === undefined) {
-        throw ManipulationError.pathSegmentInvalid(
-          `slice segment ${label} unsupported for kind ${kindLabel(current)}`,
-        );
+        throw ManipulationError.pathSegmentInvalid(`slice segment ${label} unsupported for kind ${kindLabel(current)}`);
       }
       const selected = sliceIndices(segment.selector.slice, seq.length).map((idx) => seq[idx]);
       return selectorGet(selected, segments, cursor);
@@ -120,9 +104,7 @@ function selectorGet(selected: unknown[], segments: RecursiveDescentSegments, cu
     // a child that cannot continue the path simply yields no results
     // (go: an invalid recursiveGet result is skipped in the flatten loop)
     try {
-      const child = cursor.isGroupEnd(segments)
-        ? descentGet(value, segments, cursor.nextGroup())
-        : linearGet(value, segments, cursor.nextInGroup());
+      const child = cursor.isGroupEnd(segments) ? descentGet(value, segments, cursor.nextGroup()) : linearGet(value, segments, cursor.nextInGroup());
       results.push(...child);
     } catch (err) {
       if (!(err instanceof ManipulationError)) throw err;
@@ -167,9 +149,7 @@ function unionSelect(value: unknown, members: PathSegment[]): unknown[] {
     }
     return selected;
   }
-  throw ManipulationError.pathSegmentInvalid(
-    `union segment unsupported for kind ${kindLabel(current)}`,
-  );
+  throw ManipulationError.pathSegmentInvalid(`union segment unsupported for kind ${kindLabel(current)}`);
 }
 
 /** Recursive descent (`..`): searches the current group's key segment at the
@@ -183,9 +163,7 @@ function descentGet(value: unknown, segments: RecursiveDescentSegments, cursor: 
     return linearGet(current, segments, cursor);
   }
   if (segment.selector.kind !== "Key") {
-    throw ManipulationError.pathSegmentInvalid(
-      `recursive descent search segment ${label} is not a key`,
-    );
+    throw ManipulationError.pathSegmentInvalid(`recursive descent search segment ${label} is not a key`);
   }
   const key = segment.selector.key;
 

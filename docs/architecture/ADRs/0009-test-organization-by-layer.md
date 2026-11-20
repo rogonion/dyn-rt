@@ -5,8 +5,8 @@
 
 ## Context
 
-ADR 0004 fixed the *shape* of tests (in-language data tables, custom loops,
-`test_title` fields) but not *where* they live. As modules grow, a flat
+ADR 0004 fixed the _shape_ of tests (in-language data tables, custom loops,
+`test_title` fields) but not _where_ they live. As modules grow, a flat
 `tests/` dir mixes suites for domain, application and adapters, so it is not
 obvious which file tests which layer.
 

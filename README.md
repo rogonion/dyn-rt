@@ -20,15 +20,15 @@ See `docs/architecture/ADRs/` for the decisions and
 
 ## Modules
 
-| Module | Rust crate | npm (via `@dyn-rt/dyn-rt`) | What it does |
-|---|---|---|---|
-| `shared` | `dyn-rt-shared` | `shared` | The JSON data model: `Value`, `Number`, `JsonError`, kind helpers |
-| `path` | `dyn-rt-path` | `path` | JSONPath parsing/resolution over any reflected tree |
-| `reflect` | `dyn-rt-reflect` (+ `reflect-derive`) | `reflect` | General-purpose runtime reflection over native types (Rust rolls its own; TS uses runtime introspection) |
-| `schema` | `dyn-rt-schema` | `schema` | Schemas over reflected data: validate + convert |
-| `manipulation` | `dyn-rt-manipulation` | `manipulation` | `DynObject` entrypoint: get / set / delete / forEach at a JSONPath, deep-equal |
-| `metadatamodel` | `dyn-rt-metadatamodel` | `metadatamodel` | The metadata model as an extensible JSON-like tree, with subdomains: core, fieldcolumns, database, iter, filter, flattener, unflattener, groupindex |
-| `test-support` | `dyn-rt-test-support` (dev-only) | `@dyn-rt/test-support` (dev-only) | The data-driven test harness (`TestReport`, `newTestTitle`) |
+| Module          | Rust crate                            | npm (via `@dyn-rt/dyn-rt`)        | What it does                                                                                                                                        |
+| --------------- | ------------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shared`        | `dyn-rt-shared`                       | `shared`                          | The JSON data model: `Value`, `Number`, `JsonError`, kind helpers                                                                                   |
+| `path`          | `dyn-rt-path`                         | `path`                            | JSONPath parsing/resolution over any reflected tree                                                                                                 |
+| `reflect`       | `dyn-rt-reflect` (+ `reflect-derive`) | `reflect`                         | General-purpose runtime reflection over native types (Rust rolls its own; TS uses runtime introspection)                                            |
+| `schema`        | `dyn-rt-schema`                       | `schema`                          | Schemas over reflected data: validate + convert                                                                                                     |
+| `manipulation`  | `dyn-rt-manipulation`                 | `manipulation`                    | `DynObject` entrypoint: get / set / delete / forEach at a JSONPath, deep-equal                                                                      |
+| `metadatamodel` | `dyn-rt-metadatamodel`                | `metadatamodel`                   | The metadata model as an extensible JSON-like tree, with subdomains: core, fieldcolumns, database, iter, filter, flattener, unflattener, groupindex |
+| `test-support`  | `dyn-rt-test-support` (dev-only)      | `@dyn-rt/test-support` (dev-only) | The data-driven test harness (`TestReport`, `newTestTitle`)                                                                                         |
 
 ## Layout
 
@@ -62,7 +62,7 @@ import { manipulation } from "@dyn-rt/dyn-rt";
 const user = { ID: [101], Name: ["Alice"], Address: [{ City: ["Nairobi"] }] };
 const obj = manipulation.DynObject.new(user);
 obj.get("$.Address[*].City[*]"); // => ["Nairobi"]
-obj.set("$.Name[0]", "Alicia");  // => 1
+obj.set("$.Name[0]", "Alicia"); // => 1
 ```
 
 Rust:

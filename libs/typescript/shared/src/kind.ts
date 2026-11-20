@@ -20,19 +20,7 @@ import type { JsonObject } from "./value.js";
  *   primitives (`new Number(5)` → class-instance with className "Number"),
  *   Map, Set, RegExp, etc.
  */
-export type ValueKind =
-  | "null"
-  | "undefined"
-  | "boolean"
-  | "number"
-  | "bigint"
-  | "string"
-  | "symbol"
-  | "function"
-  | "array"
-  | "date"
-  | "plain-object"
-  | "class-instance";
+export type ValueKind = "null" | "undefined" | "boolean" | "number" | "bigint" | "string" | "symbol" | "function" | "array" | "date" | "plain-object" | "class-instance";
 
 /** Discriminate the runtime kind of any value. */
 export function kindOf(value: unknown): ValueKind {

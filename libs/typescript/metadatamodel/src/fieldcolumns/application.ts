@@ -14,29 +14,10 @@ import { RegexPathTokenizer, parsePath } from "@dyn-rt/path";
 import { areEqual } from "@dyn-rt/manipulation";
 import { schemaAtPath, type Schema } from "@dyn-rt/schema";
 import { asObject, type JsonObject, type Value } from "@dyn-rt/shared";
-import {
-  cardinalityOf,
-  containsNestedGroups,
-  dataPath,
-  fieldsOf,
-  isGroup,
-  mergeProps,
-  nameOf,
-  pathKeyOf,
-  prop,
-  propsOf,
-  readOrderOf,
-  setProp,
-} from "../core/index.js";
+import { cardinalityOf, containsNestedGroups, dataPath, fieldsOf, isGroup, mergeProps, nameOf, pathKeyOf, prop, propsOf, readOrderOf, setProp } from "../core/index.js";
 import { FIELDS_KEY, props, type MetadataModel } from "../core/domain.js";
 import { MetadatamodelError } from "../error.js";
-import {
-  ColumnFields,
-  columnKeyOf,
-  fieldColumnPosition,
-  type ColumnField,
-  type FieldColumnPosition,
-} from "./domain.js";
+import { ColumnFields, columnKeyOf, fieldColumnPosition, type ColumnField, type FieldColumnPosition } from "./domain.js";
 
 // ---------------------------------------------------------------------------
 // property matching (go's FieldGroupPropertiesMatch, deep-equal semantics)
@@ -104,12 +85,7 @@ interface ExtractState {
   nextPositionCell: { value?: FieldColumnPosition };
 }
 
-function recursiveExtract(
-  group: Value,
-  state: ExtractState,
-  out: ColumnFields,
-  options: ExtractOptions,
-): void {
+function recursiveExtract(group: Value, state: ExtractState, out: ColumnFields, options: ExtractOptions): void {
   const fieldsObj = fieldsOf(group);
   const readOrder = readOrderOf(group);
 
@@ -191,15 +167,7 @@ function recursiveExtract(
 
 /** A non-nested group with separate columns: each sub-field becomes one
  * column per value index, keyed `parent[i].suffix`. */
-function extractGroupAsColumns(
-  fgProps: Value,
-  pathKey: string,
-  fgMatching: Value,
-  state: ExtractState,
-  out: ColumnFields,
-  options: ExtractOptions,
-  maxColumns: number,
-): void {
+function extractGroupAsColumns(fgProps: Value, pathKey: string, fgMatching: Value, state: ExtractState, out: ColumnFields, options: ExtractOptions, maxColumns: number): void {
   const nestedObj = fieldsOf(fgProps);
   const nestedOrder = readOrderOf(fgProps);
   for (let columnIndex = 0; columnIndex < maxColumns; columnIndex++) {
@@ -250,9 +218,7 @@ export function maxFlatColumns(fgProps: Value): number {
     const value = prop(fgProps, props.VIEW_MAX_VALUES_IN_SEPARATE_COLUMNS);
     if (value !== undefined) {
       if (typeof value !== "number") {
-        throw MetadatamodelError.invalidModel(
-          `${JSON.stringify(props.VIEW_MAX_VALUES_IN_SEPARATE_COLUMNS)} is not a number`,
-        );
+        throw MetadatamodelError.invalidModel(`${JSON.stringify(props.VIEW_MAX_VALUES_IN_SEPARATE_COLUMNS)} is not a number`);
       }
       maxColumns = Math.trunc(value);
     }
@@ -287,19 +253,11 @@ function addFlatColumnContext(field: Value, columnIndex: number): void {
   const headerFormat = obj[props.VIEW_SEPARATE_COLUMNS_HEADER_FORMAT];
   const baseName = nameOf(field, "");
   setProp(field, props.VIEW_SEPARATE_COLUMNS_HEADER_INDEX, columnIndex);
-  const newName =
-    typeof headerFormat === "string" && headerFormat !== ""
-      ? headerFormat.replaceAll("[*]", String(columnIndex + 1))
-      : `${baseName} ${columnIndex + 1}`;
+  const newName = typeof headerFormat === "string" && headerFormat !== "" ? headerFormat.replaceAll("[*]", String(columnIndex + 1)) : `${baseName} ${columnIndex + 1}`;
   setProp(field, props.GROUP_NAME, newName);
 }
 
-function appendField(
-  field: Value,
-  position: FieldColumnPosition,
-  out: ColumnFields,
-  options: ExtractOptions,
-): void {
+function appendField(field: Value, position: FieldColumnPosition, out: ColumnFields, options: ExtractOptions): void {
   // per-column schema: the schema node at the field's data path
   let schema: Schema | undefined;
   if (options.schema !== undefined) {
@@ -350,10 +308,7 @@ export interface GroupColumnIndexes {
 
 /** Retrieves the column indexes (primary and all) of `group` within
  * `columnFields` (go's `GroupsColumnsIndexesRetrieval.Get`). */
-export function groupColumnIndexes(
-  columnFields: ColumnFields,
-  group: MetadataModel,
-): GroupColumnIndexes {
+export function groupColumnIndexes(columnFields: ColumnFields, group: MetadataModel): GroupColumnIndexes {
   const indexes: GroupColumnIndexes = { primary: [], all: [] };
   collectGroupColumnIndexes(columnFields, group, true, false, indexes);
   return indexes;
@@ -366,7 +321,10 @@ function leafPositions(pathKey: string, maxColumns: number): FieldColumnPosition
   if (maxColumns > 0) {
     for (let columnIndex = 0; columnIndex < maxColumns; columnIndex++) {
       positions.push(
-        fieldColumnPosition(pathKey, { fieldInSeparateColumns: true, fieldHeaderIndex: columnIndex }),
+        fieldColumnPosition(pathKey, {
+          fieldInSeparateColumns: true,
+          fieldHeaderIndex: columnIndex,
+        }),
       );
     }
   } else {
@@ -375,18 +333,10 @@ function leafPositions(pathKey: string, maxColumns: number): FieldColumnPosition
   return positions;
 }
 
-function appendColumnIndex(
-  columnFields: ColumnFields,
-  position: FieldColumnPosition,
-  isPrimary: boolean,
-  isAll: boolean,
-  indexes: GroupColumnIndexes,
-): void {
+function appendColumnIndex(columnFields: ColumnFields, position: FieldColumnPosition, isPrimary: boolean, isAll: boolean, indexes: GroupColumnIndexes): void {
   const field = columnFields.getByKey(columnKeyOf(position));
   if (field === undefined) {
-    throw MetadatamodelError.invalidModel(
-      `column '${columnKeyOf(position)}' not found in column fields`,
-    );
+    throw MetadatamodelError.invalidModel(`column '${columnKeyOf(position)}' not found in column fields`);
   }
   const unskipped = columnFields.indexInUnskipped(field.indexInReadOrder);
   if (unskipped === undefined) return;
@@ -394,13 +344,7 @@ function appendColumnIndex(
   if (isPrimary) indexes.primary.push(unskipped);
 }
 
-function collectGroupColumnIndexes(
-  columnFields: ColumnFields,
-  group: MetadataModel,
-  isAll: boolean,
-  forcePrimary: boolean,
-  indexes: GroupColumnIndexes,
-): void {
+function collectGroupColumnIndexes(columnFields: ColumnFields, group: MetadataModel, isAll: boolean, forcePrimary: boolean, indexes: GroupColumnIndexes): void {
   const order = readOrderOf(group);
   const fieldsObj = fieldsOf(group);
 
@@ -410,8 +354,7 @@ function collectGroupColumnIndexes(
       throw MetadatamodelError.invalidModel(`field ${JSON.stringify(key)} not found in ${FIELDS_KEY}[0]`);
     }
     const fieldProps = propsOf(entry);
-    const fieldIsPrimary =
-      forcePrimary || prop(fieldProps, props.GROUP_IS_PRIMARY_KEY) === true;
+    const fieldIsPrimary = forcePrimary || prop(fieldProps, props.GROUP_IS_PRIMARY_KEY) === true;
     const pathKey = pathKeyOf(fieldProps);
 
     if (isGroup(fieldProps)) {

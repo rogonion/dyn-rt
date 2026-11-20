@@ -24,10 +24,7 @@ const titleCases: TitleCase[] = [
 ];
 
 test("newTestTitle cases (src/harness.ts)", () => {
-  const report = new TestReport(
-    "newTestTitle_cases",
-    "newTestTitle title rendering (src/harness.ts)",
-  );
+  const report = new TestReport("newTestTitle_cases", "newTestTitle title rendering (src/harness.ts)");
   for (const testCase of titleCases) {
     report.beginCase(newTestTitle(testCase.testTitle));
     const got = newTestTitle(testCase.titleField);
@@ -59,10 +56,7 @@ const reportCases: ReportCase[] = [
 ];
 
 test("TestReport collect-and-finish behavior (src/harness.ts)", () => {
-  const report = new TestReport(
-    "TestReport_cases",
-    "TestReport pass/fail collection and finish() throw behavior (src/harness.ts)",
-  );
+  const report = new TestReport("TestReport_cases", "TestReport pass/fail collection and finish() throw behavior (src/harness.ts)");
   for (const testCase of reportCases) {
     report.beginCase(newTestTitle(testCase.testTitle));
     let threw = false;
@@ -77,19 +71,14 @@ test("TestReport collect-and-finish behavior (src/harness.ts)", () => {
       threw = true;
     }
     if (threw !== testCase.expectFinishThrow) {
-      report.failCase(
-        `expected finish() to throw=${testCase.expectFinishThrow}, got threw=${threw}`,
-      );
+      report.failCase(`expected finish() to throw=${testCase.expectFinishThrow}, got threw=${threw}`);
     }
   }
   report.finish();
 });
 
 test("TestReport.abortOnFailure throws from failCase immediately (src/harness.ts)", () => {
-  const report = new TestReport(
-    "abort_on_failure_case",
-    "abortOnFailure mode throws on the first failing case (src/harness.ts)",
-  );
+  const report = new TestReport("abort_on_failure_case", "abortOnFailure mode throws on the first failing case (src/harness.ts)");
   report.beginCase("abort-on-failure aborts at failCase");
   let threw = false;
   const inner = new TestReport("inner", "").abortOnFailure();

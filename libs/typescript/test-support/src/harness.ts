@@ -99,9 +99,7 @@ export class TestReport {
     last.failure = detailToString(detail);
     if (this.abortOnFailureFlag) {
       const total = this.cases.length;
-      throw new Error(
-        `\n--- aborting suite on failed test case ---\n${this.line(last, total, total)}\n`,
-      );
+      throw new Error(`\n--- aborting suite on failed test case ---\n${this.line(last, total, total)}\n`);
     }
   }
 
@@ -144,9 +142,7 @@ export class TestReport {
     }
 
     if (failedLines.length > 0) {
-      throw new Error(
-        `\n--- ${failedLines.length} / ${total} tests failed ---\n${failedLines.join("\n")}\n`,
-      );
+      throw new Error(`\n--- ${failedLines.length} / ${total} tests failed ---\n${failedLines.join("\n")}\n`);
     }
 
     console.log(`\n--- ${total} / ${total} tests passed ---`);

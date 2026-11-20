@@ -151,54 +151,15 @@ function employeeModel(): MetadataModel {
       {
         ID: fldPrimary("$['group:fields'][*].ID[*]", "ID", "Number"),
         Profile: grp("$['group:fields'][*].Profile[*]", "Profile", [
-          [
-            "Name",
-            fld(
-              "$['group:fields'][*].Profile[*]['group:fields'][*].Name[*]",
-              "Name",
-              "Text",
-            ),
-          ],
-          [
-            "Age",
-            fld(
-              "$['group:fields'][*].Profile[*]['group:fields'][*].Age[*]",
-              "Age",
-              "Number",
-            ),
-          ],
+          ["Name", fld("$['group:fields'][*].Profile[*]['group:fields'][*].Name[*]", "Name", "Text")],
+          ["Age", fld("$['group:fields'][*].Profile[*]['group:fields'][*].Age[*]", "Age", "Number")],
           [
             "Address",
-            grp(
-              "$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]",
-              "Address",
-              [
-                [
-                  "Street",
-                  fld(
-                    "$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].Street[*]",
-                    "Street",
-                    "Text",
-                  ),
-                ],
-                [
-                  "City",
-                  fld(
-                    "$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].City[*]",
-                    "City",
-                    "Text",
-                  ),
-                ],
-                [
-                  "ZipCode",
-                  fld(
-                    "$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].ZipCode[*]",
-                    "ZipCode",
-                    "Text",
-                  ),
-                ],
-              ],
-            ),
+            grp("$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]", "Address", [
+              ["Street", fld("$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].Street[*]", "Street", "Text")],
+              ["City", fld("$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].City[*]", "City", "Text")],
+              ["ZipCode", fld("$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].ZipCode[*]", "ZipCode", "Text")],
+            ]),
           ],
         ]),
         Skills: fld("$['group:fields'][*].Skills[*]", "Skills", "Text"),
@@ -229,16 +190,7 @@ function employeeSingleProfileModel(): MetadataModel {
     [FIELDS_KEY]: [
       {
         ID: fldPrimary("$['group:fields'][*].ID[*]", "ID", "Number"),
-        Profile: grpSingle("$['group:fields'][*].Profile[*]", "Profile", [
-          [
-            "Name",
-            fld(
-              "$['group:fields'][*].Profile[*]['group:fields'][*].Name[*]",
-              "Name",
-              "Text",
-            ),
-          ],
-        ]),
+        Profile: grpSingle("$['group:fields'][*].Profile[*]", "Profile", [["Name", fld("$['group:fields'][*].Profile[*]['group:fields'][*].Name[*]", "Name", "Text")]]),
       },
     ],
   };
@@ -277,10 +229,7 @@ function employeeBob(): unknown {
 }
 
 function products(): unknown {
-  return [
-    Object.assign(new ProductRow(), { ID: [1], Name: ["Laptop"], Price: [999.99] }),
-    Object.assign(new ProductRow(), { ID: [2], Name: ["Mouse"], Price: [25.5] }),
-  ];
+  return [Object.assign(new ProductRow(), { ID: [1], Name: ["Laptop"], Price: [999.99] }), Object.assign(new ProductRow(), { ID: [2], Name: ["Mouse"], Price: [25.5] })];
 }
 
 function cartesianEmployees(): unknown {
@@ -396,17 +345,7 @@ function yieldTestData(): FlattenCase[] {
     {
       model: employeeModel,
       source: employeeBob,
-      expected: table([
-        [
-          cells([500]),
-          strCells(["Bob"]),
-          cells([30]),
-          strCells(["123 Tech Ln"]),
-          strCells(["Silicon Valley"]),
-          strCells(["94000"]),
-          strCells(["Go", "Rust"]),
-        ],
-      ]),
+      expected: table([[cells([500]), strCells(["Bob"]), cells([30]), strCells(["123 Tech Ln"]), strCells(["Silicon Valley"]), strCells(["94000"]), strCells(["Go", "Rust"])]]),
       testTitle: "deep nested employee flattens to one row, 7 columns (go case 2)",
     },
     // go case 3: array of products
@@ -424,45 +363,12 @@ function yieldTestData(): FlattenCase[] {
       model: employeeModel,
       source: cartesianEmployees,
       expected: table([
-        [
-          cells([100]),
-          strCells(["Dev"]),
-          cells([30]),
-          strCells(["Home St"]),
-          strCells(["Nairobi"]),
-          strCells(["00100"]),
-          strCells(["Go"]),
-        ],
-        [
-          cells([100]),
-          strCells(["Dev"]),
-          cells([30]),
-          strCells(["Work Ave"]),
-          strCells(["Westlands"]),
-          strCells(["00200"]),
-          strCells(["Go"]),
-        ],
-        [
-          cells([200]),
-          strCells(["Admin"]),
-          cells([40]),
-          strCells(["Office Rd"]),
-          strCells(["Mombasa"]),
-          strCells(["80100"]),
-          strCells(["Management"]),
-        ],
-        [
-          cells([200]),
-          strCells(["Consultant"]),
-          cells([35]),
-          strCells(["Remote"]),
-          strCells(["Eldoret"]),
-          strCells(["30100"]),
-          strCells(["Management"]),
-        ],
+        [cells([100]), strCells(["Dev"]), cells([30]), strCells(["Home St"]), strCells(["Nairobi"]), strCells(["00100"]), strCells(["Go"])],
+        [cells([100]), strCells(["Dev"]), cells([30]), strCells(["Work Ave"]), strCells(["Westlands"]), strCells(["00200"]), strCells(["Go"])],
+        [cells([200]), strCells(["Admin"]), cells([40]), strCells(["Office Rd"]), strCells(["Mombasa"]), strCells(["80100"]), strCells(["Management"])],
+        [cells([200]), strCells(["Consultant"]), cells([35]), strCells(["Remote"]), strCells(["Eldoret"]), strCells(["30100"]), strCells(["Management"])],
       ]),
-      testTitle:
-        "multiple employees/profiles/addresses produce the cartesian product of 4 rows (go case 5)",
+      testTitle: "multiple employees/profiles/addresses produce the cartesian product of 4 rows (go case 5)",
     },
     // single-cardinality scalar field: cell wraps the scalar
     {
@@ -482,10 +388,7 @@ function yieldTestData(): FlattenCase[] {
 }
 
 test("flatten_cases", () => {
-  const report = new TestReport(
-    "flatten_cases",
-    "flattener: objects/collections to 2D table (src/flattener)",
-  );
+  const report = new TestReport("flatten_cases", "flattener: objects/collections to 2D table (src/flattener)");
   for (const testCase of yieldTestData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
     const model = testCase.model();
@@ -495,9 +398,7 @@ test("flatten_cases", () => {
       flattener.flatten(DynObject.new(source));
       const got = tableOf(flattener.result());
       if (!areEqual(got, testCase.expected)) {
-        report.failCase(
-          `table: expected ${JSON.stringify(testCase.expected)}, got ${JSON.stringify(got)}`,
-        );
+        report.failCase(`table: expected ${JSON.stringify(testCase.expected)}, got ${JSON.stringify(got)}`);
       }
     } catch (err) {
       report.failCase(`flatten failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -507,10 +408,7 @@ test("flatten_cases", () => {
 });
 
 test("write_to_destination_case", () => {
-  const report = new TestReport(
-    "write_to_destination_case",
-    "flattener writeToDestination honors the unskipped column read order (src/flattener)",
-  );
+  const report = new TestReport("write_to_destination_case", "flattener writeToDestination honors the unskipped column read order (src/flattener)");
   report.beginCase("products table writes into a pre-sized 2D destination");
 
   const model = productModel();
@@ -527,9 +425,7 @@ test("write_to_destination_case", () => {
     flattener.writeToDestination(DynObject.new(destination));
     const expected = tableOf(flattener.result());
     if (!areEqual(destination, expected)) {
-      report.failCase(
-        `destination: expected ${JSON.stringify(expected)}, got ${JSON.stringify(destination)}`,
-      );
+      report.failCase(`destination: expected ${JSON.stringify(expected)}, got ${JSON.stringify(destination)}`);
     }
   } catch (err) {
     report.failCase(`writeToDestination failed: ${err instanceof Error ? err.message : String(err)}`);

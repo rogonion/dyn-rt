@@ -30,9 +30,7 @@ export function forEach(group: MetadataModel, callback: (props: Value) => Visit)
   for (const key of order) {
     const entry = fieldsObj[key];
     if (entry === undefined) {
-      throw MetadatamodelError.invalidModel(
-        `field ${JSON.stringify(key)} not found in ${JSON.stringify(FIELDS_KEY)}[0]`,
-      );
+      throw MetadatamodelError.invalidModel(`field ${JSON.stringify(key)} not found in ${JSON.stringify(FIELDS_KEY)}[0]`);
     }
     const fieldProps = propsOf(entry);
     const visit = callback(fieldProps);
@@ -61,9 +59,7 @@ export function filter(group: MetadataModel, callback: (props: Value) => FilterD
     const fieldsObj = fieldsOf(group);
     const entry = fieldsObj[key];
     if (entry === undefined) {
-      throw MetadatamodelError.invalidModel(
-        `field ${JSON.stringify(key)} not found in ${JSON.stringify(FIELDS_KEY)}[0]`,
-      );
+      throw MetadatamodelError.invalidModel(`field ${JSON.stringify(key)} not found in ${JSON.stringify(FIELDS_KEY)}[0]`);
     }
     const fieldProps = propsOf(entry);
     const decision = callback(fieldProps);
@@ -111,10 +107,7 @@ function removeField(group: MetadataModel, key: string): void {
  * callback receives the current props object and returns the new ENTRY (the
  * array value stored under the field name in `group:fields[0]`) plus
  * whether to skip the nested fields. */
-export function map(
-  group: MetadataModel,
-  callback: (props: Value) => [newEntry: Value, skipFields: boolean],
-): void {
+export function map(group: MetadataModel, callback: (props: Value) => [newEntry: Value, skipFields: boolean]): void {
   const order = readOrderOf(group);
 
   for (const key of order) {
@@ -122,9 +115,7 @@ export function map(
     const fieldsObj = fieldsOf(group);
     const entry = fieldsObj[key];
     if (entry === undefined) {
-      throw MetadatamodelError.invalidModel(
-        `field ${JSON.stringify(key)} not found in ${JSON.stringify(FIELDS_KEY)}[0]`,
-      );
+      throw MetadatamodelError.invalidModel(`field ${JSON.stringify(key)} not found in ${JSON.stringify(FIELDS_KEY)}[0]`);
     }
     const [newEntry, skipFields] = callback(propsOf(entry));
 

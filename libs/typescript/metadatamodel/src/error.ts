@@ -3,16 +3,7 @@
 // Error subclass with a closed `kind` union.
 
 export type MetadatamodelErrorKind =
-  | "InvalidModel"
-  | "MissingProperty"
-  | "CardinalityViolation"
-  | "PathTemplateInvalid"
-  | "GetColumnFields"
-  | "FieldValue"
-  | "Manipulation"
-  | "Filter"
-  | "Flatten"
-  | "Unflatten";
+  "InvalidModel" | "MissingProperty" | "CardinalityViolation" | "PathTemplateInvalid" | "GetColumnFields" | "FieldValue" | "Manipulation" | "Filter" | "Flatten" | "Unflatten";
 
 export class MetadatamodelError extends Error {
   readonly kind: MetadatamodelErrorKind;

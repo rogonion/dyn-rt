@@ -21,11 +21,7 @@ function sourceWithoutAB(): unknown {
   return { a: { c: [2, 3] }, name: "Alice" };
 }
 
-type Op =
-  | { kind: "get" }
-  | { kind: "set"; value: unknown }
-  | { kind: "delete" }
-  | { kind: "forEach" };
+type Op = { kind: "get" } | { kind: "set"; value: unknown } | { kind: "delete" } | { kind: "forEach" };
 
 interface ObjectCase {
   testTitle?: string;
@@ -79,10 +75,7 @@ function yieldTestData(): ObjectCase[] {
 }
 
 test("dyn_object_cases", () => {
-  const report = new TestReport(
-    "dyn_object_cases",
-    "DynObject wrapper: path input reps + get/set/delete/forEach (src/application/object.ts)",
-  );
+  const report = new TestReport("dyn_object_cases", "DynObject wrapper: path input reps + get/set/delete/forEach (src/application/object.ts)");
   for (const testCase of yieldTestData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
     const source = testCase.makeSource();
@@ -145,10 +138,7 @@ test("dyn_object_cases", () => {
 });
 
 test("dyn_object_path_input_reps", () => {
-  const report = new TestReport(
-    "dyn_object_path_input_reps",
-    "DynObject accepts text, a parsed segment, or parsed segments (src/application/object.ts)",
-  );
+  const report = new TestReport("dyn_object_path_input_reps", "DynObject accepts text, a parsed segment, or parsed segments (src/application/object.ts)");
   const tokenizer = new RegexPathTokenizer();
   const parsed = parsePath(tokenizer, "$.a.b");
 
@@ -185,10 +175,7 @@ test("dyn_object_path_input_reps", () => {
 });
 
 test("dyn_object_source_variants", () => {
-  const report = new TestReport(
-    "dyn_object_source_variants",
-    "DynObject source handling / root replacement (src/application/object.ts)",
-  );
+  const report = new TestReport("dyn_object_source_variants", "DynObject source handling / root replacement (src/application/object.ts)");
 
   report.beginCase(newTestTitle("get works on the wrapped source"));
   {

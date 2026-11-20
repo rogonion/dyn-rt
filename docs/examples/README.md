@@ -6,13 +6,13 @@ area; every snippet shown was executed against the current code (complex
 nested shapes with pointers/class instances included, and mixed
 single/array cardinality for the metadatamodel).
 
-| Module | Rust | TypeScript |
-|---|---|---|
-| `shared` (JSON value model; facade `dyn_rt::json` in Rust) | [rust/shared.md](rust/shared.md) | [typescript/shared.md](typescript/shared.md) |
-| `path` (JSONPath) | [rust/path.md](rust/path.md) | [typescript/path.md](typescript/path.md) |
-| `reflect` (runtime reflection) | [rust/reflect.md](rust/reflect.md) | [typescript/reflect.md](typescript/reflect.md) |
-| `schema` (validate / convert) | [rust/schema.md](rust/schema.md) | [typescript/schema.md](typescript/schema.md) |
-| `manipulation` (`DynObject` get/set/delete/forEach) | [rust/manipulation.md](rust/manipulation.md) | [typescript/manipulation.md](typescript/manipulation.md) |
+| Module                                                                                           | Rust                                           | TypeScript                                                 |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------- | ---------------------------------------------------------- |
+| `shared` (JSON value model; facade `dyn_rt::json` in Rust)                                       | [rust/shared.md](rust/shared.md)               | [typescript/shared.md](typescript/shared.md)               |
+| `path` (JSONPath)                                                                                | [rust/path.md](rust/path.md)                   | [typescript/path.md](typescript/path.md)                   |
+| `reflect` (runtime reflection)                                                                   | [rust/reflect.md](rust/reflect.md)             | [typescript/reflect.md](typescript/reflect.md)             |
+| `schema` (validate / convert)                                                                    | [rust/schema.md](rust/schema.md)               | [typescript/schema.md](typescript/schema.md)               |
+| `manipulation` (`DynObject` get/set/delete/forEach)                                              | [rust/manipulation.md](rust/manipulation.md)   | [typescript/manipulation.md](typescript/manipulation.md)   |
 | `metadatamodel` (core, fieldcolumns, database, iter, filter, flattener, unflattener, groupindex) | [rust/metadatamodel.md](rust/metadatamodel.md) | [typescript/metadatamodel.md](typescript/metadatamodel.md) |
 
 Runnable code:

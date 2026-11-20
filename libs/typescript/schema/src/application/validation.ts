@@ -3,13 +3,7 @@
 // accessors. Throws SchemaError on the first failure.
 
 import { kindOf } from "@dyn-rt/shared";
-import {
-  isSchemaSet,
-  renderPath,
-  type Schema,
-  type SchemaNode,
-  type SchemaPath,
-} from "../domain.js";
+import { isSchemaSet, renderPath, type Schema, type SchemaNode, type SchemaPath } from "../domain.js";
 import { SchemaError } from "../error.js";
 
 /** Options for validation (port of go's `Validation` class). */
@@ -45,13 +39,7 @@ function fail(path: SchemaPath, message: string): SchemaError {
   return SchemaError.validationFailed(message, renderPath(path));
 }
 
-function validateSchema(
-  data: unknown,
-  schema: Schema,
-  path: SchemaPath,
-  options: ValidationOptions,
-  outcome: ValidationOutcome,
-): void {
+function validateSchema(data: unknown, schema: Schema, path: SchemaPath, options: ValidationOptions, outcome: ValidationOutcome): void {
   if (isSchemaSet(schema)) {
     validateSet(data, schema, path, options, outcome);
   } else {
@@ -59,21 +47,13 @@ function validateSchema(
   }
 }
 
-function validateSet(
-  data: unknown,
-  set: { defaultKey?: string; nodes: [string, SchemaNode][] },
-  path: SchemaPath,
-  options: ValidationOptions,
-  outcome: ValidationOutcome,
-): void {
+function validateSet(data: unknown, set: { defaultKey?: string; nodes: [string, SchemaNode][] }, path: SchemaPath, options: ValidationOptions, outcome: ValidationOutcome): void {
   if (set.nodes.length === 0) {
     throw fail(path, "no schema nodes found");
   }
   const firstMatch = options.validateOnFirstMatch ?? true;
   let lastErr: unknown;
-  const ordered = [...set.nodes].sort(([a], [b]) =>
-    a === set.defaultKey ? -1 : b === set.defaultKey ? 1 : 0,
-  );
+  const ordered = [...set.nodes].sort(([a], [b]) => (a === set.defaultKey ? -1 : b === set.defaultKey ? 1 : 0));
   for (const [key, node] of ordered) {
     try {
       validateNodeWith(data, node, path, options, outcome);
@@ -88,13 +68,7 @@ function validateSet(
   }
 }
 
-function validateNodeWith(
-  data: unknown,
-  node: SchemaNode,
-  path: SchemaPath,
-  options: ValidationOptions,
-  outcome: ValidationOutcome,
-): void {
+function validateNodeWith(data: unknown, node: SchemaNode, path: SchemaPath, options: ValidationOptions, outcome: ValidationOutcome): void {
   if (isNil(data)) {
     if (node.nilable) return;
     throw fail(path, "data cannot be nil");

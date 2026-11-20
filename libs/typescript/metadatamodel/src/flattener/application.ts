@@ -9,27 +9,10 @@ import { DynObject, isEnumValue } from "@dyn-rt/manipulation";
 import type { RecursiveDescentSegments } from "@dyn-rt/path";
 import { classFieldNames, classGet } from "@dyn-rt/reflect";
 import { isPlainObject, type JsonObject, type Value } from "@dyn-rt/shared";
-import {
-  containsNestedGroups,
-  dataPathModelAware,
-  fieldsOf,
-  isGroup,
-  parseTemplate,
-  pathKeyOf,
-  prop,
-  propsOf,
-  readOrderOf,
-} from "../core/index.js";
+import { containsNestedGroups, dataPathModelAware, fieldsOf, isGroup, parseTemplate, pathKeyOf, prop, propsOf, readOrderOf } from "../core/index.js";
 import { FIELDS_KEY, props, type MetadataModel } from "../core/domain.js";
 import { MetadatamodelError } from "../error.js";
-import {
-  ColumnFields,
-  columnKeyOf,
-  extract,
-  fieldColumnPosition,
-  maxFlatColumns,
-  type FieldColumnPosition,
-} from "../fieldcolumns/index.js";
+import { ColumnFields, columnKeyOf, extract, fieldColumnPosition, maxFlatColumns, type FieldColumnPosition } from "../fieldcolumns/index.js";
 import { type ConversionNode, type FlattenedRow, type FlattenedTable } from "./domain.js";
 
 /** Converts objects into a 2D table (go's `Flattener`). */
@@ -101,17 +84,13 @@ export class Flattener {
         const sourceCol = readOrder[destCol]!;
         const cell = row[sourceCol];
         if (cell === undefined) {
-          throw MetadatamodelError.flatten(
-            `source column index ${sourceCol} out of bounds (row ${rowIndex}, row length ${row.length})`,
-          );
+          throw MetadatamodelError.flatten(`source column index ${sourceCol} out of bounds (row ${rowIndex}, row length ${row.length})`);
         }
         const target = parseTemplate(`$[${rowIndex}][${destCol}]`);
         try {
           destination.set(target, cell);
         } catch (err) {
-          throw MetadatamodelError.manipulation(
-            `write failed at row ${rowIndex} col ${destCol}: ${err instanceof Error ? err.message : String(err)}`,
-          );
+          throw MetadatamodelError.manipulation(`write failed at row ${rowIndex} col ${destCol}: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
     }
@@ -125,12 +104,7 @@ export class Flattener {
 /** Builds the conversion tree for `group` (root when `isRoot`). A group
  * with no usable fields is an error at the root and skipped when nested
  * (go's `ErrNoGroupFields`). */
-function buildConversionTree(
-  group: MetadataModel,
-  groupPathKey: string,
-  columnFields: ColumnFields,
-  isRoot: boolean,
-): ConversionNode {
+function buildConversionTree(group: MetadataModel, groupPathKey: string, columnFields: ColumnFields, isRoot: boolean): ConversionNode {
   const node: ConversionNode = { position: fieldColumnPosition(groupPathKey), children: [] };
 
   const order = readOrderOf(group);
@@ -139,9 +113,7 @@ function buildConversionTree(
   for (const key of order) {
     const entry = fieldsObj[key];
     if (entry === undefined) {
-      throw MetadatamodelError.invalidModel(
-        `field ${JSON.stringify(key)} not found in ${JSON.stringify(FIELDS_KEY)}[0]`,
-      );
+      throw MetadatamodelError.invalidModel(`field ${JSON.stringify(key)} not found in ${JSON.stringify(FIELDS_KEY)}[0]`);
     }
     const fgProps = propsOf(entry);
     const pathKey = pathKeyOf(fgProps);
@@ -157,9 +129,7 @@ function buildConversionTree(
           for (const nestedSuffix of nestedOrder) {
             const nestedEntry = nestedObj[nestedSuffix];
             if (nestedEntry === undefined) {
-              throw MetadatamodelError.invalidModel(
-                `nested field ${JSON.stringify(nestedSuffix)} not found`,
-              );
+              throw MetadatamodelError.invalidModel(`nested field ${JSON.stringify(nestedSuffix)} not found`);
             }
             const nestedKey = pathKeyOf(propsOf(nestedEntry));
             const position = fieldColumnPosition(nestedKey, {
@@ -209,11 +179,7 @@ function buildConversionTree(
 }
 
 /** Adds a leaf child when the position maps to an unskipped column. */
-function pushLeaf(
-  node: ConversionNode,
-  position: FieldColumnPosition,
-  columnFields: ColumnFields,
-): void {
+function pushLeaf(node: ConversionNode, position: FieldColumnPosition, columnFields: ColumnFields): void {
   const field = columnFields.getByKey(columnKeyOf(position));
   if (field !== undefined && !field.skip) {
     node.children.push({ position, children: [] });
@@ -228,11 +194,7 @@ function pushLeaf(
  * arrays; separate-column leaves additionally index the field's own array
  * with their header index; plain leaves read the field's whole value.
  * Cardinality is model-aware: `single` fields/groups drop their `[*]`. */
-function leafDataPath(
-  position: FieldColumnPosition,
-  model: MetadataModel,
-  linearIndexes: number[],
-): RecursiveDescentSegments {
+function leafDataPath(position: FieldColumnPosition, model: MetadataModel, linearIndexes: number[]): RecursiveDescentSegments {
   if (position.groupInSeparateColumns) {
     // parent group array indexed by the header index, then the bare suffix
     const indexes = [...linearIndexes, position.groupHeaderIndex];
@@ -250,23 +212,13 @@ function leafDataPath(
 
 /** The data path a group node branches on: the whole group value (last
  * wildcard dropped), with enclosing group arrays indexed. */
-function groupDataPath(
-  groupTemplate: string,
-  model: MetadataModel,
-  linearIndexes: number[],
-): RecursiveDescentSegments {
+function groupDataPath(groupTemplate: string, model: MetadataModel, linearIndexes: number[]): RecursiveDescentSegments {
   return parseTemplate(dataPathModelAware(groupTemplate, model, linearIndexes, false));
 }
 
 /** Converts `source` into rows according to `node`, branching per array
  * element of nested groups (Cartesian product across group arrays). */
-function recursiveConvert(
-  node: ConversionNode,
-  model: MetadataModel,
-  source: unknown,
-  linearIndexes: number[],
-  incomingRows: FlattenedTable,
-): FlattenedTable {
+function recursiveConvert(node: ConversionNode, model: MetadataModel, source: unknown, linearIndexes: number[], incomingRows: FlattenedTable): FlattenedTable {
   let currentRows = incomingRows;
   if (currentRows.length === 0) {
     currentRows = [[]];
@@ -291,7 +243,7 @@ function recursiveConvert(
     if (child.children.length > 0) {
       // nested group: branch per array element
       if (Array.isArray(fieldData)) {
-        let collected: FlattenedTable = [];
+        const collected: FlattenedTable = [];
         for (let i = 0; i < fieldData.length; i++) {
           const indexes = [...linearIndexes, i];
           // each branch gets its own copy of the rows so far (go's copyTable)

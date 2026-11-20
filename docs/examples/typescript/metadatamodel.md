@@ -51,17 +51,17 @@ const model = {
   ],
 };
 
-core.pathKeyOf(model);            // "$"
+core.pathKeyOf(model); // "$"
 Object.keys(core.fieldsOf(model)); // ["ID", "Name"]
-core.cardinalityOf(model);         // "array" (default)
+core.cardinalityOf(model); // "array" (default)
 ```
 
 ## core — path templates: dataPath / schemaPath
 
 ```ts
-core.dataPath("$['group:fields'][*].ID[*]", [], "array");  // "$.ID[0]"
+core.dataPath("$['group:fields'][*].ID[*]", [], "array"); // "$.ID[0]"
 core.dataPath("$['group:fields'][*].ID[*]", [], "single"); // "$.ID" (trailing [*] trimmed)
-core.schemaPath("$['group:fields'][*].ID[*]", [0]);        // "$['group:fields'][0].ID[0]"
+core.schemaPath("$['group:fields'][*].ID[*]", [0]); // "$['group:fields'][0].ID[0]"
 ```
 
 ## fieldcolumns / database
@@ -76,12 +76,9 @@ columnFields.readOrder; // ["id", "name"]
 
 // read/write values by db:column_name instead of by path:
 const rows = [{ ID: [1], Name: ["Alice"] }];
-const fv = new metadatamodel.database.FieldValue(
-  manipulation.DynObject.new(rows),
-  columnFields,
-);
-fv.get("id", "", [0]);                    // values at the model-resolved path
-fv.set("name", "Alicia", "", [0]);        // schema-guided set
+const fv = new metadatamodel.database.FieldValue(manipulation.DynObject.new(rows), columnFields);
+fv.get("id", "", [0]); // values at the model-resolved path
+fv.set("name", "Alicia", "", [0]); // schema-guided set
 ```
 
 ## flattener / unflattener — nested data <-> 2D table
@@ -133,8 +130,7 @@ const mixedModel = {
             {
               Age: [
                 {
-                  [core.props.GROUP_PATH_KEY]:
-                    "$['group:fields'][*].Profile['group:fields'][*].Age",
+                  [core.props.GROUP_PATH_KEY]: "$['group:fields'][*].Profile['group:fields'][*].Age",
                   [core.props.FIELD_CARDINALITY]: "single",
                 },
               ],
@@ -164,8 +160,7 @@ const query = {
   [metadatamodel.filter.query.VALUE]: {
     "$['group:fields'][*].Name[*]": {
       [metadatamodel.filter.condition.EQUAL_TO]: {
-        [metadatamodel.filter.conditionProps.ASSUMED_FIELD_TYPE]:
-          metadatamodel.filter.fieldType.TEXT,
+        [metadatamodel.filter.conditionProps.ASSUMED_FIELD_TYPE]: metadatamodel.filter.fieldType.TEXT,
         [metadatamodel.filter.conditionProps.VALUE]: "Alice",
       },
     },

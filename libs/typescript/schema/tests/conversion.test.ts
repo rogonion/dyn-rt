@@ -7,16 +7,7 @@
 
 import { test } from "vitest";
 import { TestReport, newTestTitle } from "@dyn-rt/test-support";
-import {
-  convertWith,
-  enumNode,
-  jsonScalar,
-  nilable,
-  scalar,
-  schemaSet,
-  type ConversionOptions,
-  type Schema,
-} from "../src/index.js";
+import { convertWith, enumNode, jsonScalar, nilable, scalar, schemaSet, type ConversionOptions, type Schema } from "../src/index.js";
 import {
   Circle,
   Square,
@@ -43,9 +34,7 @@ interface ConversionCase {
   target?: unknown;
   options?: ConversionOptions;
   /** { value, validSetKeys, instanceOf? } or { error: fragment expected in the message } */
-  expected:
-    | { value: unknown; validSetKeys: string[]; instanceOf?: new () => unknown }
-    | { error: string };
+  expected: { value: unknown; validSetKeys: string[]; instanceOf?: new () => unknown } | { error: string };
 }
 
 function yieldTestData(): ConversionCase[] {
@@ -91,14 +80,22 @@ function yieldTestData(): ConversionCase[] {
       source: userValue(),
       schema: userSchema(),
       target: new User(),
-      expected: { value: { ID: 1, Name: "amy", Email: "amy@example.com" }, validSetKeys: [], instanceOf: User },
+      expected: {
+        value: { ID: 1, Name: "amy", Email: "amy@example.com" },
+        validSetKeys: [],
+        instanceOf: User,
+      },
     },
     {
       testTitle: "class instance source converts into a class shape",
       source: sampleUser(),
       schema: userSchema(),
       target: new User(),
-      expected: { value: { ID: 1, Name: "amy", Email: "amy@example.com" }, validSetKeys: [], instanceOf: User },
+      expected: {
+        value: { ID: 1, Name: "amy", Email: "amy@example.com" },
+        validSetKeys: [],
+        instanceOf: User,
+      },
     },
     {
       testTitle: "nested plain object converts into nested classes (incl. the Option-like field)",
@@ -113,7 +110,11 @@ function yieldTestData(): ConversionCase[] {
         value: {
           Name: "amy",
           Age: 30,
-          Address: { Street: "1 Main St", City: "Springfield", ZipCode: { variant: "Some", payload: "12345" } },
+          Address: {
+            Street: "1 Main St",
+            City: "Springfield",
+            ZipCode: { variant: "Some", payload: "12345" },
+          },
         },
         validSetKeys: [],
         instanceOf: UserProfile,
@@ -130,7 +131,10 @@ function yieldTestData(): ConversionCase[] {
       testTitle: "object converts into a map (string key coerced via the key schema, value through indirection)",
       source: { "1": userValue() },
       schema: mapUserSchema(),
-      expected: { value: { "1": { ID: 1, Name: "amy", Email: "amy@example.com" } }, validSetKeys: [] },
+      expected: {
+        value: { "1": { ID: 1, Name: "amy", Email: "amy@example.com" } },
+        validSetKeys: [],
+      },
     },
     {
       testTitle: "indirection field converts straight through (null zip stays null via nilable)",
@@ -141,7 +145,10 @@ function yieldTestData(): ConversionCase[] {
       schema: userWithAddressSchema(),
       target: new UserWithAddress(),
       expected: {
-        value: { Name: "amy", Address: { Street: "1 Main St", City: "Springfield", ZipCode: null } },
+        value: {
+          Name: "amy",
+          Address: { Street: "1 Main St", City: "Springfield", ZipCode: null },
+        },
         validSetKeys: [],
         instanceOf: UserWithAddress,
       },
@@ -154,7 +161,11 @@ function yieldTestData(): ConversionCase[] {
         ["Product", productSchema()],
       ]),
       target: new User(),
-      expected: { value: { ID: 1, Name: "amy", Email: "amy@example.com" }, validSetKeys: ["User"], instanceOf: User },
+      expected: {
+        value: { ID: 1, Name: "amy", Email: "amy@example.com" },
+        validSetKeys: ["User"],
+        instanceOf: User,
+      },
     },
     {
       testTitle: "shape set converts circle data via the Circle node and reports the key",
@@ -185,7 +196,11 @@ function yieldTestData(): ConversionCase[] {
       testTitle: "employee converts with nested class, list and map fields",
       source: {
         ID: 3,
-        Profile: { Name: "amy", Age: 30, Address: { Street: "1 Main St", City: "Springfield", ZipCode: "12345" } },
+        Profile: {
+          Name: "amy",
+          Age: 30,
+          Address: { Street: "1 Main St", City: "Springfield", ZipCode: "12345" },
+        },
         Skills: ["rust", "go"],
         ProjectHours: { core: 40 },
       },
@@ -196,7 +211,11 @@ function yieldTestData(): ConversionCase[] {
           Profile: {
             Name: "amy",
             Age: 30,
-            Address: { Street: "1 Main St", City: "Springfield", ZipCode: { variant: "Some", payload: "12345" } },
+            Address: {
+              Street: "1 Main St",
+              City: "Springfield",
+              ZipCode: { variant: "Some", payload: "12345" },
+            },
           },
           Skills: ["rust", "go"],
           ProjectHours: { core: 40 },
@@ -213,24 +232,29 @@ function yieldTestData(): ConversionCase[] {
     {
       testTitle: "null source against a nilable node returns the target as-is",
       source: null,
-      schema: nilable(enumNode([["Some", scalar("string")], ["None", undefined]])),
+      schema: nilable(
+        enumNode([
+          ["Some", scalar("string")],
+          ["None", undefined],
+        ]),
+      ),
       target: "keep",
       expected: { value: "keep", validSetKeys: [] },
     },
     {
       testTitle: "null source against a non-nilable node errors",
       source: null,
-      schema: enumNode([["Some", scalar("string")], ["None", undefined]]),
+      schema: enumNode([
+        ["Some", scalar("string")],
+        ["None", undefined],
+      ]),
       expected: { error: "source cannot be nil" },
     },
   ];
 }
 
 test("conversion_cases", () => {
-  const report = new TestReport(
-    "conversion_cases",
-    "Data-driven suite for src/application/conversion.ts (ADR 0004/0009).",
-  );
+  const report = new TestReport("conversion_cases", "Data-driven suite for src/application/conversion.ts (ADR 0004/0009).");
   for (const testCase of yieldTestData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
     let result: { value: unknown; validSetKeys: string[] } | undefined;
@@ -242,9 +266,7 @@ test("conversion_cases", () => {
     }
     if ("error" in testCase.expected) {
       if (result !== undefined || !errorMessage.includes(testCase.expected.error)) {
-        report.failCase(
-          `expected error containing ${JSON.stringify(testCase.expected.error)}, got ${result !== undefined ? `value ${JSON.stringify(result.value)}` : JSON.stringify(errorMessage)}`,
-        );
+        report.failCase(`expected error containing ${JSON.stringify(testCase.expected.error)}, got ${result !== undefined ? `value ${JSON.stringify(result.value)}` : JSON.stringify(errorMessage)}`);
       }
     } else if (result === undefined) {
       report.failCase(`expected ok, got error: ${errorMessage}`);
@@ -253,9 +275,7 @@ test("conversion_cases", () => {
         report.failCase(`value: expected ${JSON.stringify(testCase.expected.value)}, got ${JSON.stringify(result.value)}`);
       }
       if (!eq(result.validSetKeys, testCase.expected.validSetKeys)) {
-        report.failCase(
-          `valid set keys: expected ${JSON.stringify(testCase.expected.validSetKeys)}, got ${JSON.stringify(result.validSetKeys)}`,
-        );
+        report.failCase(`valid set keys: expected ${JSON.stringify(testCase.expected.validSetKeys)}, got ${JSON.stringify(result.validSetKeys)}`);
       }
       if (testCase.expected.instanceOf !== undefined && !(result.value instanceof testCase.expected.instanceOf)) {
         report.failCase(`expected an instance of ${testCase.expected.instanceOf.name}, got ${result.value?.constructor?.name}`);

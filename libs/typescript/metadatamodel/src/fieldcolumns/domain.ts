@@ -26,10 +26,7 @@ export interface FieldColumnPosition {
 }
 
 /** A position with defaults, overridden per use site. */
-export function fieldColumnPosition(
-  pathKey: string,
-  overrides: Partial<FieldColumnPosition> = {},
-): FieldColumnPosition {
+export function fieldColumnPosition(pathKey: string, overrides: Partial<FieldColumnPosition> = {}): FieldColumnPosition {
   return {
     pathKey,
     fieldInSeparateColumns: false,
@@ -117,18 +114,13 @@ export class ColumnFields {
   reposition(): void {
     const total = this.current.length;
     for (const instruction of [...this.repositionInstructions]) {
-      const destinationOriginal = this.readOrder.findIndex(
-        (p) => columnKeyOf(p) === columnKeyOf(instruction),
-      );
+      const destinationOriginal = this.readOrder.findIndex((p) => columnKeyOf(p) === columnKeyOf(instruction));
       if (destinationOriginal === -1) continue;
       const destinationCurrent = this.current.indexOf(destinationOriginal);
       if (destinationCurrent === -1) continue;
       const sourceCurrent = this.current.indexOf(instruction.sourceIndex);
       if (sourceCurrent === -1) continue;
-      const destination =
-        instruction.positionBefore || destinationCurrent >= total - 1
-          ? destinationCurrent
-          : destinationCurrent + 1;
+      const destination = instruction.positionBefore || destinationCurrent >= total - 1 ? destinationCurrent : destinationCurrent + 1;
       if (destination !== sourceCurrent) {
         const source = this.current.splice(sourceCurrent, 1)[0]!;
         this.current.splice(Math.min(destination, this.current.length), 0, source);

@@ -101,14 +101,7 @@ const accessorCases: AccessorCase[] = [
   },
   {
     testTitle: "scalar accessors",
-    run: () => [
-      scalarNumber(3.5),
-      scalarNumber("x"),
-      scalarBigint(7n),
-      scalarBool(false),
-      scalarString("s"),
-      scalarString(1),
-    ],
+    run: () => [scalarNumber(3.5), scalarNumber("x"), scalarBigint(7n), scalarBool(false), scalarString("s"), scalarString(1)],
     expected: [3.5, undefined, 7n, false, "s", undefined],
   },
   {
@@ -118,13 +111,7 @@ const accessorCases: AccessorCase[] = [
       const copy = reflectClone(user);
       copy.Tags.push("y");
       copy.Address.City = "Mombasa";
-      return [
-        copy instanceof User,
-        copy.Address instanceof Address,
-        user.Tags,
-        user.Address.City,
-        eq(copy, new User(1, "Alice", new Address("Main St", "Mombasa"), ["x", "y"])),
-      ];
+      return [copy instanceof User, copy.Address instanceof Address, user.Tags, user.Address.City, eq(copy, new User(1, "Alice", new Address("Main St", "Mombasa"), ["x", "y"]))];
     },
     expected: [true, true, ["x"], "Nairobi", true],
   },
@@ -164,10 +151,7 @@ const accessorCases: AccessorCase[] = [
 ];
 
 test("accessor cases (src/application.ts)", () => {
-  const report = new TestReport(
-    "accessor_cases",
-    "sequence/map/class/scalar accessors + clone/zero/apply (src/application.ts)",
-  );
+  const report = new TestReport("accessor_cases", "sequence/map/class/scalar accessors + clone/zero/apply (src/application.ts)");
   for (const testCase of accessorCases) {
     report.beginCase(newTestTitle(testCase.testTitle));
     const got = testCase.run();

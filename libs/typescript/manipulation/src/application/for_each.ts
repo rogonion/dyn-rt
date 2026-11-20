@@ -12,11 +12,7 @@ import { get } from "./get.js";
 
 /** Calls `callback` for each value in `source` matched by `segments`, in
  * traversal order. Returning `false` from the callback stops early. */
-export function forEach(
-  source: unknown,
-  segments: RecursiveDescentSegments,
-  callback: (value: unknown) => boolean,
-): void {
+export function forEach(source: unknown, segments: RecursiveDescentSegments, callback: (value: unknown) => boolean): void {
   for (const value of get(source, segments)) {
     if (!callback(value)) {
       break;

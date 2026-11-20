@@ -4,20 +4,7 @@
 // capitalized field names keep parity with the go fixtures. Schema builders
 // mirror the *Schema() funcs of misc_test.go.
 
-import {
-  any,
-  enumNode,
-  indirectionNode,
-  jsonScalar,
-  mapNode,
-  nilable,
-  scalar,
-  schemaSet,
-  sequenceNode,
-  classNode,
-  type Schema,
-  type SchemaNode,
-} from "../src/index.js";
+import { any, enumNode, indirectionNode, jsonScalar, mapNode, nilable, scalar, schemaSet, sequenceNode, classNode, type Schema, type SchemaNode } from "../src/index.js";
 
 // ---------------------------------------------------------------------------
 // test types (mirrors misc_test.go)
@@ -152,7 +139,15 @@ export function addressSchema(): SchemaNode {
     ["City", stringNode()],
     // go: ZipCode *string -> TS: string | null, modeled as a nilable enum of
     // Some(string) / None (the Option shape)
-    ["ZipCode", nilable(enumNode([["Some", stringNode()], ["None", undefined]]))],
+    [
+      "ZipCode",
+      nilable(
+        enumNode([
+          ["Some", stringNode()],
+          ["None", undefined],
+        ]),
+      ),
+    ],
   ]);
 }
 

@@ -48,9 +48,7 @@ test("JsonError cases (src/error.ts)", () => {
       report.failCase(`expected kind ${testCase.expectedKind}, got ${err.kind}`);
     }
     if (err.message !== testCase.expectedMessage) {
-      report.failCase(
-        `expected message ${JSON.stringify(testCase.expectedMessage)}, got ${JSON.stringify(err.message)}`,
-      );
+      report.failCase(`expected message ${JSON.stringify(testCase.expectedMessage)}, got ${JSON.stringify(err.message)}`);
     }
     if (!(err instanceof Error) || err.name !== "JsonError") {
       report.failCase("JsonError is not an Error with name JsonError");

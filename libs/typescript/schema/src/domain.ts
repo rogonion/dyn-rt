@@ -8,10 +8,7 @@
 // schema paths
 // ---------------------------------------------------------------------------
 
-export type SchemaPathSegment =
-  | { kind: "Root" }
-  | { kind: "Key"; key: string }
-  | { kind: "Index"; index: number };
+export type SchemaPathSegment = { kind: "Root" } | { kind: "Key"; key: string } | { kind: "Index"; index: number };
 
 export type SchemaPath = SchemaPathSegment[];
 
@@ -126,11 +123,7 @@ export function mapNode(key: Schema, value: Schema): SchemaNode {
   return base("map", { kind: "Map", entries: [], key, value });
 }
 
-export function mapNodeWithEntries(
-  entries: [string, Schema][],
-  key?: Schema,
-  value?: Schema,
-): SchemaNode {
+export function mapNodeWithEntries(entries: [string, Schema][], key?: Schema, value?: Schema): SchemaNode {
   return base("map", { kind: "Map", entries, key, value });
 }
 

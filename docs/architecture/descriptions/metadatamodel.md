@@ -203,16 +203,16 @@ more than one value unless the mode is `TakeFirst`).
 
 ## Subdomains
 
-| Subdomain | What it does |
-|---|---|
-| `core` | Property getters, template post-processing (`schemaPath`/`dataPath`/`dataPathModelAware`/`dataPathKeepWildcards`), strict cardinality check |
-| `fieldcolumns` | Extract the model's fields as flat 2D table columns (read order, skip, reposition, separate columns, `groupColumnIndexes`) |
-| `database` | `getColumnFields` — the columns of one `db:table_collection` (by uid or join_depth+name, with skip/add); `FieldValue` get/set/delete of a column's values in source data through its `group:path_key` template |
-| `iter` | Recursive `forEach` / `filter` / `map` walks over fields/groups in read order (callbacks get the props object) |
-| `filter` | `DataFilter` — evaluate query conditions against a root sequence in source data, returning the excluded indexes (see below) |
-| `flattener` | Nested collections → 2D table (cells are always arrays), branching per group-array element (Cartesian product); `writeToDestination` |
-| `unflattener` | 2D table → nested collection written to a destination, merging rows into instances by primary-key signature; cardinality-aware writes |
-| `groupindex` | The instance/signature machinery used by the unflattener: `GroupIndexNode`, `GroupCollection`, `Signature` |
+| Subdomain      | What it does                                                                                                                                                                                                   |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core`         | Property getters, template post-processing (`schemaPath`/`dataPath`/`dataPathModelAware`/`dataPathKeepWildcards`), strict cardinality check                                                                    |
+| `fieldcolumns` | Extract the model's fields as flat 2D table columns (read order, skip, reposition, separate columns, `groupColumnIndexes`)                                                                                     |
+| `database`     | `getColumnFields` — the columns of one `db:table_collection` (by uid or join_depth+name, with skip/add); `FieldValue` get/set/delete of a column's values in source data through its `group:path_key` template |
+| `iter`         | Recursive `forEach` / `filter` / `map` walks over fields/groups in read order (callbacks get the props object)                                                                                                 |
+| `filter`       | `DataFilter` — evaluate query conditions against a root sequence in source data, returning the excluded indexes (see below)                                                                                    |
+| `flattener`    | Nested collections → 2D table (cells are always arrays), branching per group-array element (Cartesian product); `writeToDestination`                                                                           |
+| `unflattener`  | 2D table → nested collection written to a destination, merging rows into instances by primary-key signature; cardinality-aware writes                                                                          |
+| `groupindex`   | The instance/signature machinery used by the unflattener: `GroupIndexNode`, `GroupCollection`, `Signature`                                                                                                     |
 
 ## Filter query conditions
 
@@ -250,74 +250,74 @@ indexes `[0, 1, 3]` for products with IDs 0..3 where only "Product 2" matches:
 
 ```jsonc
 {
-  "Type": "LogicalOperator", 
-  "LogicalOperator": "And", 
+  "Type": "LogicalOperator",
+  "LogicalOperator": "And",
   "Negate": false,
   "Value": [
-    { 
-      "Type": "FieldGroup", 
-      "Negate": false, 
+    {
+      "Type": "FieldGroup",
+      "Negate": false,
       "Value": {
         "$['group:fields'][*].ID[*]": {
-          "GreaterThan": { 
-              "AssumedFieldType": "Number", 
-              "Value": 0 
-            },
-          "LessThan": { 
-            "AssumedFieldType": "Number", 
-            "Value": 3 
-          }
-        } 
-      } 
+          "GreaterThan": {
+            "AssumedFieldType": "Number",
+            "Value": 0,
+          },
+          "LessThan": {
+            "AssumedFieldType": "Number",
+            "Value": 3,
+          },
+        },
+      },
     },
-    { 
-      "Type": "FieldGroup", 
-      "Negate": false, 
+    {
+      "Type": "FieldGroup",
+      "Negate": false,
       "Value": {
         "$['group:fields'][*].Name[*]": {
-          "EndsWith": { 
-            "AssumedFieldType": "Text", 
-            "Value": "2" 
-          }
-        } 
-      } 
-    }
-  ]
+          "EndsWith": {
+            "AssumedFieldType": "Text",
+            "Value": "2",
+          },
+        },
+      },
+    },
+  ],
 }
 ```
 
 OR over a nested group's entry count and a nested field:
 
 ```jsonc
-{ 
-  "Type": "LogicalOperator", 
-  "LogicalOperator": "Or", 
+{
+  "Type": "LogicalOperator",
+  "LogicalOperator": "Or",
   "Negate": false,
   "Value": [
-    { 
-      "Type": "FieldGroup", 
-      "Negate": false, 
+    {
+      "Type": "FieldGroup",
+      "Negate": false,
       "Value": {
         "$['group:fields'][*].Address[*]": {
-          "NoOfEntriesGreaterThan": { 
-            "Value": 1 
-          } 
-        } 
-      } 
+          "NoOfEntriesGreaterThan": {
+            "Value": 1,
+          },
+        },
+      },
     },
-    { 
-      "Type": "FieldGroup", 
-      "Negate": false, 
+    {
+      "Type": "FieldGroup",
+      "Negate": false,
       "Value": {
         "$['group:fields'][*].Address[*]['group:fields'][*].City[*]": {
-          "BeginsWith": { 
-            "AssumedFieldType": "Text", 
-            "Value": "Streete" 
-          } 
-        } 
-      } 
-    }
-  ] 
+          "BeginsWith": {
+            "AssumedFieldType": "Text",
+            "Value": "Streete",
+          },
+        },
+      },
+    },
+  ],
 }
 ```
 
@@ -331,9 +331,9 @@ the query condition itself is plain JSON, and the focus is given by the two
   "Negate": true,
   "Value": {
     "$['group:fields'][*].Address[*]['group:fields'][*].City[*]": {
-      "BeginsWith": { 
-        "AssumedFieldType": "Text", 
-        "Value": "City 4" 
+      "BeginsWith": {
+        "AssumedFieldType": "Text",
+        "Value": "City 4"
       }
     }
   }
@@ -348,18 +348,18 @@ against a `UserProfileRow[]`, this evaluates the condition per entry of
 Timestamp condition compared at `yyyy-mm-dd` granularity:
 
 ```jsonc
-{ 
-  "Type": "FieldGroup", 
-  "Negate": false, 
+{
+  "Type": "FieldGroup",
+  "Negate": false,
   "Value": {
     "$['group:fields'][*].Created[*]": {
       "GreaterThan": {
         "AssumedFieldType": "Timestamp",
         "DateTimeFormat": "yyyy-mm-dd",
-        "Value": "2024-01-01T00:00:00Z"
-      }
-    } 
-  } 
+        "Value": "2024-01-01T00:00:00Z",
+      },
+    },
+  },
 }
 ```
 
@@ -367,18 +367,18 @@ Text equality against multiple values, case-insensitive, negated at the field
 level:
 
 ```jsonc
-{ 
-  "Type": "FieldGroup", 
-  "Negate": true, 
+{
+  "Type": "FieldGroup",
+  "Negate": true,
   "Value": {
     "$['group:fields'][*].Name[*]": {
       "EqualTo": {
         "AssumedFieldType": "Text",
         "CaseInsensitive": true,
-        "Values": ["product 1", "PRODUCT 3"]
-      }
-    } 
-  } 
+        "Values": ["product 1", "PRODUCT 3"],
+      },
+    },
+  },
 }
 ```
 

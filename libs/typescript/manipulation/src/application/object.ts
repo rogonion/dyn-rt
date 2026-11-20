@@ -14,12 +14,7 @@
 // the held source, which is what makes replacing a primitive root possible
 // (the pure functions can only reset containers in place).
 
-import {
-  parsePath,
-  RegexPathTokenizer,
-  type RecursiveDescentSegment,
-  type RecursiveDescentSegments,
-} from "@dyn-rt/path";
+import { parsePath, RegexPathTokenizer, type RecursiveDescentSegment, type RecursiveDescentSegments } from "@dyn-rt/path";
 import { reflectZero } from "@dyn-rt/reflect";
 import type { Schema, SchemaNode } from "@dyn-rt/schema";
 import { areEqual } from "./are_equal.js";

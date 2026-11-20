@@ -18,10 +18,10 @@ const doc = {
 };
 const obj = manipulation.DynObject.new(doc);
 
-obj.get("$.ID[*]");      // 2 values
-obj.get("$.ID[-1]");     // 1 value (negative index)
-obj.get("$.ID[0,1]");    // 2 values (union)
-obj.get("$..City[*]");   // ["Nairobi", "Mombasa"] (recursive descent)
+obj.get("$.ID[*]"); // 2 values
+obj.get("$.ID[-1]"); // 1 value (negative index)
+obj.get("$.ID[0,1]"); // 2 values (union)
+obj.get("$..City[*]"); // ["Nairobi", "Mombasa"] (recursive descent)
 ```
 
 `get` returns every match: `unknown[]`.
@@ -29,12 +29,15 @@ obj.get("$..City[*]");   // ["Nairobi", "Mombasa"] (recursive descent)
 ## set / delete / forEach
 
 ```ts
-obj.set("$.ID[0]", 7);   // => 1 (how many values were set)
-obj.delete("$.ID[1]");   // => 1
+obj.set("$.ID[0]", 7); // => 1 (how many values were set)
+obj.delete("$.ID[1]"); // => 1
 // doc.ID is now [7]
 
 let count = 0;
-obj.forEach("$..City[*]", () => { count += 1; return true; }); // false terminates
+obj.forEach("$..City[*]", () => {
+  count += 1;
+  return true;
+}); // false terminates
 // count === 2
 ```
 
@@ -45,7 +48,7 @@ Attach a schema to guide coercion/creation on `set`:
 
 ```ts
 manipulation.areEqual({ a: [1] }, { a: [1] }); // true
-manipulation.DynObject.areEqual(left, right);  // static form
+manipulation.DynObject.areEqual(left, right); // static form
 ```
 
 ## Complex nested shapes
@@ -62,13 +65,18 @@ class Complex {
 }
 
 const c = new Complex();
-c.Meta = { k1: [[1, "one"], [2, "two"]] };
+c.Meta = {
+  k1: [
+    [1, "one"],
+    [2, "two"],
+  ],
+};
 c.Maybe = new Address();
 c.Maybe.City = ["Nairobi"];
 
 const cobj = manipulation.DynObject.new(c);
-cobj.get("$.Meta['k1'][0][1]");   // ["one"]  (object key -> array index -> tuple index)
-cobj.get("$.Maybe.City[0]");      // ["Nairobi"] (through the optional class field)
+cobj.get("$.Meta['k1'][0][1]"); // ["one"]  (object key -> array index -> tuple index)
+cobj.get("$.Maybe.City[0]"); // ["Nairobi"] (through the optional class field)
 cobj.set("$.Maybe.City[0]", "Mombasa"); // => 1
 // c.Maybe.City is now ["Mombasa"]
 ```

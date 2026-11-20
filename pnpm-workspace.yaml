@@ -1,6 +1,6 @@
 packages:
-  - 'packages/typescript/*'
-  - 'libs/typescript/*'
+  - "packages/typescript/*"
+  - "libs/typescript/*"
 
 engineStrict: true
 allowBuilds:

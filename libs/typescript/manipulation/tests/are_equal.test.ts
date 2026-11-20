@@ -17,9 +17,7 @@ interface AreEqualCase {
 
 // custom checker: two UserProfiles are "equal" when only the name matches
 function nameOnly(left: unknown, right: unknown): boolean {
-  return (
-    left instanceof UserProfile && right instanceof UserProfile && left.Name === right.Name
-  );
+  return left instanceof UserProfile && right instanceof UserProfile && left.Name === right.Name;
 }
 
 function yieldTestData(): AreEqualCase[] {
@@ -34,7 +32,12 @@ function yieldTestData(): AreEqualCase[] {
       right: 1n,
       expected: false,
     },
-    { testTitle: "null vs undefined are different kinds", left: null, right: undefined, expected: false },
+    {
+      testTitle: "null vs undefined are different kinds",
+      left: null,
+      right: undefined,
+      expected: false,
+    },
     {
       testTitle: "equal sequences",
       left: [1, "x"],
@@ -145,10 +148,7 @@ function yieldTestData(): AreEqualCase[] {
 }
 
 test("are_equal_cases", () => {
-  const report = new TestReport(
-    "are_equal_cases",
-    "recursive structural equality over values (src/application/are_equal.ts)",
-  );
+  const report = new TestReport("are_equal_cases", "recursive structural equality over values (src/application/are_equal.ts)");
   for (const testCase of yieldTestData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
     const got = areEqual(testCase.left, testCase.right, testCase.custom);

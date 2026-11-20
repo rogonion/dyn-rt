@@ -76,10 +76,7 @@ export function sliceSegment(start?: number, end?: number, step?: number): PathS
   };
 }
 
-export function unionSegment(
-  accessStrategy: AccessStrategy,
-  members: PathSegment[],
-): PathSegment {
+export function unionSegment(accessStrategy: AccessStrategy, members: PathSegment[]): PathSegment {
   return { accessStrategy, selector: { kind: "Union", members } };
 }
 

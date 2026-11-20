@@ -7,13 +7,7 @@ import { test } from "vitest";
 import { TestReport, newTestTitle } from "@dyn-rt/test-support";
 import type { Value } from "@dyn-rt/shared";
 import { FIELDS_KEY, props, type MetadataModel } from "../src/core/index.js";
-import {
-  ColumnFields,
-  PropMatch,
-  columnKeyOf,
-  extract,
-  type ExtractOptions,
-} from "../src/fieldcolumns/index.js";
+import { ColumnFields, PropMatch, columnKeyOf, extract, type ExtractOptions } from "../src/fieldcolumns/index.js";
 
 // ---------------------------------------------------------------------------
 // sample model
@@ -64,16 +58,8 @@ function sampleModel(): MetadataModel {
       [props.GROUP_NAME]: "site",
       [FIELDS_KEY]: [
         {
-          Country: field(
-            "$['group:fields'][*].Site[*]['group:fields'][*].Country[*]",
-            "country",
-            "Text",
-          ),
-          City: field(
-            "$['group:fields'][*].Site[*]['group:fields'][*].City[*]",
-            "city",
-            "Text",
-          ),
+          Country: field("$['group:fields'][*].Site[*]['group:fields'][*].Country[*]", "country", "Text"),
+          City: field("$['group:fields'][*].Site[*]['group:fields'][*].City[*]", "city", "Text"),
         },
       ],
     },
@@ -106,9 +92,7 @@ function sampleModel(): MetadataModel {
 // ---------------------------------------------------------------------------
 
 type FieldColumnsOp =
-  | { kind: "extract"; expectedKeys: string[]; expectedNames: string[] }
-  | { kind: "extractSkip"; skip: PropMatch; expectedKeys: string[] }
-  | { kind: "extractReposition"; expectedKeys: string[] };
+  { kind: "extract"; expectedKeys: string[]; expectedNames: string[] } | { kind: "extractSkip"; skip: PropMatch; expectedKeys: string[] } | { kind: "extractReposition"; expectedKeys: string[] };
 
 interface FieldColumnsCase {
   testTitle?: string;
@@ -128,18 +112,7 @@ const ALL_KEYS = [
   "$['group:fields'][*].Geo[*][1].Lng",
 ];
 
-const ALL_NAMES = [
-  "source id",
-  "bio",
-  "skill 1",
-  "skill 2",
-  "country",
-  "city",
-  "lat 1",
-  "lng 1",
-  "lat 2",
-  "lng 2",
-];
+const ALL_NAMES = ["source id", "bio", "skill 1", "skill 2", "country", "city", "lat 1", "lng 1", "lat 2", "lng 2"];
 
 function yieldTestData(): FieldColumnsCase[] {
   return [
@@ -159,10 +132,7 @@ function yieldTestData(): FieldColumnsCase[] {
       testTitle: "view:column_position with position_before moves bio before source id",
       op: {
         kind: "extractReposition",
-        expectedKeys: [
-          "$['group:fields'][*].Bio[*]",
-          ...ALL_KEYS.filter((k) => k !== "$['group:fields'][*].Bio[*]"),
-        ],
+        expectedKeys: ["$['group:fields'][*].Bio[*]", ...ALL_KEYS.filter((k) => k !== "$['group:fields'][*].Bio[*]")],
       },
     },
   ];
@@ -176,17 +146,12 @@ function columnNames(fields: ColumnFields, order: number[]): string[] {
   return order.map((original) => {
     const field = fields.getByIndexInOriginalReadOrder(original);
     const name = field?.props;
-    return (typeof name === "object" && name !== null && !Array.isArray(name)
-      ? (name as Record<string, Value>)[props.GROUP_NAME]
-      : undefined) as string | undefined ?? "<missing>";
+    return ((typeof name === "object" && name !== null && !Array.isArray(name) ? (name as Record<string, Value>)[props.GROUP_NAME] : undefined) as string | undefined) ?? "<missing>";
   });
 }
 
 test("fieldcolumns_cases", () => {
-  const report = new TestReport(
-    "fieldcolumns_cases",
-    "fieldcolumns extraction / skip / reposition (src/fieldcolumns)",
-  );
+  const report = new TestReport("fieldcolumns_cases", "fieldcolumns extraction / skip / reposition (src/fieldcolumns)");
   for (const testCase of yieldTestData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
     let fields: ColumnFields;

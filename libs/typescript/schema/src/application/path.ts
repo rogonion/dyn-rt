@@ -14,21 +14,13 @@ export interface SchemaAtPath {
 }
 
 /** Resolves a single recursive-descent segment (a linear path) against `schema`. */
-export function schemaAtPath(
-  segment: RecursiveDescentSegment,
-  schema: Schema,
-): SchemaAtPath {
+export function schemaAtPath(segment: RecursiveDescentSegment, schema: Schema): SchemaAtPath {
   const validSetKeys: string[] = [];
   const node = resolveAt(0, segment, schema, validSetKeys);
   return { node, validSetKeys };
 }
 
-function resolveAt(
-  index: number,
-  segments: PathSegment[],
-  schema: Schema,
-  validSetKeys: string[],
-): SchemaNode {
+function resolveAt(index: number, segments: PathSegment[], schema: Schema, validSetKeys: string[]): SchemaNode {
   if (segments.length === 0 || index >= segments.length) {
     throw SchemaError.schemaPathError("current path segment indexes exhausted");
   }
@@ -38,12 +30,7 @@ function resolveAt(
   return resolveNodeAt(index, segments, schema, validSetKeys);
 }
 
-function resolveSetAt(
-  index: number,
-  segments: PathSegment[],
-  set: { defaultKey?: string; nodes: [string, SchemaNode][] },
-  validSetKeys: string[],
-): SchemaNode {
+function resolveSetAt(index: number, segments: PathSegment[], set: { defaultKey?: string; nodes: [string, SchemaNode][] }, validSetKeys: string[]): SchemaNode {
   if (set.nodes.length === 0) {
     throw SchemaError.schemaPathError("no schema nodes found");
   }
@@ -58,9 +45,7 @@ function resolveSetAt(
       throw err;
     }
   };
-  const ordered = [...set.nodes].sort(([a], [b]) =>
-    a === set.defaultKey ? -1 : b === set.defaultKey ? 1 : 0,
-  );
+  const ordered = [...set.nodes].sort(([a], [b]) => (a === set.defaultKey ? -1 : b === set.defaultKey ? 1 : 0));
   for (const [key, node] of ordered) {
     try {
       return tryNode(key, node);
@@ -71,12 +56,7 @@ function resolveSetAt(
   throw lastErr instanceof Error ? lastErr : SchemaError.schemaPathError("no schema nodes found");
 }
 
-function resolveNodeAt(
-  index: number,
-  segments: PathSegment[],
-  node: SchemaNode,
-  validSetKeys: string[],
-): SchemaNode {
+function resolveNodeAt(index: number, segments: PathSegment[], node: SchemaNode, validSetKeys: string[]): SchemaNode {
   const last = segments.length - 1;
   const segment = segments[index]!;
   const selector = segment.selector;
@@ -92,13 +72,7 @@ function resolveNodeAt(
   throw SchemaError.schemaPathError("current path segment is not key or index");
 }
 
-function resolveWithCollectionKey(
-  index: number,
-  segments: PathSegment[],
-  node: SchemaNode,
-  collectionKey: string,
-  validSetKeys: string[],
-): SchemaNode {
+function resolveWithCollectionKey(index: number, segments: PathSegment[], node: SchemaNode, collectionKey: string, validSetKeys: string[]): SchemaNode {
   const last = segments.length - 1;
   const shape = node.shape;
 
@@ -109,9 +83,7 @@ function resolveWithCollectionKey(
   if (shape.kind === "Map") {
     const entry = shape.entries.find(([k]) => k === collectionKey);
     if (entry !== undefined) {
-      return index === last
-        ? schemaAsNode(entry[1], validSetKeys)
-        : resolveAt(index + 1, segments, entry[1], validSetKeys);
+      return index === last ? schemaAsNode(entry[1], validSetKeys) : resolveAt(index + 1, segments, entry[1], validSetKeys);
     }
     if (shape.key === undefined || shape.value === undefined) {
       throw SchemaError.schemaPathError("schema for associative collection keys and/or values not found");
@@ -122,16 +94,12 @@ function resolveWithCollectionKey(
   if (shape.kind === "Sequence") {
     const item = shape.items.find(([i]) => String(i) === collectionKey);
     if (item !== undefined) {
-      return index === last
-        ? schemaAsNode(item[1], validSetKeys)
-        : resolveAt(index + 1, segments, item[1], validSetKeys);
+      return index === last ? schemaAsNode(item[1], validSetKeys) : resolveAt(index + 1, segments, item[1], validSetKeys);
     }
     if (shape.elements === undefined) {
       throw SchemaError.schemaPathError("schema for linear collection elements not found");
     }
-    return index === last
-      ? schemaAsNode(shape.elements, validSetKeys)
-      : resolveAt(index + 1, segments, shape.elements, validSetKeys);
+    return index === last ? schemaAsNode(shape.elements, validSetKeys) : resolveAt(index + 1, segments, shape.elements, validSetKeys);
   }
   if (shape.kind === "Class") {
     if (shape.fields.length === 0) {
@@ -141,9 +109,7 @@ function resolveWithCollectionKey(
     if (field === undefined) {
       throw SchemaError.schemaPathError(`schema for class field '${collectionKey}' not found`);
     }
-    return index === last
-      ? schemaAsNode(field[1], validSetKeys)
-      : resolveAt(index + 1, segments, field[1], validSetKeys);
+    return index === last ? schemaAsNode(field[1], validSetKeys) : resolveAt(index + 1, segments, field[1], validSetKeys);
   }
   // leaf shapes: no children to descend into; return the node itself
   return node;

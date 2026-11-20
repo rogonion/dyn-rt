@@ -24,9 +24,10 @@ One repo, dual toolchains, four top-level code directories:
   there is no shared vector directory — languages mirror the same case tables.
 
 Root tooling: cargo workspace (`apps/rust/*`, `libs/rust/*`, `packages/rust/*`)
-+ pnpm workspace (`libs/typescript/*`, `packages/typescript/*`), orchestrated
-by uv + poe (`poe_tasks.toml`, dev dependency group in `pyproject.toml`).
-Python is the task runner only. `docs/architecture/` holds ADRs.
+
+- pnpm workspace (`libs/typescript/*`, `packages/typescript/*`), orchestrated
+  by uv + poe (`poe_tasks.toml`, dev dependency group in `pyproject.toml`).
+  Python is the task runner only. `docs/architecture/` holds ADRs.
 
 ## Consequences
 

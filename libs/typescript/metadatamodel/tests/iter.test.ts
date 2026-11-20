@@ -73,24 +73,8 @@ function userInformationModel(): MetadataModel {
           "$['group:fields'][*].Details[*]",
           "Address Details",
           [
-            [
-              "City",
-              fldDepth(
-                "$['group:fields'][*].Details[*]['group:fields'][*].City[*]",
-                "City Name",
-                "Text",
-                1,
-              ),
-            ],
-            [
-              "ZipCode",
-              fldDepth(
-                "$['group:fields'][*].Details[*]['group:fields'][*].ZipCode[*]",
-                "Postal Code",
-                "Number",
-                1,
-              ),
-            ],
+            ["City", fldDepth("$['group:fields'][*].Details[*]['group:fields'][*].City[*]", "City Name", "Text", 1)],
+            ["ZipCode", fldDepth("$['group:fields'][*].Details[*]['group:fields'][*].ZipCode[*]", "Postal Code", "Number", 1)],
           ],
           ["City", "ZipCode"],
         ),
@@ -112,17 +96,7 @@ function filteredNoNameSuffix(): MetadataModel {
         Details: grp(
           "$['group:fields'][*].Details[*]",
           "Address Details",
-          [
-            [
-              "ZipCode",
-              fldDepth(
-                "$['group:fields'][*].Details[*]['group:fields'][*].ZipCode[*]",
-                "Postal Code",
-                "Number",
-                1,
-              ),
-            ],
-          ],
+          [["ZipCode", fldDepth("$['group:fields'][*].Details[*]['group:fields'][*].ZipCode[*]", "Postal Code", "Number", 1)]],
           ["ZipCode"],
         ),
       },
@@ -160,24 +134,8 @@ function mappedNameSuffixFound(): MetadataModel {
           "$['group:fields'][*].Details[*]",
           "Address Details",
           [
-            [
-              "City",
-              fldDepth(
-                "$['group:fields'][*].Details[*]['group:fields'][*].City[*]",
-                "City Name Found",
-                "Text",
-                1,
-              ),
-            ],
-            [
-              "ZipCode",
-              fldDepth(
-                "$['group:fields'][*].Details[*]['group:fields'][*].ZipCode[*]",
-                "Postal Code",
-                "Number",
-                1,
-              ),
-            ],
+            ["City", fldDepth("$['group:fields'][*].Details[*]['group:fields'][*].City[*]", "City Name Found", "Text", 1)],
+            ["ZipCode", fldDepth("$['group:fields'][*].Details[*]['group:fields'][*].ZipCode[*]", "Postal Code", "Number", 1)],
           ],
           ["City", "ZipCode"],
         ),
@@ -274,14 +232,8 @@ function yieldTestData(): IterCase[] {
 /** The props of `props` with `group:name` appended with `suffix` — helper
  * for the map callbacks; returns the new ENTRY (array with the props). */
 function renamedEntry(propsValue: Value, suffix: string): Value {
-  const name =
-    typeof propsValue === "object" && propsValue !== null && !Array.isArray(propsValue)
-      ? propsValue[props.GROUP_NAME]
-      : undefined;
-  const newProps: Value =
-    typeof name === "string"
-      ? { ...(propsValue as Record<string, Value>), [props.GROUP_NAME]: `${name}${suffix}` }
-      : propsValue;
+  const name = typeof propsValue === "object" && propsValue !== null && !Array.isArray(propsValue) ? propsValue[props.GROUP_NAME] : undefined;
+  const newProps: Value = typeof name === "string" ? { ...(propsValue as Record<string, Value>), [props.GROUP_NAME]: `${name}${suffix}` } : propsValue;
   return [newProps];
 }
 
@@ -292,9 +244,7 @@ function propsEntry(propsValue: Value): Value {
 }
 
 function nameOf(propsValue: Value): string | undefined {
-  return typeof propsValue === "object" && propsValue !== null && !Array.isArray(propsValue)
-    ? (propsValue[props.GROUP_NAME] as string | undefined)
-    : undefined;
+  return typeof propsValue === "object" && propsValue !== null && !Array.isArray(propsValue) ? (propsValue[props.GROUP_NAME] as string | undefined) : undefined;
 }
 
 function expectedModel(op: IterOp): MetadataModel {
@@ -316,10 +266,7 @@ function expectedModel(op: IterOp): MetadataModel {
 }
 
 test("iter_cases", () => {
-  const report = new TestReport(
-    "iter_cases",
-    "iter forEach/filter/map walks (src/iter/application.ts)",
-  );
+  const report = new TestReport("iter_cases", "iter forEach/filter/map walks (src/iter/application.ts)");
   for (const testCase of yieldTestData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
     const op = testCase.op;

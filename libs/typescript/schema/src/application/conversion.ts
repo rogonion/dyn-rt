@@ -7,13 +7,7 @@
 
 import { reflectClone } from "@dyn-rt/reflect";
 import { isClassInstance, isPlainObject } from "@dyn-rt/shared";
-import {
-  isSchemaSet,
-  renderPath,
-  type Schema,
-  type SchemaNode,
-  type SchemaPath,
-} from "../domain.js";
+import { isSchemaSet, renderPath, type Schema, type SchemaNode, type SchemaPath } from "../domain.js";
 import { SchemaError } from "../error.js";
 
 /** Options for conversion (port of go's `Conversion` class). */
@@ -42,25 +36,13 @@ export function convert(source: unknown, schema: Schema, target?: unknown): unkn
 }
 
 /** Converts with explicit options; returns the value plus the matched set keys. */
-export function convertWith(
-  source: unknown,
-  schema: Schema,
-  target?: unknown,
-  options: ConversionOptions = {},
-): ConversionResult {
+export function convertWith(source: unknown, schema: Schema, target?: unknown, options: ConversionOptions = {}): ConversionResult {
   const outcome: ConversionOutcome = { validSetKeys: [] };
   const value = convertSchema(source, schema, target, [], options, outcome);
   return { value, validSetKeys: outcome.validSetKeys };
 }
 
-function convertSchema(
-  source: unknown,
-  schema: Schema,
-  target: unknown,
-  path: SchemaPath,
-  options: ConversionOptions,
-  outcome: ConversionOutcome,
-): unknown {
+function convertSchema(source: unknown, schema: Schema, target: unknown, path: SchemaPath, options: ConversionOptions, outcome: ConversionOutcome): unknown {
   if (isSchemaSet(schema)) {
     return convertSet(source, schema, target, path, options, outcome);
   }
@@ -68,14 +50,7 @@ function convertSchema(
 }
 
 /** Converts `source` against a single schema node. */
-export function convertNode(
-  source: unknown,
-  node: SchemaNode,
-  target?: unknown,
-  path: SchemaPath = [],
-  options: ConversionOptions = {},
-  outcome: ConversionOutcome = { validSetKeys: [] },
-): unknown {
+export function convertNode(source: unknown, node: SchemaNode, target?: unknown, path: SchemaPath = [], options: ConversionOptions = {}, outcome: ConversionOutcome = { validSetKeys: [] }): unknown {
   return convertNodeWith(source, node, target, path, options, outcome);
 }
 
@@ -83,14 +58,7 @@ function fail(path: SchemaPath, message: string): SchemaError {
   return SchemaError.conversionFailed(message, renderPath(path));
 }
 
-function convertNodeWith(
-  source: unknown,
-  node: SchemaNode,
-  target: unknown,
-  path: SchemaPath,
-  options: ConversionOptions,
-  outcome: ConversionOutcome,
-): unknown {
+function convertNodeWith(source: unknown, node: SchemaNode, target: unknown, path: SchemaPath, options: ConversionOptions, outcome: ConversionOutcome): unknown {
   if (isNil(source)) {
     if (node.nilable) {
       return target === undefined ? null : target; // leave the target as-is
@@ -121,10 +89,7 @@ function convertNodeWith(
         throw fail(path, `unsupported source kind '${typeof source}' for class conversion`);
       }
       // preserve the target's prototype when a target object is given
-      const result: Record<string, unknown> =
-        target !== null && typeof target === "object" && !Array.isArray(target)
-          ? (reflectClone(target) as Record<string, unknown>)
-          : {};
+      const result: Record<string, unknown> = target !== null && typeof target === "object" && !Array.isArray(target) ? (reflectClone(target) as Record<string, unknown>) : {};
       const sourceMap = source as Record<string, unknown>;
       if (isPlainObject(source)) {
         // map source (plain object / Value-like): every source key must have a
@@ -214,25 +179,24 @@ function convertNodeWith(
         }
         const [, variantSchema] = variant;
         if (variantSchema === undefined) return { variant: active };
-        return { variant: active, payload: convertSchema(sourceMap.payload, variantSchema, undefined, path, options, outcome) };
+        return {
+          variant: active,
+          payload: convertSchema(sourceMap.payload, variantSchema, undefined, path, options, outcome),
+        };
       }
       const some = node.shape.variants.find(([name]) => name === "Some");
       if (some !== undefined && some[1] !== undefined) {
-        return { variant: "Some", payload: convertSchema(source, some[1], undefined, path, options, outcome) };
+        return {
+          variant: "Some",
+          payload: convertSchema(source, some[1], undefined, path, options, outcome),
+        };
       }
       throw fail(path, "source is not an enum");
     }
   }
 }
 
-function convertSet(
-  source: unknown,
-  set: { defaultKey?: string; nodes: [string, SchemaNode][] },
-  target: unknown,
-  path: SchemaPath,
-  options: ConversionOptions,
-  outcome: ConversionOutcome,
-): unknown {
+function convertSet(source: unknown, set: { defaultKey?: string; nodes: [string, SchemaNode][] }, target: unknown, path: SchemaPath, options: ConversionOptions, outcome: ConversionOutcome): unknown {
   if (set.nodes.length === 0) {
     throw fail(path, "no schema nodes found");
   }
@@ -247,9 +211,7 @@ function convertSet(
       throw err;
     }
   };
-  const ordered = [...set.nodes].sort(([a], [b]) =>
-    a === set.defaultKey ? -1 : b === set.defaultKey ? 1 : 0,
-  );
+  const ordered = [...set.nodes].sort(([a], [b]) => (a === set.defaultKey ? -1 : b === set.defaultKey ? 1 : 0));
   for (const [key, node] of ordered) {
     try {
       return tryNode(key, node);

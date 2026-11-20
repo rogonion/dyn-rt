@@ -49,8 +49,7 @@ const smokeCases: SmokeCase[] = [
   },
   {
     testTitle: "facade re-exports metadatamodel.core.dataPath",
-    run: () =>
-      metadatamodel.core.dataPath("$['group:fields'][*].ID[*]", [], "array"),
+    run: () => metadatamodel.core.dataPath("$['group:fields'][*].ID[*]", [], "array"),
     expected: "$.ID[0]",
   },
   {

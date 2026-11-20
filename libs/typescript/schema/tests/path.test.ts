@@ -6,15 +6,7 @@ import { test } from "vitest";
 import { TestReport, newTestTitle } from "@dyn-rt/test-support";
 import { RegexPathTokenizer, parsePath } from "@dyn-rt/path";
 import { schemaAtPath, type Schema, type SchemaShape } from "../src/index.js";
-import {
-  addressSchema,
-  companySchema,
-  listOfProductsSchema,
-  listOfShapesSchema,
-  nestedItemSchema,
-  userProfileSchema,
-  userSchema,
-} from "./common.js";
+import { addressSchema, companySchema, listOfProductsSchema, listOfShapesSchema, nestedItemSchema, userProfileSchema, userSchema } from "./common.js";
 
 interface PathCase {
   testTitle?: string;
@@ -86,10 +78,7 @@ function yieldTestData(): PathCase[] {
 }
 
 test("schema_path_cases", () => {
-  const report = new TestReport(
-    "schema_path_cases",
-    "Data-driven suite for src/application/path.ts: schema-path resolution.",
-  );
+  const report = new TestReport("schema_path_cases", "Data-driven suite for src/application/path.ts: schema-path resolution.");
   const tokenizer = new RegexPathTokenizer();
   for (const testCase of yieldTestData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
@@ -103,9 +92,7 @@ test("schema_path_cases", () => {
     }
     if ("error" in testCase.expected) {
       if (resolved !== undefined || !errorMessage.includes(testCase.expected.error)) {
-        report.failCase(
-          `expected error containing ${JSON.stringify(testCase.expected.error)}, got ${resolved !== undefined ? `kind ${resolved.node.shape.kind}` : JSON.stringify(errorMessage)}`,
-        );
+        report.failCase(`expected error containing ${JSON.stringify(testCase.expected.error)}, got ${resolved !== undefined ? `kind ${resolved.node.shape.kind}` : JSON.stringify(errorMessage)}`);
       }
     } else if (resolved === undefined) {
       report.failCase(`expected ok, got error: ${errorMessage}`);
@@ -113,14 +100,8 @@ test("schema_path_cases", () => {
       const kind = resolved.node.shape.kind;
       const typeName = resolved.node.typeName;
       const keys = resolved.validSetKeys;
-      if (
-        kind !== testCase.expected.kind ||
-        typeName !== testCase.expected.typeName ||
-        !eqArrays(keys, testCase.expected.validSetKeys)
-      ) {
-        report.failCase(
-          `expected (${testCase.expected.kind}, ${testCase.expected.typeName}, ${JSON.stringify(testCase.expected.validSetKeys)}), got (${kind}, ${typeName}, ${JSON.stringify(keys)})`,
-        );
+      if (kind !== testCase.expected.kind || typeName !== testCase.expected.typeName || !eqArrays(keys, testCase.expected.validSetKeys)) {
+        report.failCase(`expected (${testCase.expected.kind}, ${testCase.expected.typeName}, ${JSON.stringify(testCase.expected.validSetKeys)}), got (${kind}, ${typeName}, ${JSON.stringify(keys)})`);
       }
     }
   }

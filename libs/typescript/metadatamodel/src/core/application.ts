@@ -9,25 +9,11 @@
 // `group:fields[*]` structure segments and resolves the remaining wildcards
 // against the data to get the actual path to data.
 
-import {
-  RegexPathTokenizer,
-  parsePath,
-  renderSegments,
-  type PathSegment,
-  type RecursiveDescentSegment,
-  type RecursiveDescentSegments,
-} from "@dyn-rt/path";
+import { RegexPathTokenizer, parsePath, renderSegments, type PathSegment, type RecursiveDescentSegment, type RecursiveDescentSegments } from "@dyn-rt/path";
 import { unwrapAll } from "@dyn-rt/manipulation";
 import { asArray, asObject, get, isObject, type JsonObject, type Value } from "@dyn-rt/shared";
 import { MetadatamodelError } from "../error.js";
-import {
-  DEFAULT_CARDINALITY,
-  FIELDS_KEY,
-  parseCardinality,
-  props,
-  type Cardinality,
-  type MetadataModel,
-} from "./domain.js";
+import { DEFAULT_CARDINALITY, FIELDS_KEY, parseCardinality, props, type Cardinality, type MetadataModel } from "./domain.js";
 
 // ---------------------------------------------------------------------------
 // property getters
@@ -125,9 +111,7 @@ export function checkValueCardinality(value: unknown, cardinality: Cardinality):
   const current = unwrapAll(value);
   const isSequence = Array.isArray(current);
   if (cardinality === "array" && !isSequence) {
-    throw MetadatamodelError.cardinalityViolation(
-      `declared 'array' but value is ${typeof current} (single)`,
-    );
+    throw MetadatamodelError.cardinalityViolation(`declared 'array' but value is ${typeof current} (single)`);
   }
   if (cardinality === "single" && isSequence) {
     throw MetadatamodelError.cardinalityViolation("declared 'single' but value is an array");
@@ -152,15 +136,11 @@ export function readOrderOf(fieldGroup: MetadataModel): string[] {
   if (order !== undefined) {
     const array = asArray(order);
     if (array === undefined) {
-      throw MetadatamodelError.invalidModel(
-        `${JSON.stringify(props.GROUP_READ_ORDER_OF_FIELDS)} is not an array`,
-      );
+      throw MetadatamodelError.invalidModel(`${JSON.stringify(props.GROUP_READ_ORDER_OF_FIELDS)} is not an array`);
     }
     return array.map((entry) => {
       if (typeof entry !== "string") {
-        throw MetadatamodelError.invalidModel(
-          `${JSON.stringify(props.GROUP_READ_ORDER_OF_FIELDS)} entry is not a string`,
-        );
+        throw MetadatamodelError.invalidModel(`${JSON.stringify(props.GROUP_READ_ORDER_OF_FIELDS)} entry is not a string`);
       }
       return entry;
     });
@@ -206,9 +186,7 @@ export function mergeProps(into: Value, from: Value): void {
 export function parseTemplate(template: string): RecursiveDescentSegments {
   const segments = parsePath(new RegexPathTokenizer(), template);
   if (segments.length === 0 || segments.every((group) => group.length === 0)) {
-    throw MetadatamodelError.pathTemplateInvalid(
-      `template ${JSON.stringify(template)} parsed to no segments`,
-    );
+    throw MetadatamodelError.pathTemplateInvalid(`template ${JSON.stringify(template)} parsed to no segments`);
   }
   return segments;
 }
@@ -290,12 +268,7 @@ export function dataPath(template: string, indices: number[], cardinality: Cardi
  * `indexLastWildcard` controls the trailing wildcard (the leaf field's own
  * value index): `false` reads the whole value (used by the flattener and
  * unflattener for cell/group reads). */
-export function dataPathModelAware(
-  template: string,
-  model: MetadataModel,
-  indices: number[],
-  indexLastWildcard: boolean,
-): string {
+export function dataPathModelAware(template: string, model: MetadataModel, indices: number[], indexLastWildcard: boolean): string {
   const segments = parseTemplate(template);
   const flat = segments.flatMap((group) => group.map((segment) => segment.selector));
   const total = flat.length;
@@ -344,7 +317,10 @@ export function dataPathModelAware(
         if (indexIt && (fieldProps === undefined || cardinalityOf(fieldProps) === "array")) {
           const value = indices[index] ?? 0;
           index++;
-          outGroup.push({ accessStrategy: "Positional", selector: { kind: "Index", index: value } });
+          outGroup.push({
+            accessStrategy: "Positional",
+            selector: { kind: "Index", index: value },
+          });
         }
         // single cardinality (or dropped last wildcard): no segment
         i += 2;

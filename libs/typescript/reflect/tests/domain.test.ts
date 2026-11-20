@@ -31,7 +31,12 @@ const refCases: RefCase[] = [
   { testTitle: "bigint is Scalar", value: 10n, expected: "Scalar", expectedTypeName: "bigint" },
   { testTitle: "string is Scalar", value: "x", expected: "Scalar", expectedTypeName: "string" },
   { testTitle: "boolean is Scalar", value: true, expected: "Scalar", expectedTypeName: "boolean" },
-  { testTitle: "array is Sequence", value: [1, 2], expected: "Sequence", expectedTypeName: "array" },
+  {
+    testTitle: "array is Sequence",
+    value: [1, 2],
+    expected: "Sequence",
+    expectedTypeName: "array",
+  },
   {
     testTitle: "plain object is Map",
     value: { a: 1 },
@@ -71,10 +76,7 @@ const refCases: RefCase[] = [
 ];
 
 test("reflectRef routing cases (src/domain.ts)", () => {
-  const report = new TestReport(
-    "reflectRef_cases",
-    "reflectRef routing over native values (src/domain.ts)",
-  );
+  const report = new TestReport("reflectRef_cases", "reflectRef routing over native values (src/domain.ts)");
   for (const testCase of refCases) {
     report.beginCase(newTestTitle(testCase.testTitle));
     const got = reflectRef(testCase.value);

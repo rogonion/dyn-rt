@@ -8,8 +8,8 @@ Schemas over reflected data (Scalar, Any, Class, Map, Sequence, Indirection, Enu
 import { schema } from "@dyn-rt/dyn-rt";
 
 const numSchema = schema.scalar("number");
-schema.validate(42, numSchema);              // ok; .validSetKeys => []
-schema.convert(42, numSchema);               // 42
+schema.validate(42, numSchema); // ok; .validSetKeys => []
+schema.convert(42, numSchema); // 42
 
 const userSchema = schema.classNode("User", [
   ["ID", schema.sequenceNode(schema.scalar("number"))],
@@ -21,7 +21,7 @@ const set = schema.schemaSet("int", [
   ["int", schema.scalar("number")],
   ["text", schema.scalar("string")],
 ]);
-schema.validate(7, set).validSetKeys;        // ["int"]
+schema.validate(7, set).validSetKeys; // ["int"]
 ```
 
 Full examples: <https://github.com/rogonion/dyn-rt/blob/main/docs/examples/typescript/schema.md>

@@ -66,10 +66,7 @@ function yieldTestData(): DeleteCase[] {
     },
     {
       testTitle: "recursive descent delete removes every Name (go $..Name)",
-      root: [
-        { User: { Name: "Alice" } },
-        { Items: [{ Name: "Item 1" }] },
-      ],
+      root: [{ User: { Name: "Alice" } }, { Items: [{ Name: "Item 1" }] }],
       path: "$..Name",
       expectedCount: 2,
       expectedRoot: [{ User: {} }, { Items: [{}] }],
@@ -154,9 +151,7 @@ test("delete_cases", () => {
     }
     if (testCase.expectError !== undefined) {
       if (countValue !== undefined || !errorMessage.includes(testCase.expectError)) {
-        report.failCase(
-          `expected error containing ${JSON.stringify(testCase.expectError)}, got ${countValue !== undefined ? `Ok(${countValue})` : JSON.stringify(errorMessage)}`,
-        );
+        report.failCase(`expected error containing ${JSON.stringify(testCase.expectError)}, got ${countValue !== undefined ? `Ok(${countValue})` : JSON.stringify(errorMessage)}`);
       }
       continue;
     }
@@ -168,9 +163,7 @@ test("delete_cases", () => {
       report.failCase(`path ${testCase.path} || expected count ${testCase.expectedCount}, got ${countValue}`);
     }
     if (!areEqual(root, testCase.expectedRoot) && !eq(root, testCase.expectedRoot)) {
-      report.failCase(
-        `path ${testCase.path} || expected root ${render(testCase.expectedRoot)}, got ${render(root)}`,
-      );
+      report.failCase(`path ${testCase.path} || expected root ${render(testCase.expectedRoot)}, got ${render(root)}`);
     }
   }
   report.finish();

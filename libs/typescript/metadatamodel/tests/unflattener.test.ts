@@ -173,54 +173,15 @@ function employeeModel(): MetadataModel {
       {
         ID: fldPrimary("$['group:fields'][*].ID[*]", "ID", "Number"),
         Profile: grp("$['group:fields'][*].Profile[*]", "Profile", [
-          [
-            "Name",
-            fld(
-              "$['group:fields'][*].Profile[*]['group:fields'][*].Name[*]",
-              "Name",
-              "Text",
-            ),
-          ],
-          [
-            "Age",
-            fld(
-              "$['group:fields'][*].Profile[*]['group:fields'][*].Age[*]",
-              "Age",
-              "Number",
-            ),
-          ],
+          ["Name", fld("$['group:fields'][*].Profile[*]['group:fields'][*].Name[*]", "Name", "Text")],
+          ["Age", fld("$['group:fields'][*].Profile[*]['group:fields'][*].Age[*]", "Age", "Number")],
           [
             "Address",
-            grp(
-              "$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]",
-              "Address",
-              [
-                [
-                  "Street",
-                  fld(
-                    "$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].Street[*]",
-                    "Street",
-                    "Text",
-                  ),
-                ],
-                [
-                  "City",
-                  fld(
-                    "$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].City[*]",
-                    "City",
-                    "Text",
-                  ),
-                ],
-                [
-                  "ZipCode",
-                  fld(
-                    "$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].ZipCode[*]",
-                    "ZipCode",
-                    "Text",
-                  ),
-                ],
-              ],
-            ),
+            grp("$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]", "Address", [
+              ["Street", fld("$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].Street[*]", "Street", "Text")],
+              ["City", fld("$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].City[*]", "City", "Text")],
+              ["ZipCode", fld("$['group:fields'][*].Profile[*]['group:fields'][*].Address[*]['group:fields'][*].ZipCode[*]", "ZipCode", "Text")],
+            ]),
           ],
         ]),
         Skills: fld("$['group:fields'][*].Skills[*]", "Skills", "Text"),
@@ -287,9 +248,7 @@ function yieldTestData(): UnflattenCase[] {
       model: userModel,
       op: {
         kind: "users",
-        table: [
-          [cellsI([101]), cellsS(["Alice"]), cellsS(["alice@example.com"])],
-        ],
+        table: [[cellsI([101]), cellsS(["Alice"]), cellsS(["alice@example.com"])]],
         expected: [
           Object.assign(new UserRow(), {
             ID: [101],
@@ -305,17 +264,7 @@ function yieldTestData(): UnflattenCase[] {
       model: employeeModel,
       op: {
         kind: "employees",
-        table: [
-          [
-            cellsI([500]),
-            cellsS(["Bob"]),
-            cellsI([30]),
-            cellsS(["123 Tech Ln"]),
-            cellsS(["Silicon Valley"]),
-            cellsS(["94000"]),
-            cellsS(["Go", "Rust"]),
-          ],
-        ],
+        table: [[cellsI([500]), cellsS(["Bob"]), cellsI([30]), cellsS(["123 Tech Ln"]), cellsS(["Silicon Valley"]), cellsS(["94000"]), cellsS(["Go", "Rust"])]],
         expected: [
           Object.assign(new EmployeeRow(), {
             ID: [500],
@@ -344,42 +293,10 @@ function yieldTestData(): UnflattenCase[] {
       op: {
         kind: "employees",
         table: [
-          [
-            cellsI([100]),
-            cellsS(["Dev"]),
-            cellsI([30]),
-            cellsS(["Home St"]),
-            cellsS(["Nairobi"]),
-            cellsS(["00100"]),
-            cellsS(["Go"]),
-          ],
-          [
-            cellsI([100]),
-            cellsS(["Dev"]),
-            cellsI([30]),
-            cellsS(["Work Ave"]),
-            cellsS(["Westlands"]),
-            cellsS(["00200"]),
-            cellsS(["Go"]),
-          ],
-          [
-            cellsI([200]),
-            cellsS(["Admin"]),
-            cellsI([40]),
-            cellsS(["Office Rd"]),
-            cellsS(["Mombasa"]),
-            cellsS(["80100"]),
-            cellsS(["Management"]),
-          ],
-          [
-            cellsI([200]),
-            cellsS(["Consultant"]),
-            cellsI([35]),
-            cellsS(["Remote"]),
-            cellsS(["Eldoret"]),
-            cellsS(["30100"]),
-            cellsS(["Management"]),
-          ],
+          [cellsI([100]), cellsS(["Dev"]), cellsI([30]), cellsS(["Home St"]), cellsS(["Nairobi"]), cellsS(["00100"]), cellsS(["Go"])],
+          [cellsI([100]), cellsS(["Dev"]), cellsI([30]), cellsS(["Work Ave"]), cellsS(["Westlands"]), cellsS(["00200"]), cellsS(["Go"])],
+          [cellsI([200]), cellsS(["Admin"]), cellsI([40]), cellsS(["Office Rd"]), cellsS(["Mombasa"]), cellsS(["80100"]), cellsS(["Management"])],
+          [cellsI([200]), cellsS(["Consultant"]), cellsI([35]), cellsS(["Remote"]), cellsS(["Eldoret"]), cellsS(["30100"]), cellsS(["Management"])],
         ],
         expected: [
           Object.assign(new EmployeeRow(), {
@@ -473,10 +390,7 @@ function yieldTestData(): UnflattenCase[] {
 }
 
 test("unflatten_cases", () => {
-  const report = new TestReport(
-    "unflatten_cases",
-    "unflattener: 2D table to nested collection (src/unflattener)",
-  );
+  const report = new TestReport("unflatten_cases", "unflattener: 2D table to nested collection (src/unflattener)");
   for (const testCase of yieldTestData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
     const model = testCase.model();
@@ -487,37 +401,25 @@ test("unflatten_cases", () => {
         const unflattener = new Unflattener(model, DynObject.new(dest).withSchemaOpt(userSchema()));
         unflattener.unflatten(op.table);
         if (!areEqual(toValue(dest), toValue(op.expected))) {
-          report.failCase(
-            `dest: expected ${JSON.stringify(op.expected)}, got ${JSON.stringify(dest)}`,
-          );
+          report.failCase(`dest: expected ${JSON.stringify(op.expected)}, got ${JSON.stringify(dest)}`);
         }
       } else if (op.kind === "employees") {
         const dest: EmployeeRow[] = [];
-        const unflattener = new Unflattener(
-          model,
-          DynObject.new(dest).withSchemaOpt(employeeSchema()),
-        );
+        const unflattener = new Unflattener(model, DynObject.new(dest).withSchemaOpt(employeeSchema()));
         unflattener.unflatten(op.table);
         if (!areEqual(toValue(dest), toValue(op.expected))) {
-          report.failCase(
-            `dest: expected ${JSON.stringify(op.expected)}, got ${JSON.stringify(dest)}`,
-          );
+          report.failCase(`dest: expected ${JSON.stringify(op.expected)}, got ${JSON.stringify(dest)}`);
         }
       } else {
         const dest: UserWithBio[] = [];
-        const unflattener = new Unflattener(
-          model,
-          DynObject.new(dest).withSchemaOpt(userBioSchema()),
-        );
+        const unflattener = new Unflattener(model, DynObject.new(dest).withSchemaOpt(userBioSchema()));
         unflattener.singleCellMode = op.mode;
         try {
           unflattener.unflatten(op.table);
           if (op.expectError !== undefined) {
             report.failCase(`expected error containing ${JSON.stringify(op.expectError)}, got Ok`);
           } else if (op.expected !== undefined && !areEqual(toValue(dest), toValue(op.expected))) {
-            report.failCase(
-              `dest: expected ${JSON.stringify(op.expected)}, got ${JSON.stringify(dest)}`,
-            );
+            report.failCase(`dest: expected ${JSON.stringify(op.expected)}, got ${JSON.stringify(dest)}`);
           } else if (op.expected === undefined && op.expectError === undefined) {
             report.failCase("expected an error but got Ok");
           }
@@ -525,9 +427,7 @@ test("unflatten_cases", () => {
           if (op.expectError !== undefined) {
             const message = err instanceof Error ? err.message : String(err);
             if (!message.includes(op.expectError)) {
-              report.failCase(
-                `error expected to contain ${JSON.stringify(op.expectError)}, got ${message}`,
-              );
+              report.failCase(`error expected to contain ${JSON.stringify(op.expectError)}, got ${message}`);
             }
           } else {
             report.failCase(`unexpected error: ${err instanceof Error ? err.message : String(err)}`);
@@ -544,10 +444,7 @@ test("unflatten_cases", () => {
 /** End-to-end: flatten an EmployeeRow[], then unflatten the table back and
  * expect the original collection. */
 test("flatten_unflatten_roundtrip_case", () => {
-  const report = new TestReport(
-    "flatten_unflatten_roundtrip_case",
-    "flatten then unflatten reproduces the source collection (src/flattener + src/unflattener)",
-  );
+  const report = new TestReport("flatten_unflatten_roundtrip_case", "flatten then unflatten reproduces the source collection (src/flattener + src/unflattener)");
   report.beginCase("cartesian employees round-trip");
 
   const model = employeeModel();

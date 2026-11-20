@@ -20,9 +20,9 @@ path.renderSegments(segments); // "$.store.book[0].title"
 ## Selector kinds
 
 ```ts
-path.renderSegments(path.parsePath(tokenizer, "$[0,-1]"));   // "$[0,-1]"  union, negative index
+path.renderSegments(path.parsePath(tokenizer, "$[0,-1]")); // "$[0,-1]"  union, negative index
 path.renderSegments(path.parsePath(tokenizer, "$.a[1:8:2]")); // "$.a[1:8:2]" slice
-path.renderSegments(path.parsePath(tokenizer, "$.a[*]"));     // "$.a.*"    wildcard
+path.renderSegments(path.parsePath(tokenizer, "$.a[*]")); // "$.a.*"    wildcard
 path.renderSegments(path.parsePath(tokenizer, "$..City[*]")); // "$..City.*" recursive descent
 ```
 

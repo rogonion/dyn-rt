@@ -14,17 +14,17 @@ instances.
 ```ts
 import { shared } from "@dyn-rt/dyn-rt";
 
-shared.kindOf({ a: 1 });        // "plain-object"  (JSON object shape)
-shared.kindOf([1, 2]);          // "array"
-shared.kindOf("x");             // "string"
-shared.kindOf(10n);             // "bigint"
-shared.kindOf(undefined);       // "undefined"
-shared.kindOf(new Date());      // "date"
-shared.kindOf(new Map());       // "class-instance"
+shared.kindOf({ a: 1 }); // "plain-object"  (JSON object shape)
+shared.kindOf([1, 2]); // "array"
+shared.kindOf("x"); // "string"
+shared.kindOf(10n); // "bigint"
+shared.kindOf(undefined); // "undefined"
+shared.kindOf(new Date()); // "date"
+shared.kindOf(new Map()); // "class-instance"
 shared.kindOf(new (class Foo {})()); // "class-instance" (user classes — the struct analogue)
 
 shared.isPlainObject({ a: 1 }); // true
-shared.typeName({ a: 1 });      // "object"
+shared.typeName({ a: 1 }); // "object"
 ```
 
 `ValueKind`: `"null" | "undefined" | "boolean" | "number" | "bigint" |

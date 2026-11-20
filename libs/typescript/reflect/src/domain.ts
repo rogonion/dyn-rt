@@ -15,14 +15,7 @@ import { className, kindOf } from "@dyn-rt/shared";
  *   RegExp, boxed primitives, functions); `Enum`/`Indirection` have no TS
  *   runtime analogue (TS enums are plain objects; there are no
  *   pointer wrappers) and route to `Unknown`. */
-export type ReflectRef =
-  | "Scalar"
-  | "Sequence"
-  | "Map"
-  | "Class"
-  | "Enum"
-  | "Indirection"
-  | "Unknown";
+export type ReflectRef = "Scalar" | "Sequence" | "Map" | "Class" | "Enum" | "Indirection" | "Unknown";
 
 /** Route a value to its reflect shape. */
 export function reflectRef(value: unknown): ReflectRef {
@@ -33,11 +26,7 @@ export function reflectRef(value: unknown): ReflectRef {
       return "Map";
     case "class-instance":
       // boxed primitives (new Number/String/Boolean) are scalar leaves
-      if (
-        value instanceof Number ||
-        value instanceof String ||
-        value instanceof Boolean
-      ) {
+      if (value instanceof Number || value instanceof String || value instanceof Boolean) {
         return "Scalar";
       }
       return "Class";

@@ -3,20 +3,7 @@
 
 import { test } from "vitest";
 import { TestReport, newTestTitle } from "@dyn-rt/test-support";
-import {
-  type Value,
-  typeName,
-  isNull,
-  isBoolean,
-  isNumber,
-  isString,
-  isArray,
-  isObject,
-  asArray,
-  asObject,
-  get,
-  object,
-} from "../src/index.js";
+import { type Value, typeName, isNull, isBoolean, isNumber, isString, isArray, isObject, asArray, asObject, get, object } from "../src/index.js";
 
 interface TypeNameCase {
   testTitle?: string;
@@ -111,9 +98,7 @@ test("get cases (src/value.ts)", () => {
     report.beginCase(newTestTitle(testCase.testTitle));
     const got = get(testCase.value, testCase.key);
     if (JSON.stringify(got) !== JSON.stringify(testCase.expected)) {
-      report.failCase(
-        `expected ${JSON.stringify(testCase.expected)}, got ${JSON.stringify(got)}`,
-      );
+      report.failCase(`expected ${JSON.stringify(testCase.expected)}, got ${JSON.stringify(got)}`);
     }
   }
   report.finish();
@@ -150,9 +135,7 @@ test("object builder cases (src/value.ts)", () => {
     report.beginCase(newTestTitle(testCase.testTitle));
     const got = object(testCase.entries);
     if (JSON.stringify(got) !== JSON.stringify(testCase.expected)) {
-      report.failCase(
-        `expected ${JSON.stringify(testCase.expected)}, got ${JSON.stringify(got)}`,
-      );
+      report.failCase(`expected ${JSON.stringify(testCase.expected)}, got ${JSON.stringify(got)}`);
     }
     // asArray/asObject round-trip on the built value
     if (asObject(got) === undefined) {

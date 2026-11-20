@@ -12,11 +12,7 @@ import { classNode, scalar, sequenceNode, type Schema, type SchemaNode } from "@
 import { object, type JsonObject, type Value } from "@dyn-rt/shared";
 import { FIELDS_KEY, props, type MetadataModel } from "../src/core/index.js";
 import { PropMatch } from "../src/fieldcolumns/index.js";
-import {
-  FieldValue,
-  getColumnFields,
-  type GetColumnFieldsOptions,
-} from "../src/database/index.js";
+import { FieldValue, getColumnFields, type GetColumnFieldsOptions } from "../src/database/index.js";
 
 /** Renders a value for failure messages. */
 function render(value: unknown): string {
@@ -34,15 +30,7 @@ function render(value: unknown): string {
 
 /** A field entry: array whose first element is the props object, carrying
  * the db:* properties like go's testdata models. */
-function dbField(
-  pathKey: string,
-  name: string,
-  column: string,
-  uid: string,
-  depth: number,
-  table: string,
-  primary: boolean,
-): Value {
+function dbField(pathKey: string, name: string, column: string, uid: string, depth: number, table: string, primary: boolean): Value {
   const entries: JsonObject = {
     [props.GROUP_PATH_KEY]: pathKey,
     [props.GROUP_NAME]: name,
@@ -58,14 +46,7 @@ function dbField(
 }
 
 /** A group entry (array with props object) holding nested fields. */
-function dbGroup(
-  pathKey: string,
-  name: string,
-  uid: string,
-  depth: number,
-  table: string,
-  fields: [string, Value][],
-): Value {
+function dbGroup(pathKey: string, name: string, uid: string, depth: number, table: string, fields: [string, Value][]): Value {
   return [
     {
       [props.GROUP_PATH_KEY]: pathKey,
@@ -91,15 +72,7 @@ function productModel(): MetadataModel {
       {
         ID: dbField("$['group:fields'][*].ID[*]", "ID", "ID", "Product", 0, "Product", true),
         Name: dbField("$['group:fields'][*].Name[*]", "Name", "Name", "Product", 0, "Product", false),
-        Price: dbField(
-          "$['group:fields'][*].Price[*]",
-          "Price",
-          "Price",
-          "Product",
-          0,
-          "Product",
-          false,
-        ),
+        Price: dbField("$['group:fields'][*].Price[*]", "Price", "Price", "Product", 0, "Product", false),
       },
     ],
   };
@@ -118,39 +91,10 @@ function employeeModel(): MetadataModel {
     [FIELDS_KEY]: [
       {
         ID: dbField("$['group:fields'][*].ID[*]", "ID", "ID", "Employee", 0, "Employee", true),
-        Profile: dbGroup(
-          "$['group:fields'][*].Profile[*]",
-          "Profile",
-          "Profile",
-          1,
-          "Profile",
-          [
-            [
-              "Age",
-              dbField(
-                "$['group:fields'][*].Profile[*]['group:fields'][*].Age[*]",
-                "Age",
-                "Age",
-                "Profile",
-                1,
-                "Profile",
-                false,
-              ),
-            ],
-            [
-              "Bio",
-              dbField(
-                "$['group:fields'][*].Profile[*]['group:fields'][*].Bio[*]",
-                "Bio",
-                "Bio",
-                "Profile",
-                1,
-                "Profile",
-                false,
-              ),
-            ],
-          ],
-        ),
+        Profile: dbGroup("$['group:fields'][*].Profile[*]", "Profile", "Profile", 1, "Profile", [
+          ["Age", dbField("$['group:fields'][*].Profile[*]['group:fields'][*].Age[*]", "Age", "Age", "Profile", 1, "Profile", false)],
+          ["Bio", dbField("$['group:fields'][*].Profile[*]['group:fields'][*].Bio[*]", "Bio", "Bio", "Profile", 1, "Profile", false)],
+        ]),
       },
     ],
   };
@@ -298,10 +242,7 @@ function yieldGetColumnFieldsData(): GetColumnFieldsCase[] {
 }
 
 test("get_column_fields_cases", () => {
-  const report = new TestReport(
-    "get_column_fields_cases",
-    "database getColumnFields (src/database/application.ts)",
-  );
+  const report = new TestReport("get_column_fields_cases", "database getColumnFields (src/database/application.ts)");
   for (const testCase of yieldGetColumnFieldsData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
     const model = testCase.model();
@@ -314,9 +255,7 @@ test("get_column_fields_cases", () => {
       const gotOrder = fields.readOrder;
       const expectedOrder = testCase.expected.map(([name]) => name);
       if (JSON.stringify(gotOrder) !== JSON.stringify(expectedOrder)) {
-        report.failCase(
-          `read_order: expected ${JSON.stringify(expectedOrder)}, got ${JSON.stringify(gotOrder)}`,
-        );
+        report.failCase(`read_order: expected ${JSON.stringify(expectedOrder)}, got ${JSON.stringify(gotOrder)}`);
       }
       for (const [name, pathKey] of testCase.expected) {
         const propsValue = fields.get(name);
@@ -324,10 +263,7 @@ test("get_column_fields_cases", () => {
           report.failCase(`column ${name}: missing`);
           continue;
         }
-        const gotKey =
-          typeof propsValue === "object" && propsValue !== null && !Array.isArray(propsValue)
-            ? (propsValue as JsonObject)[props.GROUP_PATH_KEY]
-            : undefined;
+        const gotKey = typeof propsValue === "object" && propsValue !== null && !Array.isArray(propsValue) ? (propsValue as JsonObject)[props.GROUP_PATH_KEY] : undefined;
         if (gotKey !== pathKey) {
           report.failCase(`column ${name}: path_key expected ${JSON.stringify(pathKey)}, got ${JSON.stringify(gotKey)}`);
         }
@@ -586,10 +522,7 @@ function yieldFieldValueData(): FieldValueCase[] {
 }
 
 test("field_value_cases", () => {
-  const report = new TestReport(
-    "field_value_cases",
-    "database FieldValue get/set/delete (src/database/application.ts)",
-  );
+  const report = new TestReport("field_value_cases", "database FieldValue get/set/delete (src/database/application.ts)");
   for (const testCase of yieldFieldValueData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
     const model = testCase.model();
@@ -640,9 +573,7 @@ test("field_value_cases", () => {
     if (op.kind === "set" || op.kind === "delete") {
       const expected = op.expectedSource();
       if (!areEqual(fieldValue.obj.getSource(), expected)) {
-        report.failCase(
-          `source: expected ${render(expected)}, got ${render(fieldValue.obj.getSource())}`,
-        );
+        report.failCase(`source: expected ${render(expected)}, got ${render(fieldValue.obj.getSource())}`);
       }
     }
   }

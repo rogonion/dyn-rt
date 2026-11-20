@@ -42,18 +42,16 @@ function yieldTestData(): GetCase[] {
     {
       // go case 2: recursive descent over a mixed slice
       testTitle: "recursive descent collects all Name fields (go case 2)",
-      root: [
-        { User: { Name: "Alice" } },
-        { User: { Name: "Bob" } },
-        { Items: [{ Name: "Item 1" }, { Name: "Item 2" }] },
-      ],
+      root: [{ User: { Name: "Alice" } }, { User: { Name: "Bob" } }, { Items: [{ Name: "Item 1" }, { Name: "Item 2" }] }],
       path: "$..Name",
       expectedValues: ["Alice", "Bob", "Item 1", "Item 2"],
     },
     {
       // go case 3: union on a class
       testTitle: "union operator over class-instance fields (go case 3)",
-      root: new ComplexData({ User: new User({ ID: 10, Name: "Charlie", Email: "charlie@example.com" }) }),
+      root: new ComplexData({
+        User: new User({ ID: 10, Name: "Charlie", Email: "charlie@example.com" }),
+      }),
       path: "$.User['ID', 'Name']",
       expectedValues: [10, "Charlie"],
     },
@@ -61,11 +59,7 @@ function yieldTestData(): GetCase[] {
       // go case 4: deep path with index and field
       testTitle: "array index then class-instance field (go case 4)",
       root: new ComplexData({
-        Items: [
-          new ComplexDataItem({ Name: "First", Value: 10 }),
-          new ComplexDataItem({ Name: "Second", Value: 20 }),
-          new ComplexDataItem({ Name: "Third", Value: 30 }),
-        ],
+        Items: [new ComplexDataItem({ Name: "First", Value: 10 }), new ComplexDataItem({ Name: "Second", Value: 20 }), new ComplexDataItem({ Name: "Third", Value: 30 })],
       }),
       path: "$.Items[1].Value",
       expectedValues: [20],
@@ -80,26 +74,15 @@ function yieldTestData(): GetCase[] {
     {
       // go case 6 equivalent: recursive descent + slice + union
       testTitle: "recursive descent with slice then union (go case 6 equivalent)",
-      root: [
-        { one: { Three: [0, 1, 2, 3, { "04": [0, 4] }, 5] } },
-        { Two: { Three: [0, 3, { TwentyFour: 24 }] } },
-      ],
+      root: [{ one: { Three: [0, 1, 2, 3, { "04": [0, 4] }, 5] } }, { Two: { Three: [0, 3, { TwentyFour: 24 }] } }],
       path: "$..Three[::2]['TwentyFour','04']",
-      expectedValues: [
-        [0, 4],
-        24,
-      ],
+      expectedValues: [[0, 4], 24],
     },
     {
       // go $.one..Two[*]: descent into key then wildcard over array elements
       testTitle: "descent into key then wildcard over array (go $.one..Two[*])",
       root: {
-        one: [
-          1,
-          { Two: [12] },
-          { three: ["four"] },
-          { five: [{ Two: [13] }] },
-        ],
+        one: [1, { Two: [12] }, { three: ["four"] }, { five: [{ Two: [13] }] }],
       },
       path: "$.one..Two[*]",
       expectedValues: [12, 13],
@@ -203,10 +186,7 @@ function yieldTestData(): GetCase[] {
     // --- native built-in shapes (arrays of class instances, nested combos) --
     {
       testTitle: "array of class instances: index then field",
-      root: [
-        new User({ ID: 1, Name: "Ann", Email: "a@x" }),
-        new User({ ID: 2, Name: "Bob", Email: "b@x" }),
-      ],
+      root: [new User({ ID: 1, Name: "Ann", Email: "a@x" }), new User({ ID: 2, Name: "Bob", Email: "b@x" })],
       path: "$[1].Name",
       expectedValues: ["Bob"],
     },
@@ -248,10 +228,7 @@ function yieldTestData(): GetCase[] {
 }
 
 test("get_cases", () => {
-  const report = new TestReport(
-    "get_cases",
-    "get over values at a JSONPath (src/application/get.ts)",
-  );
+  const report = new TestReport("get_cases", "get over values at a JSONPath (src/application/get.ts)");
   const tokenizer = new RegexPathTokenizer();
   for (const testCase of yieldTestData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
@@ -265,9 +242,7 @@ test("get_cases", () => {
     }
     if (testCase.expectError !== undefined) {
       if (values !== undefined || !errorMessage.includes(testCase.expectError)) {
-        report.failCase(
-          `expected error containing ${JSON.stringify(testCase.expectError)}, got ${values !== undefined ? `${values.length} results` : JSON.stringify(errorMessage)}`,
-        );
+        report.failCase(`expected error containing ${JSON.stringify(testCase.expectError)}, got ${values !== undefined ? `${values.length} results` : JSON.stringify(errorMessage)}`);
       }
       continue;
     }
@@ -276,16 +251,12 @@ test("get_cases", () => {
       continue;
     }
     if (values.length !== testCase.expectedValues.length) {
-      report.failCase(
-        `result count: expected ${testCase.expectedValues.length}, got ${values.length} (${values.map(render).join(", ")})`,
-      );
+      report.failCase(`result count: expected ${testCase.expectedValues.length}, got ${values.length} (${values.map(render).join(", ")})`);
       continue;
     }
     for (let i = 0; i < values.length; i++) {
       if (!areEqual(values[i], testCase.expectedValues[i]) && !eq(values[i], testCase.expectedValues[i])) {
-        report.failCase(
-          `result ${i}: expected ${render(testCase.expectedValues[i])}, got ${render(values[i])}`,
-        );
+        report.failCase(`result ${i}: expected ${render(testCase.expectedValues[i])}, got ${render(values[i])}`);
         break;
       }
     }

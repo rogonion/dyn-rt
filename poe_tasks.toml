@@ -27,7 +27,14 @@ rs-publish = ["rs-pub-shared", "rs-pub-path", "rs-pub-reflect-derive", "rs-pub-r
 ts-install = "pnpm install"
 ts-build = "pnpm -r --if-present build"
 ts-test = "pnpm -r --if-present test"
-ts-lint = "pnpm -r --if-present lint"
+# per-package type check (each package's `lint` script is tsc --noEmit)
+ts-lint-tsc = "pnpm -r --if-present lint"
+# repo-wide eslint (flat config eslint.config.mjs at the root)
+ts-lint-eslint = "pnpm exec eslint ."
+ts-lint = ["ts-lint-tsc", "ts-lint-eslint"]
+# prettier (config .prettierrc.json; ignores in .prettierignore)
+ts-fmt = "pnpm exec prettier --write ."
+ts-fmt-check = "pnpm exec prettier --check ."
 # Publishes the 7 public @dyn-rt/* packages to npm in dependency order
 # (pnpm -r is topological; workspace:* deps are rewritten to 1.0.0 and
 # publishConfig swaps exports to dist/, access public is baked in).
@@ -37,7 +44,7 @@ ts-publish-dry = "pnpm -r publish --dry-run --no-git-checks"
 ts-publish-run = "pnpm -r publish --no-git-checks"
 ts-publish = ["ts-build", "ts-publish-run"]
 
-fmt = ["rs-fmt"]
-lint = ["rs-clippy", "ts-lint"]
+fmt = ["rs-fmt", "ts-fmt"]
+lint = ["rs-clippy", "ts-lint", "ts-fmt-check"]
 test = ["rs-test", "ts-test"]
 build = ["rs-build", "ts-build"]

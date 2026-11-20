@@ -8,13 +8,7 @@
 // 3. split each part into bracket contents and plain text
 // 4. extract one PathSegment per token
 
-import type {
-  AccessStrategy,
-  PathSegment,
-  PathTokenizer,
-  RecursiveDescentSegment,
-  RecursiveDescentSegments,
-} from "./domain.js";
+import type { AccessStrategy, PathSegment, PathTokenizer, RecursiveDescentSegment, RecursiveDescentSegments } from "./domain.js";
 
 /** Parse a JSONPath string into its deconstructed AST. */
 export function parsePath(tokenizer: PathTokenizer, path: string): RecursiveDescentSegments {
@@ -95,10 +89,7 @@ export function extractSegment(tokenizer: PathTokenizer, token: string): PathSeg
  * The union's access strategy is Mixed when any member is Mixed or when
  * members mix Positional and Named; otherwise it inherits the single member
  * kind present. */
-function extractUnionSegment(
-  tokenizer: PathTokenizer,
-  unionParts: string[],
-): PathSegment {
+function extractUnionSegment(tokenizer: PathTokenizer, unionParts: string[]): PathSegment {
   const members: PathSegment[] = [];
   let hasMixed = false;
   let hasPositional = false;

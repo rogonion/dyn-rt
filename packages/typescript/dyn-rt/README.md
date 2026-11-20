@@ -10,7 +10,7 @@ import { manipulation, metadatamodel } from "@dyn-rt/dyn-rt";
 const user = { ID: [101], Name: ["Alice"], Address: [{ City: ["Nairobi"] }] };
 const obj = manipulation.DynObject.new(user);
 obj.get("$.Address[*].City[*]"); // => ["Nairobi"]
-obj.set("$.Name[0]", "Alicia");  // => 1
+obj.set("$.Name[0]", "Alicia"); // => 1
 
 metadatamodel.core.dataPath("$['group:fields'][*].ID[*]", [], "array"); // "$.ID[0]"
 ```

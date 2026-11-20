@@ -8,14 +8,7 @@
 import { areEqual } from "@dyn-rt/manipulation";
 import { asArray, get, type Value } from "@dyn-rt/shared";
 import { MetadatamodelError } from "../error.js";
-import {
-  condition,
-  conditionProps,
-  datetimeFormat,
-  fieldType,
-  type ConditionProcessor,
-  type FilterContext,
-} from "./domain.js";
+import { condition, conditionProps, datetimeFormat, fieldType, type ConditionProcessor, type FilterContext } from "./domain.js";
 
 /** The default set of condition processors, keyed by condition name (go's
  * `DefaultFilterProcessors`). */
@@ -37,46 +30,23 @@ export function defaultFilterProcessors(): [string, ConditionProcessor][] {
  * conditions go to `numberOfEntriesConditionTrue`; everything else
  * is dispatched on the condition's `AssumedFieldType` — and when the value
  * found is a sequence, ANY element satisfying the condition counts. */
-export function isConditionTrue(
-  ctx: FilterContext,
-  pathKey: string,
-  filterCondition: string,
-  valueFound: unknown,
-  filterValue: Value,
-): boolean {
-  if (
-    filterCondition === condition.NO_OF_ENTRIES_GREATER_THAN ||
-    filterCondition === condition.NO_OF_ENTRIES_LESS_THAN ||
-    filterCondition === condition.NO_OF_ENTRIES_EQUAL_TO
-  ) {
+export function isConditionTrue(ctx: FilterContext, pathKey: string, filterCondition: string, valueFound: unknown, filterValue: Value): boolean {
+  if (filterCondition === condition.NO_OF_ENTRIES_GREATER_THAN || filterCondition === condition.NO_OF_ENTRIES_LESS_THAN || filterCondition === condition.NO_OF_ENTRIES_EQUAL_TO) {
     return numberOfEntriesConditionTrue(ctx, pathKey, filterCondition, valueFound, filterValue);
   }
 
   const assumedRaw = get(filterValue, conditionProps.ASSUMED_FIELD_TYPE);
   if (typeof assumedRaw !== "string") {
     if (assumedRaw === undefined) {
-      return errorOrFalse(
-        ctx,
-        `filter condition property '${conditionProps.ASSUMED_FIELD_TYPE}' not found`,
-      );
+      return errorOrFalse(ctx, `filter condition property '${conditionProps.ASSUMED_FIELD_TYPE}' not found`);
     }
-    return errorOrFalse(
-      ctx,
-      `filter condition property '${conditionProps.ASSUMED_FIELD_TYPE}' is not a string`,
-    );
+    return errorOrFalse(ctx, `filter condition property '${conditionProps.ASSUMED_FIELD_TYPE}' is not a string`);
   }
   const assumed = assumedRaw;
 
   if (Array.isArray(valueFound)) {
     for (const element of valueFound) {
-      const conditionTrue = dispatchAssumedType(
-        ctx,
-        pathKey,
-        filterCondition,
-        element,
-        filterValue,
-        assumed,
-      );
+      const conditionTrue = dispatchAssumedType(ctx, pathKey, filterCondition, element, filterValue, assumed);
       if (conditionTrue) {
         return true;
       }
@@ -89,14 +59,7 @@ export function isConditionTrue(
 
 /** Routes to the text/number/timestamp/default processor by assumed field
  * type (go's switch in `IsConditionTrue`). */
-function dispatchAssumedType(
-  ctx: FilterContext,
-  pathKey: string,
-  filterCondition: string,
-  valueFound: unknown,
-  filterValue: Value,
-  assumed: string,
-): boolean {
+function dispatchAssumedType(ctx: FilterContext, pathKey: string, filterCondition: string, valueFound: unknown, filterValue: Value, assumed: string): boolean {
   if (assumed === fieldType.TEXT) {
     return textConditionTrue(ctx, pathKey, filterCondition, valueFound, filterValue);
   }
@@ -111,13 +74,7 @@ function dispatchAssumedType(
 
 /** `NoOfEntries*` conditions: compares the length of a sequence value
  * (go's `IsNumberOfEntriesConditionTrue`). */
-export function numberOfEntriesConditionTrue(
-  ctx: FilterContext,
-  _pathKey: string,
-  filterCondition: string,
-  valueFound: unknown,
-  filterValue: Value,
-): boolean {
+export function numberOfEntriesConditionTrue(ctx: FilterContext, _pathKey: string, filterCondition: string, valueFound: unknown, filterValue: Value): boolean {
   if (!Array.isArray(valueFound)) {
     return false;
   }
@@ -144,13 +101,7 @@ export function numberOfEntriesConditionTrue(
 
 /** Text conditions: EqualTo / BeginsWith / EndsWith / Contains against
  * string values, honoring `CaseInsensitive` (go's `IsTextConditionTrue`). */
-export function textConditionTrue(
-  ctx: FilterContext,
-  _pathKey: string,
-  filterCondition: string,
-  valueFound: unknown,
-  filterValue: Value,
-): boolean {
+export function textConditionTrue(ctx: FilterContext, _pathKey: string, filterCondition: string, valueFound: unknown, filterValue: Value): boolean {
   const caseInsensitiveRaw = get(filterValue, conditionProps.CASE_INSENSITIVE);
   const caseInsensitive = caseInsensitiveRaw === true;
 
@@ -159,34 +110,22 @@ export function textConditionTrue(
   const multiple = get(filterValue, conditionProps.VALUES);
   if (single !== undefined) {
     if (typeof single !== "string") {
-      return errorOrFalse(
-        ctx,
-        `filter condition property '${conditionProps.VALUE}' is not a string`,
-      );
+      return errorOrFalse(ctx, `filter condition property '${conditionProps.VALUE}' is not a string`);
     }
     valuesToCompare.push(caseInsensitive ? single.toLowerCase() : single);
   } else if (multiple !== undefined) {
     const items = asArray(multiple);
     if (items === undefined) {
-      return errorOrFalse(
-        ctx,
-        `filter condition property '${conditionProps.VALUES}' is not an array`,
-      );
+      return errorOrFalse(ctx, `filter condition property '${conditionProps.VALUES}' is not an array`);
     }
     for (const item of items) {
       if (typeof item !== "string") {
-        return errorOrFalse(
-          ctx,
-          `filter condition property '${conditionProps.VALUES}' entries must be strings`,
-        );
+        return errorOrFalse(ctx, `filter condition property '${conditionProps.VALUES}' entries must be strings`);
       }
       valuesToCompare.push(caseInsensitive ? item.toLowerCase() : item);
     }
   } else {
-    return errorOrFalse(
-      ctx,
-      `filter condition property '${conditionProps.VALUE}' not found`,
-    );
+    return errorOrFalse(ctx, `filter condition property '${conditionProps.VALUE}' not found`);
   }
 
   if (typeof valueFound !== "string") {
@@ -216,13 +155,7 @@ export function textConditionTrue(
 
 /** Number conditions: EqualTo / GreaterThan / LessThan against numeric
  * values (go's `IsNumberConditionTrue`). */
-export function numberConditionTrue(
-  ctx: FilterContext,
-  _pathKey: string,
-  filterCondition: string,
-  valueFound: unknown,
-  filterValue: Value,
-): boolean {
+export function numberConditionTrue(ctx: FilterContext, _pathKey: string, filterCondition: string, valueFound: unknown, filterValue: Value): boolean {
   const values = compareValuesF64(ctx, filterValue);
 
   const valueFoundFloat = asF64(valueFound);
@@ -251,25 +184,13 @@ export function numberConditionTrue(
 /** Timestamp conditions: EqualTo / GreaterThan / LessThan on RFC 3339
  * timestamps, compared at the granularity of the condition's
  * `DateTimeFormat` (go's `IsTimestampConditionTrue`). */
-export function timestampConditionTrue(
-  ctx: FilterContext,
-  _pathKey: string,
-  filterCondition: string,
-  valueFound: unknown,
-  filterValue: Value,
-): boolean {
+export function timestampConditionTrue(ctx: FilterContext, _pathKey: string, filterCondition: string, valueFound: unknown, filterValue: Value): boolean {
   const formatRaw = get(filterValue, conditionProps.DATE_TIME_FORMAT);
   if (typeof formatRaw !== "string") {
     if (formatRaw === undefined) {
-      return errorOrFalse(
-        ctx,
-        `filter condition property '${conditionProps.DATE_TIME_FORMAT}' not found`,
-      );
+      return errorOrFalse(ctx, `filter condition property '${conditionProps.DATE_TIME_FORMAT}' not found`);
     }
-    return errorOrFalse(
-      ctx,
-      `filter condition property '${conditionProps.DATE_TIME_FORMAT}' is not a string`,
-    );
+    return errorOrFalse(ctx, `filter condition property '${conditionProps.DATE_TIME_FORMAT}' is not a string`);
   }
   const format = formatRaw;
 
@@ -282,25 +203,16 @@ export function timestampConditionTrue(
   } else if (multiple !== undefined) {
     const items = asArray(multiple);
     if (items === undefined) {
-      return errorOrFalse(
-        ctx,
-        `filter condition property '${conditionProps.VALUES}' is not an array`,
-      );
+      return errorOrFalse(ctx, `filter condition property '${conditionProps.VALUES}' is not an array`);
     }
     rawValues.push(...items);
   } else {
-    return errorOrFalse(
-      ctx,
-      `filter condition property '${conditionProps.VALUE}' not found`,
-    );
+    return errorOrFalse(ctx, `filter condition property '${conditionProps.VALUE}' not found`);
   }
   const valuesToCompare: Timestamp[] = [];
   for (const raw of rawValues) {
     if (typeof raw !== "string") {
-      return errorOrFalse(
-        ctx,
-        `filter condition property '${conditionProps.VALUE}' must be an RFC 3339 string`,
-      );
+      return errorOrFalse(ctx, `filter condition property '${conditionProps.VALUE}' must be an RFC 3339 string`);
     }
     const ts = Timestamp.parseRfc3339(raw);
     if (ts === undefined) {
@@ -338,13 +250,7 @@ export function timestampConditionTrue(
 
 /** Default (Any-typed) condition: EqualTo via deep equality (go's
  * `IsDefaultEqualTrue`). */
-export function defaultEqualTrue(
-  ctx: FilterContext,
-  _pathKey: string,
-  filterCondition: string,
-  valueFound: unknown,
-  filterValue: Value,
-): boolean {
+export function defaultEqualTrue(ctx: FilterContext, _pathKey: string, filterCondition: string, valueFound: unknown, filterValue: Value): boolean {
   const rawValues: Value[] = [];
   const single = get(filterValue, conditionProps.VALUE);
   const multiple = get(filterValue, conditionProps.VALUES);
@@ -353,17 +259,11 @@ export function defaultEqualTrue(
   } else if (multiple !== undefined) {
     const items = asArray(multiple);
     if (items === undefined) {
-      return errorOrFalse(
-        ctx,
-        `filter condition property '${conditionProps.VALUES}' is not an array`,
-      );
+      return errorOrFalse(ctx, `filter condition property '${conditionProps.VALUES}' is not an array`);
     }
     rawValues.push(...items);
   } else {
-    return errorOrFalse(
-      ctx,
-      `filter condition property '${conditionProps.VALUE}' or '${conditionProps.VALUES}' not found`,
-    );
+    return errorOrFalse(ctx, `filter condition property '${conditionProps.VALUE}' or '${conditionProps.VALUES}' not found`);
   }
 
   if (filterCondition === condition.EQUAL_TO) {
@@ -419,10 +319,7 @@ function rawCompareValues(ctx: FilterContext, filterValue: Value): Value[] {
   if (multiple !== undefined) {
     const items = asArray(multiple);
     if (items === undefined) {
-      return errorOrEmpty(
-        ctx,
-        `filter condition property '${conditionProps.VALUES}' is not an array`,
-      );
+      return errorOrEmpty(ctx, `filter condition property '${conditionProps.VALUES}' is not an array`);
     }
     return items;
   }

@@ -5,13 +5,7 @@
 
 import { test } from "vitest";
 import { TestReport, newTestTitle } from "@dyn-rt/test-support";
-import {
-  type ValueKind,
-  kindOf,
-  isPlainObject,
-  isClassInstance,
-  className,
-} from "../src/index.js";
+import { type ValueKind, kindOf, isPlainObject, isClassInstance, className } from "../src/index.js";
 
 class User {
   constructor(
@@ -38,9 +32,17 @@ const kindCases: KindCase[] = [
   { testTitle: "array", value: [1, 2], expected: "array" },
   { testTitle: "date", value: new Date("2024-01-02T03:04:05Z"), expected: "date" },
   { testTitle: "plain object", value: { a: 1 }, expected: "plain-object" },
-  { testTitle: "null-prototype object is plain", value: Object.create(null), expected: "plain-object" },
+  {
+    testTitle: "null-prototype object is plain",
+    value: Object.create(null),
+    expected: "plain-object",
+  },
   { testTitle: "class instance", value: new User(1, "Alice"), expected: "class-instance" },
-  { testTitle: "boxed Number is a class-instance", value: new Number(5), expected: "class-instance" },
+  {
+    testTitle: "boxed Number is a class-instance",
+    value: new Number(5),
+    expected: "class-instance",
+  },
   { testTitle: "Map is a class-instance", value: new Map(), expected: "class-instance" },
 ];
 
@@ -96,10 +98,7 @@ const helperCases: HelperCase[] = [
 ];
 
 test("isPlainObject/isClassInstance/className cases (src/kind.ts)", () => {
-  const report = new TestReport(
-    "kind_helper_cases",
-    "isPlainObject / isClassInstance / className (src/kind.ts)",
-  );
+  const report = new TestReport("kind_helper_cases", "isPlainObject / isClassInstance / className (src/kind.ts)");
   for (const testCase of helperCases) {
     report.beginCase(newTestTitle(testCase.testTitle));
     if (isPlainObject(testCase.value) !== testCase.expectedPlain) {
@@ -112,9 +111,7 @@ test("isPlainObject/isClassInstance/className cases (src/kind.ts)", () => {
       if (typeof testCase.value !== "object" || testCase.value === null) {
         report.failCase("expected an object for className");
       } else if (className(testCase.value) !== testCase.expectedClassName) {
-        report.failCase(
-          `className expected ${testCase.expectedClassName}, got ${className(testCase.value)}`,
-        );
+        report.failCase(`className expected ${testCase.expectedClassName}, got ${className(testCase.value)}`);
       }
     }
   }

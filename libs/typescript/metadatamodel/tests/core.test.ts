@@ -34,7 +34,12 @@ import {
 type TemplateOp =
   | { kind: "schemaPath"; indices: number[] }
   | { kind: "dataPath"; indices: number[]; cardinality: Cardinality }
-  | { kind: "dataPathModelAware"; model: MetadataModel; indices: number[]; indexLastWildcard: boolean }
+  | {
+      kind: "dataPathModelAware";
+      model: MetadataModel;
+      indices: number[];
+      indexLastWildcard: boolean;
+    }
   | { kind: "dataPathKeepWildcards" };
 
 interface TemplateCase {
@@ -109,29 +114,41 @@ function yieldTemplateData(): TemplateCase[] {
     {
       testTitle: "model-aware data path indexes array fields and drops single ones",
       template: "$['group:fields'][*].Site[*]['group:fields'][*].Country[*]",
-      op: { kind: "dataPathModelAware", model: sampleModel(), indices: [1, 2], indexLastWildcard: true },
+      op: {
+        kind: "dataPathModelAware",
+        model: sampleModel(),
+        indices: [1, 2],
+        indexLastWildcard: true,
+      },
       expected: "$.Site[1].Country[2]",
     },
     {
       testTitle: "model-aware data path with indexLastWildcard=false reads the whole leaf value",
       template: "$['group:fields'][*].Bio[*]",
-      op: { kind: "dataPathModelAware", model: sampleModel(), indices: [], indexLastWildcard: false },
+      op: {
+        kind: "dataPathModelAware",
+        model: sampleModel(),
+        indices: [],
+        indexLastWildcard: false,
+      },
       expected: "$.Bio",
     },
     {
       testTitle: "model-aware data path drops the single SourceId trailing wildcard",
       template: "$['group:fields'][*].SourceId[*]",
-      op: { kind: "dataPathModelAware", model: sampleModel(), indices: [], indexLastWildcard: true },
+      op: {
+        kind: "dataPathModelAware",
+        model: sampleModel(),
+        indices: [],
+        indexLastWildcard: true,
+      },
       expected: "$.SourceId",
     },
   ];
 }
 
 test("template_cases", () => {
-  const report = new TestReport(
-    "template_cases",
-    "group:path_key template post-processing: schemaPath / dataPath (src/core/application.ts)",
-  );
+  const report = new TestReport("template_cases", "group:path_key template post-processing: schemaPath / dataPath (src/core/application.ts)");
   for (const testCase of yieldTemplateData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
     let got: string | undefined;
@@ -145,12 +162,7 @@ test("template_cases", () => {
           got = dataPath(testCase.template, testCase.op.indices, testCase.op.cardinality);
           break;
         case "dataPathModelAware":
-          got = dataPathModelAware(
-            testCase.template,
-            testCase.op.model,
-            testCase.op.indices,
-            testCase.op.indexLastWildcard,
-          );
+          got = dataPathModelAware(testCase.template, testCase.op.model, testCase.op.indices, testCase.op.indexLastWildcard);
           break;
         case "dataPathKeepWildcards":
           got = dataPathKeepWildcards(testCase.template);
@@ -161,9 +173,7 @@ test("template_cases", () => {
     }
     if (testCase.expectError !== undefined) {
       if (got !== undefined || !errorMessage.includes(testCase.expectError)) {
-        report.failCase(
-          `expected error containing ${JSON.stringify(testCase.expectError)}, got ${got !== undefined ? JSON.stringify(got) : JSON.stringify(errorMessage)}`,
-        );
+        report.failCase(`expected error containing ${JSON.stringify(testCase.expectError)}, got ${got !== undefined ? JSON.stringify(got) : JSON.stringify(errorMessage)}`);
       }
       continue;
     }
@@ -243,7 +253,10 @@ interface ModelCase {
 function yieldModelData(): ModelCase[] {
   return [
     { testTitle: "root group path key", op: { kind: "pathKeyOf", expected: "$" } },
-    { testTitle: "name from group:name", op: { kind: "nameOf", defaultValue: "", expected: "Vector Data" } },
+    {
+      testTitle: "name from group:name",
+      op: { kind: "nameOf", defaultValue: "", expected: "Vector Data" },
+    },
     {
       // templates end in [*], so the fallback needs a key-terminated template
       testTitle: "name falls back to the last template segment",
@@ -258,45 +271,73 @@ function yieldModelData(): ModelCase[] {
       testTitle: "name falls back to the default when nothing else is available",
       op: { kind: "nameOfProps", fieldGroup: {}, defaultValue: "fallback", expected: "fallback" },
     },
-    { testTitle: "fieldsOf exposes the nested group", op: { kind: "fieldsContain", field: "Site" } },
+    {
+      testTitle: "fieldsOf exposes the nested group",
+      op: { kind: "fieldsContain", field: "Site" },
+    },
     {
       testTitle: "propsOf unwraps the field props array",
       op: { kind: "propsDataType", field: "SourceId", expected: "Number" },
     },
-    { testTitle: "explicit single cardinality", op: { kind: "cardinalityOf", field: "SourceId", expected: "single" } },
-    { testTitle: "cardinality defaults to array", op: { kind: "cardinalityOf", field: "Bio", expected: "array" } },
+    {
+      testTitle: "explicit single cardinality",
+      op: { kind: "cardinalityOf", field: "SourceId", expected: "single" },
+    },
+    {
+      testTitle: "cardinality defaults to array",
+      op: { kind: "cardinalityOf", field: "Bio", expected: "array" },
+    },
     {
       testTitle: "read order defaults to the fields' key order",
       op: { kind: "readOrder", expected: ["SourceId", "Bio", "Site"] },
     },
-    { testTitle: "containsNestedGroups finds the Site group", op: { kind: "containsNestedGroups", expected: true } },
+    {
+      testTitle: "containsNestedGroups finds the Site group",
+      op: { kind: "containsNestedGroups", expected: true },
+    },
     {
       testTitle: "array value satisfies array cardinality",
       op: { kind: "checkCardinality", value: [1], cardinality: "array" },
     },
     {
       testTitle: "single value violates array cardinality (strict)",
-      op: { kind: "checkCardinality", value: 1, cardinality: "array", expectError: "cardinality violation" },
+      op: {
+        kind: "checkCardinality",
+        value: 1,
+        cardinality: "array",
+        expectError: "cardinality violation",
+      },
     },
     {
       testTitle: "array value violates single cardinality (strict)",
-      op: { kind: "checkCardinality", value: [1], cardinality: "single", expectError: "cardinality violation" },
+      op: {
+        kind: "checkCardinality",
+        value: [1],
+        cardinality: "single",
+        expectError: "cardinality violation",
+      },
     },
     {
       testTitle: "single value satisfies single cardinality",
       op: { kind: "checkCardinality", value: "text", cardinality: "single" },
     },
-    { testTitle: "parseCardinality maps single/object/array/list", op: { kind: "parseCardinality", raw: "object", expected: "single" } },
-    { testTitle: "parseCardinality maps list to array", op: { kind: "parseCardinality", raw: "list", expected: "array" } },
-    { testTitle: "parseCardinality rejects unknown values", op: { kind: "parseCardinality", raw: "weird" } },
+    {
+      testTitle: "parseCardinality maps single/object/array/list",
+      op: { kind: "parseCardinality", raw: "object", expected: "single" },
+    },
+    {
+      testTitle: "parseCardinality maps list to array",
+      op: { kind: "parseCardinality", raw: "list", expected: "array" },
+    },
+    {
+      testTitle: "parseCardinality rejects unknown values",
+      op: { kind: "parseCardinality", raw: "weird" },
+    },
   ];
 }
 
 test("model_cases", () => {
-  const report = new TestReport(
-    "model_cases",
-    "model property getters + strict cardinality (src/core/application.ts)",
-  );
+  const report = new TestReport("model_cases", "model property getters + strict cardinality (src/core/application.ts)");
   for (const testCase of yieldModelData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
     const model = sampleModel();

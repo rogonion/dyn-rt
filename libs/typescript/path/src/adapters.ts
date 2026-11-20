@@ -21,26 +21,17 @@ const BRACKET_CONTENT = String.raw`(?:${QUOTED_SINGLE}|${QUOTED_DOUBLE}|[^\]])+`
  * OR the standalone recursive descent operator `..`.
  *
  * Used in step 1 (`splitRecursiveDescent`). */
-export const RECURSIVE_DESCENT_SPLIT_REGEX = new RegExp(
-  String.raw`\[${BRACKET_CONTENT}\]|(?<descent>\.\.)`,
-  "g",
-);
+export const RECURSIVE_DESCENT_SPLIT_REGEX = new RegExp(String.raw`\[${BRACKET_CONTENT}\]|(?<descent>\.\.)`, "g");
 
 /** Matches bracketed selector expressions `[...]` (ignoring internal dots)
  * OR the standalone dot notation operator `.`.
  *
  * Used in step 2 (`splitDotNotation`). */
-export const MEMBER_DOT_NOTATION_REGEX = new RegExp(
-  String.raw`\[${BRACKET_CONTENT}\]|(?<dot>\.)`,
-  "g",
-);
+export const MEMBER_DOT_NOTATION_REGEX = new RegExp(String.raw`\[${BRACKET_CONTENT}\]|(?<dot>\.)`, "g");
 
 /** Splits a part into bracket contents (`ibracket`) and non-bracket text
  * (`obracket`). Used in step 3 (`splitBrackets`). */
-export const BRACKET_SPLIT_REGEX = new RegExp(
-  String.raw`\[(?<ibracket>${BRACKET_CONTENT})\]|(?<obracket>[^\[]+)`,
-  "g",
-);
+export const BRACKET_SPLIT_REGEX = new RegExp(String.raw`\[(?<ibracket>${BRACKET_CONTENT})\]|(?<obracket>[^\[]+)`, "g");
 
 /** Matches a positional index: an optionally negative integer, anchored. */
 export const POSITIONAL_INDEX_REGEX = /^(?<position>-?\d+)$/;
@@ -51,19 +42,11 @@ export const SLICE_SELECTOR_REGEX = /(?<start>-?\d*):(?<end>-?\d*)(?::(?<step>-?
 
 /** Matches the union splitter `,` while ignoring commas inside quotes.
  * Used in step 4a (`splitUnion`). */
-export const UNION_SPLIT_REGEX = new RegExp(
-  String.raw`${QUOTED_SINGLE}|${QUOTED_DOUBLE}|${QUOTED_BACKTICK}|(?<comma>,)`,
-  "g",
-);
+export const UNION_SPLIT_REGEX = new RegExp(String.raw`${QUOTED_SINGLE}|${QUOTED_DOUBLE}|${QUOTED_BACKTICK}|(?<comma>,)`, "g");
 
 /** Matches a fully quoted string and captures the unquoted content per quote
  * style: single, double, backtick. */
-export const QUOTE_EXTRACTOR_REGEX = new RegExp(
-  "^(?:'(?<single>[^'\\\\]*(?:\\\\.[^'\\\\]*)*)'" +
-    '|"(?<double>[^"\\\\]*(?:\\\\.[^"\\\\]*)*)"' +
-    "|`(?<backtick>[^`\\\\]*(?:\\\\.[^`\\\\]*)*)`" +
-    ")$",
-);
+export const QUOTE_EXTRACTOR_REGEX = new RegExp("^(?:'(?<single>[^'\\\\]*(?:\\\\.[^'\\\\]*)*)'" + '|"(?<double>[^"\\\\]*(?:\\\\.[^"\\\\]*)*)"' + "|`(?<backtick>[^`\\\\]*(?:\\\\.[^`\\\\]*)*)`" + ")$");
 
 /** Parse an optional signed-integer capture: `""` and bare `"-"` are not
  * numbers (mirrors Rust's `parse::<isize>()` failing on them). */

@@ -9,8 +9,8 @@ import { path } from "@dyn-rt/dyn-rt";
 
 const tokenizer = new path.RegexPathTokenizer();
 const segments = path.parsePath(tokenizer, "$.store.book[0].title");
-path.renderSegments(segments);                              // "$.store.book[0].title"
-path.renderSegments(path.parsePath(tokenizer, "$[0,-1]"));  // "$[0,-1]"  union, negative index
+path.renderSegments(segments); // "$.store.book[0].title"
+path.renderSegments(path.parsePath(tokenizer, "$[0,-1]")); // "$[0,-1]"  union, negative index
 path.renderSegments(path.parsePath(tokenizer, "$.a[1:8:2]")); // "$.a[1:8:2]" slice
 path.renderSegments(path.parsePath(tokenizer, "$..City[*]")); // "$..City.*" recursive descent
 ```

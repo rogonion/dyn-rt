@@ -9,17 +9,7 @@ import { RegexPathTokenizer, parsePath } from "@dyn-rt/path";
 import { reflectClone } from "@dyn-rt/reflect";
 import type { Schema } from "@dyn-rt/schema";
 import { areEqual, set } from "../src/index.js";
-import {
-  ComplexData,
-  User,
-  UserProfile,
-  UserWithAddress,
-  Address,
-  eq,
-  render,
-  stringIntMapSchema,
-  userProfileSchema,
-} from "./common.js";
+import { ComplexData, User, UserProfile, UserWithAddress, Address, eq, render, stringIntMapSchema, userProfileSchema } from "./common.js";
 
 interface SetCase {
   testTitle?: string;
@@ -125,17 +115,11 @@ function yieldTestData(): SetCase[] {
     },
     {
       testTitle: "recursive descent set updates every Name (go $..Name)",
-      root: [
-        { User: { Name: "Alice" } },
-        { Items: [{ Name: "Item 1" }] },
-      ],
+      root: [{ User: { Name: "Alice" } }, { Items: [{ Name: "Item 1" }] }],
       path: "$..Name",
       value: "OneName",
       expectedCount: 2,
-      expectedRoot: [
-        { User: { Name: "OneName" } },
-        { Items: [{ Name: "OneName" }] },
-      ],
+      expectedRoot: [{ User: { Name: "OneName" } }, { Items: [{ Name: "OneName" }] }],
     },
     {
       // root set on a container replaces it in place (primitive roots need DynObject)
@@ -192,17 +176,11 @@ function yieldTestData(): SetCase[] {
     },
     {
       testTitle: "array of class instances: set field through index",
-      root: [
-        new User({ ID: 1, Name: "Ann", Email: "a@x" }),
-        new User({ ID: 2, Name: "Bob", Email: "b@x" }),
-      ],
+      root: [new User({ ID: 1, Name: "Ann", Email: "a@x" }), new User({ ID: 2, Name: "Bob", Email: "b@x" })],
       path: "$[0].Name",
       value: "X",
       expectedCount: 1,
-      expectedRoot: [
-        new User({ ID: 1, Name: "X", Email: "a@x" }),
-        new User({ ID: 2, Name: "Bob", Email: "b@x" }),
-      ],
+      expectedRoot: [new User({ ID: 1, Name: "X", Email: "a@x" }), new User({ ID: 2, Name: "Bob", Email: "b@x" })],
     },
     {
       testTitle: "tuple-analogue array positional element set",
@@ -224,10 +202,7 @@ function yieldTestData(): SetCase[] {
 }
 
 test("set_cases", () => {
-  const report = new TestReport(
-    "set_cases",
-    "set at a JSONPath with schema-driven coercion/creation (src/application/set.ts)",
-  );
+  const report = new TestReport("set_cases", "set at a JSONPath with schema-driven coercion/creation (src/application/set.ts)");
   const tokenizer = new RegexPathTokenizer();
   for (const testCase of yieldTestData()) {
     report.beginCase(newTestTitle(testCase.testTitle));
@@ -242,9 +217,7 @@ test("set_cases", () => {
     }
     if (testCase.expectError !== undefined) {
       if (countValue !== undefined || !errorMessage.includes(testCase.expectError)) {
-        report.failCase(
-          `expected error containing ${JSON.stringify(testCase.expectError)}, got ${countValue !== undefined ? `Ok(${countValue})` : JSON.stringify(errorMessage)}`,
-        );
+        report.failCase(`expected error containing ${JSON.stringify(testCase.expectError)}, got ${countValue !== undefined ? `Ok(${countValue})` : JSON.stringify(errorMessage)}`);
       }
       continue;
     }
@@ -256,9 +229,7 @@ test("set_cases", () => {
       report.failCase(`path ${testCase.path} || expected count ${testCase.expectedCount}, got ${countValue}`);
     }
     if (!areEqual(root, testCase.expectedRoot) && !eq(root, testCase.expectedRoot)) {
-      report.failCase(
-        `path ${testCase.path} || expected root ${render(testCase.expectedRoot)}, got ${render(root)}`,
-      );
+      report.failCase(`path ${testCase.path} || expected root ${render(testCase.expectedRoot)}, got ${render(root)}`);
     }
   }
   report.finish();

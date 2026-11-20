@@ -86,9 +86,7 @@ test("for_each_cases", () => {
       continue;
     }
     if (visited.length !== testCase.expectedVisited.length) {
-      report.failCase(
-        `visited count: expected ${testCase.expectedVisited.length}, got ${visited.length} (${visited.map(render).join(", ")})`,
-      );
+      report.failCase(`visited count: expected ${testCase.expectedVisited.length}, got ${visited.length} (${visited.map(render).join(", ")})`);
       continue;
     }
     for (let i = 0; i < visited.length; i++) {
